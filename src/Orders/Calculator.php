@@ -65,7 +65,18 @@ class Calculator implements Contract
 
     public function calculateLineItem(array $data, array $lineItem): array
     {
+
         $product = ProductAPI::find($lineItem['product']);
+
+	    if ($product->purchasableType() === 'probo') {
+
+		    $lineItem['total'] = 100;
+
+		    return [
+			    'data' => $data,
+			    'lineItem'  => $lineItem,
+		    ];
+	    }
 
         if ($product->purchasableType() === 'variants') {
             $variant = $product->variant(
@@ -88,6 +99,7 @@ class Calculator implements Contract
                 'lineItem'  => $lineItem,
             ];
         }
+
 
         if (SimpleCommerce::$productPriceHook) {
             $productPrice = (SimpleCommerce::$productPriceHook)($this->order, $product);

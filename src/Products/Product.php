@@ -35,6 +35,10 @@ class Product implements Contract
 
     public function purchasableType(): string
     {
+	    if ($this->data()['blueprint'] == 'product_probo') {
+		    return 'probo';
+	    }
+
         if (isset($this->data()['product_variants']['variants'])) {
             return 'variants';
         }

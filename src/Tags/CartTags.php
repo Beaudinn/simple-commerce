@@ -11,6 +11,7 @@ class CartTags extends SubTag
 
     public function index()
     {
+
         return $this->getOrMakeCart()->toAugmentedArray();
     }
 
@@ -21,10 +22,13 @@ class CartTags extends SubTag
 
     public function items()
     {
+
+
         $cart = $this->getOrMakeCart();
 
+
         return $cart->lineItems()->count() >= 1
-            ? is_array($cart->toAugmentedArray()['items']) ? $cart->toAugmentedArray()['items'] : $cart->toAugmentedArray()['items']->value()
+            ? is_array($cart->toAugmentedArray()['items']) ? $cart->toAugmentedArray()['items'] : $cart->toAugmentedArray()['items']
             : [];
     }
 
@@ -54,7 +58,7 @@ class CartTags extends SubTag
     public function grandTotal()
     {
         if ($this->hasCart()) {
-            return $this->getCart()->toAugmentedArray()['grand_total']->value();
+            return $this->getCart()->toAugmentedArray()['grand_total'];
         }
 
         return 0;
@@ -71,8 +75,9 @@ class CartTags extends SubTag
 
     public function itemsTotal()
     {
+
         if ($this->hasCart()) {
-            return $this->getCart()->toAugmentedArray()['items_total']->value();
+            return $this->getCart()->toAugmentedArray()['items_total'];
         }
 
         return 0;
@@ -90,7 +95,7 @@ class CartTags extends SubTag
     public function shippingTotal()
     {
         if ($this->hasCart()) {
-            return $this->getCart()->toAugmentedArray()['shipping_total']->value();
+            return $this->getCart()->toAugmentedArray()['shipping_total'];
         }
 
         return 0;
@@ -108,7 +113,7 @@ class CartTags extends SubTag
     public function taxTotal()
     {
         if ($this->hasCart()) {
-            return $this->getCart()->toAugmentedArray()['tax_total']->value();
+            return $this->getCart()->toAugmentedArray()['tax_total'];
         }
 
         return 0;
@@ -126,7 +131,7 @@ class CartTags extends SubTag
     public function couponTotal()
     {
         if ($this->hasCart()) {
-            return $this->getCart()->toAugmentedArray()['coupon_total']->value();
+            return $this->getCart()->toAugmentedArray()['coupon_total'];
         }
 
         return 0;

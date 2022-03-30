@@ -27,6 +27,7 @@ class CartItemController extends BaseActionController
         $cart = $this->hasCart() ? $this->getCart() : $this->makeCart();
         $product = Product::find($request->product);
 
+
         $items = $cart->has('items') ? $cart->get('items') : [];
 
         // Handle customer stuff..
@@ -81,6 +82,8 @@ class CartItemController extends BaseActionController
             if ($variant !== null && $variant->stockCount() !== null && $variant->stockCount() < $request->quantity) {
                 return $this->withErrors($request, __("There's not enough stock to fulfil the quantity you selected. Please try again later."));
             }
+        } elseif ($product->purchasableType() === 'probo') {
+	       // For probo no stock check
         }
 
         // If this product requires another one, ensure the customer has already purchased it...
@@ -123,6 +126,11 @@ class CartItemController extends BaseActionController
             $alreadyExistsQuery = $alreadyExistsQuery->where('product', $request->product);
         }
 
+        if (config('simple-commerce.cart.unique_metadata')) {
+            $alreadyExistsQuery = $alreadyExistsQuery->where('metadata', $metadata);
+        }
+
+        //Probo check if option are same
         if (config('simple-commerce.cart.unique_metadata')) {
             $alreadyExistsQuery = $alreadyExistsQuery->where('metadata', $metadata);
         }
