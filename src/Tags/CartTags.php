@@ -12,6 +12,7 @@ class CartTags extends SubTag
     public function index()
     {
 
+
         return $this->getOrMakeCart()->toAugmentedArray();
     }
 

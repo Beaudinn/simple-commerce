@@ -65,6 +65,12 @@ class Manager implements Contract
         return $this->resolve()->getCharge($order);
     }
 
+
+	public function methods($order)
+	{
+		return $this->resolve()->methods($order);
+	}
+
     public function refundCharge($order)
     {
         $refund = $this->resolve()->refundCharge($order);

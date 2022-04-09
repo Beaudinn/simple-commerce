@@ -13,7 +13,7 @@ trait CartDriver
         return resolve(CartDriverContract::class)->getCartKey();
     }
 
-    protected function getCart(): Order
+    public function getCart(): Order
     {
         try {
             return resolve(CartDriverContract::class)->getCart();
@@ -24,7 +24,7 @@ trait CartDriver
         }
     }
 
-    protected function hasCart(): bool
+    public function hasCart(): bool
     {
         try {
             return resolve(CartDriverContract::class)->hasCart();

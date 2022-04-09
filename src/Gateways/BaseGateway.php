@@ -101,7 +101,7 @@ class BaseGateway
         return [];
     }
 
-    public function markOrderAsPaid(Order $order): bool
+	public function markOrderAsPaid(Order $order): bool
     {
         if ($this->isOffsiteGateway()) {
             $this->handleStock($order);

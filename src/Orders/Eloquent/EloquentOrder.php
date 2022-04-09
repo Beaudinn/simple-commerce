@@ -2,6 +2,7 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Orders\Eloquent;
 
+use DoubleThreeDigital\Runway\Runway;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Calculator;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order as OrderContract;
 use DoubleThreeDigital\SimpleCommerce\Events\CouponRedeemed;
@@ -15,6 +16,8 @@ use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\URL;
+use Webhoek\Probo\Api\Resources\Price;
+use Webhoek\Probo\Api\Resources\ResourceFactory;
 
 class EloquentOrder implements OrderContract
 {
@@ -99,8 +102,13 @@ class EloquentOrder implements OrderContract
 	public function toAugmentedArray($keys = NULL)
 	{
 		// TODO: If using Runway, we should get the model's blueprint and return it's augmented data.
+		//$this->recalculate();
 
-		$data = $this->toArray();
+		$resource = Runway::findResourceByModel($this->model);
+
+
+		$data = $resource->augment($this->model);
+		var_dump($data); die();
 		$data['items']  = collect($data['items'])->map(function ($item){
 			$item['product'] =  Product::find($item['product'])->toAugmentedArray();
 			return $item;
@@ -336,10 +344,17 @@ class EloquentOrder implements OrderContract
 		return $lineItem->toArray();
 	}
 
+	public function getPrices(){
+
+		return collect($this->model->probo_prices)->mapWithKeys(function ($price){
+			return [ $price['delivery_date'] => ResourceFactory::createFromApiResult($price, new Price(app('probo.api.client')))];
+		});
+
+	}
+
 	public function recalculate(): self
 	{
 		$calculate = resolve(Calculator::class)->calculate($this);
-
 		$this->data($calculate);
 
 		$this->save();
@@ -352,6 +367,13 @@ class EloquentOrder implements OrderContract
 		$this->model->update(array_merge($this->data, [
 			'orderNumber' => $this->orderNumber,
 		]));
+
+
+
+		//var_dump($this->data['items']); die();
+		foreach ($this->data['items'] as $item) {
+			$this->model->lineItems()->where('id', $item['id'])->update(['total' => $item['total']]);
+		}
 
 		$this->model = $this->model->fresh();
 

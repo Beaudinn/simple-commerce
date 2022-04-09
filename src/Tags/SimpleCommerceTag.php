@@ -36,6 +36,7 @@ class SimpleCommerceTag extends Tags
             ->pluck('value')
             ->first();
 
+
         $method = isset($tag[1]) ? $tag[1] : 'index';
 
         if (! $class) {
