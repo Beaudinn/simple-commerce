@@ -6,6 +6,7 @@ use DoubleThreeDigital\SimpleCommerce\Contracts\Gateway;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use DoubleThreeDigital\SimpleCommerce\Events\PostCheckout;
 use DoubleThreeDigital\SimpleCommerce\Facades\Currency;
+use DoubleThreeDigital\SimpleCommerce\Exceptions\OrderNotFound;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderFacade;
 use DoubleThreeDigital\SimpleCommerce\Gateways\BaseGateway;
 use DoubleThreeDigital\SimpleCommerce\Gateways\Prepare;
@@ -19,6 +20,7 @@ use Statamic\Statamic;
 
 class MollieGateway extends BaseGateway implements Gateway
 {
+
 	protected $mollie;
 
 	public function name(): string
@@ -159,4 +161,5 @@ class MollieGateway extends BaseGateway implements Gateway
 		$this->mollie->addVersionString('Statamic/' . Statamic::version());
 		$this->mollie->addVersionString('SimpleCommerce/' . SimpleCommerce::version());
 	}
+
 }
