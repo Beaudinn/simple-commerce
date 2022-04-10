@@ -2,14 +2,14 @@
 title: Upgrade Guide
 ---
 
-When upgrading from v2.2 to v2.3, please read through this guide in case there's anything you need to change. Most of the updates around the configuration file and blueprint changes have been automated to help speed up the process.
+## Overview
 
-You may also [review the changes](https://github.com/doublethreedigital/simple-commerce/compare/v2.3...v2.2) manually if you wish.
+When upgrading, read through this guide to see if there's anything you may need to change. A few of the big common changes will be done automatically (and will be marked as 'Automated' throughout the guide) but there will likely be some manual steps you'll need to take.
 
-In your `composer.json` file, change the `doublethreedigital/simple-commerce` version constraint:
+In your `composer.json` file, update the `doublethreedigital/simple-commerce` version constraint:
 
 ```json
-"doublethreedigital/simple-commerce": "2.3.*"
+"doublethreedigital/simple-commerce": "3.0.*"
 ```
 
 Then run:
@@ -18,228 +18,201 @@ Then run:
 composer update doublethreedigital/simple-commerce --with-dependencies
 ```
 
-## High: Gateways
+## Changes
 
-### Built-in gateway namespace changes
+- Data Refactor TODO: #556
+- new minimum system reqs
+- no more receipt pdfs
+- mention upgrade script tasks
 
-The namespace of all built-in gateways (Dummy, Stripe & Mollie) have been updated from `Gateways\GatewayName` to `Gateways\Builtin\GatewayName`.
+### High: Changes around the Data APIs (Partially automated)
 
-If you're using one of these gateways, you must update the namespace in your `simple-commerce.php` config file.
+This is probably **the largest change** around how Simple Commerce works. If you've written any kind of custom code that deals with an `Order`, `Product`, etc, I'd recommend you test your code to ensure it's compatible with v3.0.
 
-**Note: this is one of the upgrade steps that's automated for you.**
-
-```php
-/*
-|--------------------------------------------------------------------------
-| Gateways
-|--------------------------------------------------------------------------
-|
-| You can setup multiple payment gateways for your store with Simple Commerce.
-| Here's where you can configure the gateways in use.
-|
-| https://simple-commerce.duncanmcclean.com/gateways
-|
-*/
-
-'gateways' => [
-    \DoubleThreeDigital\SimpleCommerce\Gateways\Builtin\DummyGateway::class => [
-        'display' => 'Card',
-    ],
-],
-```
-
-### Custom gateway namespace changes
-
-If you're using a custom gateway, please update the namespaces of the Data Transfer Objects (DTOs) provided by SC.
-
-```
-// Before
-use DoubleThreeDigital\SimpleCommerce\Data\Gateways\BaseGateway;
-use DoubleThreeDigital\SimpleCommerce\Data\Gateways\GatewayPrep;
-use DoubleThreeDigital\SimpleCommerce\Data\Gateways\GatewayPurchase;
-use DoubleThreeDigital\SimpleCommerce\Data\Gateways\GatewayResponse;
-
-// Now
-use DoubleThreeDigital\SimpleCommerce\Gateways\BaseGateway;
-use DoubleThreeDigital\SimpleCommerce\Gateways\Prepare;
-use DoubleThreeDigital\SimpleCommerce\Gateways\Purchase;
-use DoubleThreeDigital\SimpleCommerce\Gateways\Response;
-```
-
-## High: Email notifications
-
-Previously, Mailables were used to send email notifications to customers and store owners.
-
-However, in order to easily support more notification types in the future, I've changed the way email notifications work. They now use Laravel's [Notifications feature](https://laravel.com/docs/master/notifications).
-
-### Updated configuration
-
-You may now specifiy multiple notifications for an 'event'. You can also specify who you'd like each of the notifications to be sent to. You can choose from
-
-```
-/*
-|--------------------------------------------------------------------------
-| Notifications
-|--------------------------------------------------------------------------
-|
-| Simple Commerce can automatically send notifications after events occur in your store.
-| eg. a cart being completed.
-|
-| Here's where you can toggle if certain notifications are enabled/disabled.
-|
-| https://simple-commerce.duncanmcclean.com/email
-|
-*/
-
-'notifications' => [
-    'order_paid' => [
-        \DoubleThreeDigital\SimpleCommerce\Notifications\CustomerOrderPaid::class   => ['to' => 'customer'],
-        \DoubleThreeDigital\SimpleCommerce\Notifications\BackOfficeOrderPaid::class => ['to' => 'duncan@example.com'],
-    ],
-],
-```
-
-**Note: this is one of the upgrade steps that's automated for you.**
-
-## Medium: Events
-
-I've updated the names of events, the parameters available in events and there's a few events which have also been removed. A full list of changes is available below:
-
-### `CartUpdated`
-
-This event has been removed.
-
-### `CouponRedeemed`
-
-Previously the `$coupon` was an `Entry` instance, this has been changed to a `Coupon` instance.
+As part of the changes, a small configuration change was needed. This change should be **automated** for you. Instead of seeing `driver` keys inside of the 'content drivers' array, you should see `repository` keys.
 
 ```php
-public function handle(CouponRedeemed $event)
-{
-	$event->coupon; // is now a Coupon
-}
-```
-
-### `CustomerAddedToCart`
-
-This event has been removed. In place, I'd recommend listening for order entries being updated and checking if the `customer` field has been changed.
-
-### `CartCompleted` -> `OrderPaid`
-
-This event has been renamed `OrderPaid`. Additionally, the `$cart` parameter has been removed, `$order` should now be used (all of the same methods are available).
-
-```php
-public function handle(OrderPaid $event)
-{
-	$event->order; // will return an Order, should be used in place of $cart
-}
-```
-
-### `CartSaved` -> `OrderSaved`
-
-This event has been renamed `OrderSaved`. Additionally, the `$cart` parameter has been removed and a `$order` parameter has been added.
-
-The `$order` parameter will return an `Order` instance.
-
-```php
-public function handle(OrderSaved $event)
-{
-	$event->order; // will return an Order, should be used in place of $cart
-}
-```
-
-### `PostCheckout`
-
-Previously, only an order's data array was passed into this event. However, now the full `$order` is available.
-
-```php
-public function handle(PostCheckout $event)
-{
-	$event->order; // will return an Order
-}
-```
-
-### `PreCheckout`
-
-Previously, only an order's data array was passed into this event. However, now the full `$order` is available.
-
-```php
-public function handle(PreCheckout $event)
-{
-	$event->order; // will return an Order
-}
-```
-
-## Medium: Translations
-
-I've simplified the translations into a single file, `messages.php`. If you were previously using your own translations, please [review the updated file](https://github.com/doublethreedigital/simple-commerce/blob/2.3/resources/lang/en/messages.php).
-
-## Medium: Custom Data Classes
-
-To help with future features I've got planned (👀), I've updated a few things around custom data classes.
-
-Note: You'll now find me referring to these as 'content drivers'.
-
-### Updates to binding your custom data class
-
-Instead of directly binding to the service container in your `AppServiceProvider.php` file, please bind your data class from inside the `simple-commerce.php` config file.
-
-```php
-/*
-|--------------------------------------------------------------------------
-| Content Drivers
-|--------------------------------------------------------------------------
-|
-| Simple Commerce stores all products, orders, coupons etc as flat-file entries.
-| This works great for store stores where you want to keep everything simple. But
-| sometimes, for more complex stores, you may want use a database instead. To do so,
-| just swap out the 'content driver' in place below.
-|
-*/
-
 'content' => [
-    'orders' => [
-        'driver' => \DoubleThreeDigital\SimpleCommerce\Orders\Order::class,
-        'collection' => 'orders',
-    ],
-
-    'products' => [
-        'driver' => \DoubleThreeDigital\SimpleCommerce\Products\Product::class,
-        'collection' => 'products',
-    ],
-
     'coupons' => [
-        'driver' => \DoubleThreeDigital\SimpleCommerce\Coupons\Coupon::class,
+        'repository' => \DoubleThreeDigital\SimpleCommerce\Coupons\EntryCouponRepository::class,
         'collection' => 'coupons',
     ],
 
     'customers' => [
-        'driver' => \DoubleThreeDigital\SimpleCommerce\Customers\Customer::class,
+        'repository' => \DoubleThreeDigital\SimpleCommerce\Customers\EntryCustomerRepository::class,
         'collection' => 'customers',
+    ],
+
+    'orders' => [
+        'repository' => \DoubleThreeDigital\SimpleCommerce\Orders\EntryOrderRepository::class,
+        'collection' => 'orders',
+    ],
+
+    'products' => [
+        'repository' => \DoubleThreeDigital\SimpleCommerce\Products\EntryProductRepository::class,
+        'collection' => 'products',
     ],
 ],
 ```
 
-When updating, we will **automate** the change of configuration format. However, it will not automatically switch it to your custom driver/data class.
+You'll also find that [the 'interfaces'](https://github.com/doublethreedigital/simple-commerce/tree/3.0/src/Contracts) for each of these Data APIs have been rewritten.
 
-### Contract changes
+In addition to these changes, you should check any custom code you've written is still compatible with Simple Commerce's updated APIs. Here's a few common examples of patterns in v2.4 and what they look like now in v3.0.
 
-I've also made various changes to the contracts implemented by custom drivers/data classes. You may [review the changes on GitHub](https://github.com/doublethreedigital/simple-commerce/tree/2.3/src/Contracts).
+#### Creating products/customers/orders/coupons
 
-## Low: Cart facade
-
-Like mentioned in the [v2.2 upgrade guide](https://simple-commerce.duncanmcclean.com//update-guide#cart-facade-being-phased-out), the `Cart` facade has now been completley removed.
-
-You should now use the `Order` facade which provides all of the same methods.
+**Previously:**
 
 ```php
-// Before
-Cart::find('abc-123');
-
-// After
-Order::find('abc-123');
+$order = Order::create([
+    'items' => [
+        [
+            'product' => 'abc',
+            'quantity' => 1,
+            'total' => 1255,
+        ],
+    ],
+    'items_total' => 1255,
+    'gift_note' => 'This is a very special note.',
+]);
 ```
+
+**Now:**
+
+```php
+$order = Order::make()
+    ->lineItems([
+        [
+            'product' => 'abc',
+            'quantity' => 1,
+            'total' => 1255,
+        ],
+    ])
+    ->itemsTotal(1255)
+    ->data([
+        'gift_note' => 'This is a very special note.',
+    ]);
+
+$order->save();
+```
+
+A lot of 'things' on Data Models are now properties which can be modified using fluent getter/setters. Anything outside of a property can be set using `->data()`, `->set()` or `->merge()`. We're now using the same pattern for making/saving as Statamic itself.
+
+#### Getting grand total from an order
+
+**Previously:**
+
+```php
+$order = Order::find('123');
+
+$order->get('grand_total');
+```
+
+**Now:**
+
+```php
+$order = Order::find('123');
+
+$order->grandTotal();
+```
+
+#### Getting the original entry
+
+**Previously:**
+
+```php
+$order = Order::find('123');
+
+$order->entry();
+```
+
+**Now:**
+
+```php
+$order = Order::find('123');
+
+$order->resource();
+```
+
+### High: Field Whitelisting (Partially automated)
+
+To improve the security of your site, we've introduced a 'whitelist' for the fields that will be saved from Simple Commerce's front-end forms.
+
+Previously, Simple Commerce would save anything provided in a request (for example: on the request to add a product to the cart) to your order entry.
+
+Now, SC will only save the request data from the fields you've whitelisted in the Simple Commerce config.
+
+Simple Commerce has **partially automated** this upgrade step for you. Upon upgrade, a `field_whitelist` key will be added to your `simple-commerce.php` config file.
+
+It will have pulled in any fields from your orders that aren't 'reserved' (eg. SC presumes you probably don't want the `is_paid` field to be fillable).
+
+### Medium: Order Emails
+
+Previously, Simple Commerce would send a fairly basic email with a PDF receipt attached.
+
+The library used to generate the PDF receipts (DomPDF) doesn't support new CSS features and was limiting in its available functionality. In v3, the receipr PDF has been removed from order emails. Instead, email body's contain a table with the order line items, along with any customer information which is displayed below.
+
+![](/img/simple-commerce/order-email-example.png)
+
+If you wish to continue with the previous behavior, you may create a copy of the [notifications from v2.4](https://github.com/doublethreedigital/simple-commerce/tree/2.4/src/Notifications) and put them in your `app` folder.
+
+Then, in your config file, you'd adjust the notification class used to match your app one. Be sure to manually require the DomPDF dependency, as this is no longer required for you by Simple Commerce.
+
+```
+composer require dompdf/dompdf
+```
+
+### Medium: Order Confirmation page
+
+Although not technically a breaking change, it's worth noting as it may help to cleaup your code.
+
+On the 'Order Confirmation' page (the one after checking out), you'd previously have to use the `{{ session:cart }}` tag in order to access the previous cart. However, now you may use Simple Commerce's cart tags like normal.
+
+**Previously:**
+
+```antlers
+{{ session:cart }}
+    Thanks for your order ({{ title }}), {{ customer:title }}
+{{ /session:cart }}
+```
+
+**Now:**
+
+```antlers
+{{ sc:cart }}
+    Thanks for your order ({{ title }}), {{ customer:title }}
+{{ /sc:cart }}
+```
+
+### Low: Higher System Requirements
+
+Simple Commerce v3 requires you to be using PHP 8.0 (and above), along with Laravel 8 (and above) and Statamic 3.3. Adjusting the system requirements encourages developers to stay up to date and means Simple Commerce can take advantage of new features.
+
+### Low: Order Numbers (Automated)
+
+In the past, order numbers would be stored as part of the title on Order entries.
+
+However, SC v3 has taken advantage of a Statamic feature called ['title formats'](https://statamic.dev/collections#titles). This means we store the order number in it's own field, `order_number` (hidden field, added during upgrade).
+
+Then, Simple Commerce will configure the title format to be like so: `#xxxx`.
+
+### Low: Updated namespaces for `Currency`/`Country`/`Region` classes
+
+If you were previously referencing any of these classes, you should update your references to their new namespaces:
+
+- `DoubleThreeDigital\SimpleCommerce\Support\Currency` -> `DoubleThreeDigital\SimpleCommerce\Currency`
+- `DoubleThreeDigital\SimpleCommerce\Support\Country` -> `DoubleThreeDigital\SimpleCommerce\Country`
+- `DoubleThreeDigital\SimpleCommerce\Support\Regions` -> `DoubleThreeDigital\SimpleCommerce\Regions`
+
+## Running into an issue upgrading?
+
+Like I say, quite a lot has changed between v2.4 and v3.0 so if you're running into issues upgrading, please either [open a GitHub Issue](https://github.com/doublethreedigital/simple-commerce/issues/new/choose) or [send me an email](mailto:help@doublethree.digital).
+
+## Previous upgrade guides
+
+- [v2.2 to v2.3](https://github.com/doublethreedigital/simple-commerce/blob/2.3/docs/upgrade-guide.md)
+- [v2.3 to v2.4](https://github.com/doublethreedigital/simple-commerce/blob/2.4/docs/upgrade-guide.md)
 
 ---
 
-Please feel free to [reach out](mailto:duncan@doublethree.digital) if you've got any questions about upgrading! I'm always happy to help.
+[You may also view a diff of changes between v2.4 and v3.0](https://github.com/doublethreedigital/simple-commerce/compare/2.4...3.0)

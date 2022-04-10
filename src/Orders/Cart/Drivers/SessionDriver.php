@@ -15,7 +15,7 @@ class SessionDriver implements CartDriver
 {
     public function getCartKey(): string
     {
-        return Session::get(Config::get('simple-commerce.cart.key'));
+        return Session::get($this->getKey());
     }
 
     public function getCart(): Order
@@ -25,16 +25,15 @@ class SessionDriver implements CartDriver
 
     public function hasCart(): bool
     {
-        return Session::has(Config::get('simple-commerce.cart.key'));
+        return Session::has($this->getKey());
     }
 
     public function makeCart(): Order
     {
-        $cart = OrderAPI::create()
-            ->site($this->guessSiteFromRequest())
-            ->save();
+        $cart = OrderAPI::make();
+        $cart->save();
 
-        Session::put(config('simple-commerce.cart.key'), $cart->id);
+        Session::put($this->getKey(), $cart->id);
 
         return $cart;
     }
@@ -50,7 +49,7 @@ class SessionDriver implements CartDriver
 
     public function forgetCart()
     {
-        Session::forget(config('simple-commerce.cart.key'));
+        Session::forget($this->getKey());
     }
 
     protected function guessSiteFromRequest(): ASite
@@ -74,5 +73,17 @@ class SessionDriver implements CartDriver
         }
 
         return Site::current();
+    }
+
+    protected function getKey(): string
+    {
+        $key = Config::get('simple-commerce.cart.key', 'simple-commerce-cart');
+        $site = $this->guessSiteFromRequest();
+
+        if (Site::hasMultiple() && ! Config::get('simple-commerce.cart.single_cart')) {
+            return $key . '-' . $site->handle();
+        }
+
+        return $key;
     }
 }

@@ -1,5 +1,5 @@
 ---
-title: 'Cart'
+title: "Cart"
 ---
 
 ## Cart Information
@@ -29,6 +29,11 @@ To get a count of the items in the customers' cart, use `{{ sc:cart:count }}`.
 
 To get the total quantity of products in the customers' cart, use `{{ sc:cart:quantityTotal }}`.
 
+When you're looping through line items, you may do some bits like this:
+
+- You can get the tax amount for the current line item with `{{ tax:amount }}`
+- You can get the total including tax with `{{ total_including_tax }}`
+
 ## Check if customer has a cart
 
 This tag allows you to check if the current customer has a cart attached to them. It'll return a boolean, meaning you can use it in one of Antlers' if statements.
@@ -43,22 +48,32 @@ This tag allows you to check if the current customer has a cart attached to them
 
 There's tags for each of the different totals in a cart.
 
-* `{{ sc:cart:total }}` - Returns the overall/grand total of the cart
-* `{{ sc:cart:grand_total }}` - Does the same thing as `sc:cart:total`
-* `{{ sc:cart:items_total }}` - Returns the total of all cart items.
-* `{{ sc:cart:shipping_total }}` - Returns the shipping total of the cart.
-* `{{ sc:cart:tax_total }}` - Returns the tax total of the cart.
-* `{{ sc:cart:coupon_total }}` - Returns the total amount saved from coupons.
+- `{{ sc:cart:total }}` - Returns the overall/grand total of the cart
+- `{{ sc:cart:grand_total }}` - Does the same thing as `sc:cart:total`
+- `{{ sc:cart:items_total }}` - Returns the total of all cart items.
+- `{{ sc:cart:shipping_total }}` - Returns the shipping total of the cart.
+- `{{ sc:cart:tax_total }}` - Returns the tax total of the cart.
+- `{{ sc:cart:coupon_total }}` - Returns the total amount saved from coupons.
 
-If you need the 'raw' value for any of these totals, meaning the integer, rather than the formatted currency amount, you can do this: `{{ sc:cart:raw_grand_total }}`
+If you need the 'raw' value for any of these totals, meaning the integer, rather than the formatted currency amount, you can do this: `{{ sc:cart:raw_grand_total }}`.
+
+If you find yourself needing to check if an order is 'free' (grand total is £0), then you can use the `{{ sc:cart:free }}` tag:
+
+```antlers
+{{ if {sc:cart:free} === true }}
+    You have nothing to pay!
+{{ else }}
+    You have stuff to pay - cough up!
+{{ /if }}
+```
 
 ## Add Item to Cart
 
 This tag allows you to add a product/variant to your cart. It's a [form tag](/tags#form-tags) so you need to provide a couple of parameters (form fields) when submitting:
 
-* `product` - The ID of the product you want to add to the cart.
-* `variant` - If applicable, the key of the variant you wish to add to the cart. Bear in mind, you will also need to provide the `product` with this.
-* `quantity` - The quantity of the cart item you're adding.
+- `product` - The ID of the product you want to add to the cart.
+- `variant` - If applicable, the key of the variant you wish to add to the cart. Bear in mind, you will also need to provide the `product` with this.
+- `quantity` - The quantity of the cart item you're adding.
 
 ```antlers
 {{ sc:cart:addItem }}

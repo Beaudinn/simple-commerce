@@ -8,12 +8,12 @@ Every store can have any number of shipping methods. For example, you could use 
 
 ## Configuration
 
-Shipping Methods can be configured on a site by site basis. This means you could have different stores for each country you sell in and for each of those countries, you could have different shipping methods.
+Shipping Methods can be configured on a site-by-site basis, helpful for if you have different version of your store for different countries.
 
 ```php
 'sites' => [
     'default' => [
-        // ...
+        ...
 
         'shipping' => [
             'methods' => [
@@ -24,7 +24,33 @@ Shipping Methods can be configured on a site by site basis. This means you could
 ],
 ```
 
-Similarly to the way you configure gateways, it's just an array of shipping method classes. You can register as many as you need.
+The `methods` array should contain an array of Shipping Method classes, with the `::class` syntax.
+
+### Default shipping method
+
+Normally, a shipping total isn't calculated until you've added a Shipping Method to the order. This is usually done after the customer has entered their shipping address and they're then offered an option as to which Shipping Method to use.
+
+However, there are some cases where you may need to calculate Shipping costs before a Shipping Method has been selected on an order. You may also want it for stores where there's only one shipping method available.
+
+In these cases, you may configure a default Shipping Method which will be used when calculating order totals if no Shipping Method has already been set.
+
+```php
+'sites' => [
+    'default' => [
+        ...
+
+        'shipping' => [
+            'default_method' => \DoubleThreeDigital\SimpleCommerce\Shipping\StandardPost::class,
+
+            'methods' => [
+                \DoubleThreeDigital\SimpleCommerce\Shipping\StandardPost::class,
+            ],
+        ],
+    ],
+],
+```
+
+> Warning: Simple Commerce will not check if the default method is 'available' for the customer before using it.
 
 ## Creating a shipping method
 
@@ -62,7 +88,7 @@ class FirstClass implements ShippingMethod
         return 0;
     }
 
-    public function checkAvailability(Address $address): bool
+    public function checkAvailability(Order $order, Address $address): bool
     {
         return true;
     }
@@ -71,30 +97,10 @@ class FirstClass implements ShippingMethod
 
 Here's a quick explanation of what each method does.
 
-* **name:** Should return the name of your shipping method (will be shown to customers)
-* **description:** Should return a description for your shipping method
-* **calculateCost:** This method should be where you return the cost of the shipping, based on the order's entry data.
-* **checkAvailability:** This method is where an Address object is passed in and you should return a boolean of whether or not you ship to that location.
-
-## Configuration
-
-Shipping Methods can be configured on a site-by-site basis, helpful for if you have different version of your store for different countries.
-
-```php
-'sites' => [
-    'default' => [
-        ...
-
-        'shipping' => [
-            'methods' => [
-                \DoubleThreeDigital\SimpleCommerce\Shipping\StandardPost::class,
-            ],
-        ],
-    ],
-],
-```
-
-The `methods` array should contain an array of Shipping Method classes, with the `::class` syntax.
+- **name:** Should return the name of your shipping method (will be shown to customers)
+- **description:** Should return a description for your shipping method
+- **calculateCost:** This method should be where you return the cost of the shipping, based on the order's entry data.
+- **checkAvailability:** This method is where an Address object is passed in and you should return a boolean of whether or not you ship to that location.
 
 ## Templating
 
@@ -141,3 +147,30 @@ After the customer has entered their address we can find available shipping meth
 ```
 
 After the customer has submitted that form, Simple Commerce will use that shipping method and update the order totals.
+
+## Marking an order as shipped
+
+As of Simple Commerce v2.4, you may now mark an order as 'Shipped'. You can either do this programatically or via the Control Panel.
+
+Marking an order as shipped will dispatch an event which you can use to send notifications to customers.
+
+### Programatically
+
+If you want to mark an order as Shipped from your own code, you may use the `markAsShipped` method available on `Order` objects.
+
+```php
+use DoubleThreeDigital\SimpleCommerce\Facades\Order;
+
+$order = Order::find(123);
+$order->markAsShipped();
+```
+
+### Via the Control Panel
+
+> **Note:** this will only show if you're using Collections & Entries for your orders. You'll need to build this yourself for custom [content drivers](/extending/content-drivers).
+
+In the Control Panel listing table for orders, find the order you wish to mark as shipped, click the three dots on the right, and select the 'Mark as Shipped' option.
+
+The action will only be available for order which have already been marked as paid.
+
+![Mark as Shipped](/img/simple-commerce/mark-as-shipped.png)

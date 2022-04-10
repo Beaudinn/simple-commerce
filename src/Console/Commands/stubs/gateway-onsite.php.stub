@@ -12,11 +12,6 @@ use Illuminate\Http\Request;
 
 class DummyClass extends BaseGateway implements Gateway
 {
-    public function name(): string
-    {
-        return 'Gateway Name';
-    }
-
     public function prepare(Prepare $data): Response
     {
         return new Response();
@@ -28,6 +23,11 @@ class DummyClass extends BaseGateway implements Gateway
     }
 
     public function purchaseRules(): array
+    {
+        return [];
+    }
+
+    public function purchaseMessages(): array
     {
         return [];
     }

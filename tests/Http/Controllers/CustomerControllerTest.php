@@ -11,13 +11,6 @@ class CustomerControllerTest extends TestCase
 {
     use SetupCollections;
 
-    public function setUp(): void
-    {
-        parent::setUp();
-
-        $this->setupCollections();
-    }
-
     /** @test */
     public function can_get_customer()
     {
@@ -130,7 +123,7 @@ class CustomerControllerTest extends TestCase
         $customer->fresh();
 
         $data = [
-            '_request' => CustomerUpdateFormRequest::class,
+            '_request' => encrypt(CustomerUpdateFormRequest::class),
             'vip' => true,
         ];
 

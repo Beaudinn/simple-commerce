@@ -2,8 +2,9 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Tests\Tags;
 
-use DoubleThreeDigital\SimpleCommerce\Support\Countries;
-use DoubleThreeDigital\SimpleCommerce\Support\Currencies;
+use DoubleThreeDigital\SimpleCommerce\Countries;
+use DoubleThreeDigital\SimpleCommerce\Currencies;
+use DoubleThreeDigital\SimpleCommerce\Regions;
 use DoubleThreeDigital\SimpleCommerce\Tags\SimpleCommerceTag as Tag;
 use DoubleThreeDigital\SimpleCommerce\Tags\SubTag;
 use DoubleThreeDigital\SimpleCommerce\Tests\TestCase;
@@ -62,12 +63,42 @@ class SimpleCommerceTagTest extends TestCase
     }
 
     /** @test */
+    public function can_get_countries_with_regions_inside()
+    {
+        $usage = $this->tag('{{ sc:countries }}{{ name }}|{{ regions limit="1" }}{{ name }}{{ /regions }},{{ /sc:countries }}');
+
+        $this->assertStringContainsString('Austria|Burgenland', $usage);
+    }
+
+    /** @test */
     public function can_get_currencies()
     {
         $usage = $this->tag('{{ sc:currencies }}{{ name }},{{ /sc:currencies }}');
 
         foreach (Currencies::toArray() as $currency) {
             $this->assertStringContainsString($currency['name'], $usage);
+        }
+    }
+
+    /** @test */
+    public function can_get_regions()
+    {
+        $usage = $this->tag('{{ sc:regions }}{{ name }} ({{ country:iso }}),{{ /sc:regions }}');
+
+        foreach (Regions::toArray() as $region) {
+            $this->assertStringContainsString($region['name'], $usage);
+            $this->assertStringContainsString($region['country_iso'], $usage);
+        }
+    }
+
+    /** @test */
+    public function can_get_regions_scoped_by_country()
+    {
+        $usage = $this->tag('{{ sc:regions country="GB" }}{{ name }} ({{ country:iso }}),{{ /sc:regions }}');
+
+        foreach (Regions::where('country_iso', 'GB')->toArray() as $region) {
+            $this->assertStringContainsString($region['name'], $usage);
+            $this->assertStringContainsString($region['country_iso'], $usage);
         }
     }
 

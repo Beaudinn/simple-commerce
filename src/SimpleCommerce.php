@@ -3,16 +3,20 @@
 namespace DoubleThreeDigital\SimpleCommerce;
 
 use Closure;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Statamic\Facades\Addon;
-use Statamic\Facades\Collection;
 use Statamic\Facades\Site;
 use Statamic\Statamic;
 
 class SimpleCommerce
 {
+    /** @var array */
     protected static $gateways = [];
     protected static $shippingMethods = [];
+
+    /** @var Contracts\TaxEngine */
+    protected static $taxEngine;
 
     public static $productPriceHook;
     public static $productVariantPriceHook;
@@ -20,7 +24,7 @@ class SimpleCommerce
     public static function version(): string
     {
         if (app()->environment('testing')) {
-            return 'v2.0.0';
+            return 'v3.0.0';
         }
 
         return Addon::get('doublethreedigital/simple-commerce')->version();
@@ -44,7 +48,7 @@ class SimpleCommerce
         });
     }
 
-    public static function gateways()
+    public static function gateways(): array
     {
         return collect(static::$gateways)
             ->map(function ($gateway) {
@@ -59,7 +63,7 @@ class SimpleCommerce
                     'display'         => isset($gateway[1]['display']) ? $gateway[1]['display'] : $instance->name(),
                     'purchaseRules'   => $instance->purchaseRules(),
                     'gateway-config'  => $gateway[1],
-                    'webhook_url'     => Str::finish(config('app.url'), '/').config('statamic.routes.action').'/simple-commerce/gateways/'.$handle.'/webhook',
+                    'webhook_url'     => Str::finish(config('app.url'), '/') . config('statamic.routes.action') . '/simple-commerce/gateways/' . $handle . '/webhook',
                 ];
             })
             ->toArray();
@@ -71,6 +75,13 @@ class SimpleCommerce
             $gateway,
             $config,
         ];
+    }
+
+    public static function bootTaxEngine()
+    {
+        return Statamic::booted(function () {
+            static::$taxEngine = config('simple-commerce.tax_engine');
+        });
     }
 
     public static function bootShippingMethods()
@@ -88,6 +99,26 @@ class SimpleCommerce
         });
     }
 
+    public static function setTaxEngine($taxEngine)
+    {
+        static::$taxEngine = $taxEngine;
+    }
+
+    public static function taxEngine(): Contracts\TaxEngine
+    {
+        return new static::$taxEngine;
+    }
+
+    public static function isUsingStandardTaxEngine(): bool
+    {
+        // TODO: figure out how we can actually set the engine for a specific test
+        if (app()->environment('testing')) {
+            return true;
+        }
+
+        return static::taxEngine() instanceof Tax\Standard\TaxEngine;
+    }
+
     public static function shippingMethods(string $site = null)
     {
         if ($site) {
@@ -100,30 +131,6 @@ class SimpleCommerce
     public static function registerShippingMethod(string $site, string $shippingMethod)
     {
         static::$shippingMethods[$site][] = $shippingMethod;
-    }
-
-    public static function freshOrderNumber()
-    {
-        $minimum = config('simple-commerce.minimum_order_number');
-
-        $query = Collection::find(SimpleCommerce::orderDriver()['collection'])
-            ->queryEntries()
-            ->orderBy('title', 'asc')
-            ->where('title', '!=', null)
-            ->get()
-            ->map(function ($order) {
-                $order->title = str_replace('Order ', '', $order->title);
-                $order->title = str_replace('#', '', $order->title);
-
-                return $order->title;
-            })
-            ->last();
-
-        if (! $query) {
-            return $minimum + 1;
-        }
-
-        return ((int) $query) + 1;
     }
 
     public static function orderDriver(): array
@@ -144,6 +151,19 @@ class SimpleCommerce
     public static function customerDriver(): array
     {
         return config('simple-commerce.content.customers');
+    }
+
+    /**
+     * This shouldn't be used as a Statamic::svg() replacement. It's only useful for grabbing
+     * icons from Simple Commerce's `resources/svgs` directory.
+     */
+    public static function svg($name)
+    {
+        if (File::exists(__DIR__ . '/../resources/svg/' . $name . '.svg')) {
+            return File::get(__DIR__ . '/../resources/svg/' . $name . '.svg');
+        }
+
+        return Statamic::svg($name);
     }
 
     public static function productPriceHook(Closure $callback): self

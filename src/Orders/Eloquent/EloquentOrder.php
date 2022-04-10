@@ -105,9 +105,11 @@ class EloquentOrder implements OrderContract
 		//$this->recalculate();
 
 		$resource = Runway::findResourceByModel($this->model);
+		$resource = Runway::findResource('model');
 
 
-		$data = $resource->augment($this->model);
+
+		$data = $resource->augment($this->model)->toAugmentedArray();
 		var_dump($data); die();
 		$data['items']  = collect($data['items'])->map(function ($item){
 			$item['product'] =  Product::find($item['product'])->toAugmentedArray();
@@ -335,6 +337,7 @@ class EloquentOrder implements OrderContract
 
 	public function addLineItem(array $lineItemData): array
 	{
+
 		$lineItem = $this->model->lineItems()->create($lineItemData);
 
 		if (!$this->withoutRecalculating) {

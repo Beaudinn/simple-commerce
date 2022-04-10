@@ -4,6 +4,7 @@ return [
 
     'actions' => [
         'mark_as_paid' => 'Mark As Paid',
+        'mark_as_shipped' => 'Mark As Shipped',
         'refund' => 'Refund',
     ],
 
@@ -43,9 +44,13 @@ return [
     ],
 
     'validation' => [
-        'entry_exists' => 'The entry :value does not exist.',
+        'product_exists' => 'The product :value does not exist.',
+        'coupon_exists' => 'The coupon :value does not exist.',
         'country_exists' => 'The selected country is not recognised.',
         'is_a_gateway' => ':value is not a gateway',
+        'region_exists' => 'The selected region is not recognised.',
+        'tax_category_exists' => 'Sorry, the tax category provided could not be found.',
+        'tax_zone_exists' => 'Sorry, the tax zone provided could not be found.',
         'valid_coupon' => 'Sorry, this coupon is not valid for your order.',
         'email_address_contains_spaces' => 'Your email may not contain any spaces.',
     ],

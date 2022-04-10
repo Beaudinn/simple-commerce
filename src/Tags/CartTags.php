@@ -3,6 +3,7 @@
 namespace DoubleThreeDigital\SimpleCommerce\Tags;
 
 use DoubleThreeDigital\SimpleCommerce\Orders\Cart\Drivers\CartDriver;
+use Statamic\Statamic;
 
 class CartTags extends SubTag
 {
@@ -27,9 +28,16 @@ class CartTags extends SubTag
 
         $cart = $this->getOrMakeCart();
 
+        // If we're using Statamic 3.2.*, we need to do it a little differently...
+        if (version_compare(Statamic::version(), '3.3.0', '<')) {
+            return $cart->lineItems()->count() >= 1
+                ? is_array($cart->toAugmentedArray()['items']) ? $cart->toAugmentedArray()['items'] : $cart->toAugmentedArray()['items']->value()
+                : [];
+        }
 
+        // Soon: $cart->entry()->items itself should work - the regex parser currently has a bug in it 😅
         return $cart->lineItems()->count() >= 1
-            ? is_array($cart->toAugmentedArray()['items']) ? $cart->toAugmentedArray()['items'] : $cart->toAugmentedArray()['items']
+            ? $cart->lineItems()->all()
             : [];
     }
 
@@ -56,6 +64,11 @@ class CartTags extends SubTag
         return $this->grandTotal();
     }
 
+    public function free()
+    {
+        return $this->rawGrandTotal() === 0;
+    }
+
     public function grandTotal()
     {
         if ($this->hasCart()) {
@@ -68,7 +81,7 @@ class CartTags extends SubTag
     public function rawGrandTotal()
     {
         if ($this->hasCart()) {
-            return $this->getCart()->get('grand_total');
+            return $this->getCart()->grandTotal();
         }
 
         return 0;
@@ -87,7 +100,7 @@ class CartTags extends SubTag
     public function rawItemsTotal()
     {
         if ($this->hasCart()) {
-            return $this->getCart()->get('items_total');
+            return $this->getCart()->itemsTotal();
         }
 
         return 0;
@@ -105,7 +118,7 @@ class CartTags extends SubTag
     public function rawShippingTotal()
     {
         if ($this->hasCart()) {
-            return $this->getCart()->get('shipping_total');
+            return $this->getCart()->shippingTotal();
         }
 
         return 0;
@@ -123,7 +136,7 @@ class CartTags extends SubTag
     public function rawTaxTotal()
     {
         if ($this->hasCart()) {
-            return $this->getCart()->get('tax_total');
+            return $this->getCart()->taxTotal();
         }
 
         return 0;
@@ -141,7 +154,7 @@ class CartTags extends SubTag
     public function rawCouponTotal()
     {
         if ($this->hasCart()) {
-            return $this->getCart()->get('coupon_total');
+            return $this->getCart()->couponTotal();
         }
 
         return 0;

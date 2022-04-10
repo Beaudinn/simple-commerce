@@ -31,6 +31,15 @@ class EnforceBlueprintFields
             ], 'sidebar');
         }
 
+        if (SimpleCommerce::isUsingStandardTaxEngine()) {
+            $event->blueprint->ensureField('tax_category', [
+                'type'      => 'tax_category',
+                'display'   => 'Tax Category',
+                'max_items' => 1,
+                'mode'      => 'select',
+            ], 'sidebar');
+        }
+
         return $event->blueprint;
     }
 

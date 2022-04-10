@@ -18,11 +18,15 @@ interface GatewayManager
 
     public function purchaseRules();
 
+    public function purchaseMessages();
+
     public function getCharge($order);
 
     public function refundCharge($order);
 
     public function callback(Request $request);
+
+    public function callbackUrl(array $extraParamters = []);
 
     public function webhook(Request $request);
 

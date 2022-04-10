@@ -16,7 +16,7 @@ class CookieDriver implements CartDriver
 {
     public function getCartKey(): string
     {
-        return Cookie::get(Config::get('simple-commerce.cart.key'));
+        return Cookie::get($this->getKey());
     }
 
     public function getCart(): Order
@@ -35,17 +35,15 @@ class CookieDriver implements CartDriver
 
     public function hasCart(): bool
     {
-        return Cookie::has(Config::get('simple-commerce.cart.key'));
+        return Cookie::has($this->getKey());
     }
 
     public function makeCart(): Order
     {
-        $cart = OrderAPI::create(
-            [],
-            $this->guessSiteFromRequest()
-        );
+        $cart = OrderAPI::make();
+        $cart->save();
 
-        Cookie::queue(config('simple-commerce.cart.key'), $cart->id);
+        Cookie::queue($this->getKey(), $cart->id);
 
         return $cart;
     }
@@ -62,7 +60,7 @@ class CookieDriver implements CartDriver
     public function forgetCart()
     {
         Cookie::queue(
-            Cookie::forget(Config::get('simple-commerce.cart.key'))
+            Cookie::forget($this->getKey())
         );
     }
 
@@ -72,14 +70,14 @@ class CookieDriver implements CartDriver
             return Site::get($site);
         }
 
-        foreach (Site::all() as $site) {
+        foreach (Site::all()->reverse() as $site) {
             if (Str::contains(request()->url(), $site->url())) {
                 return $site;
             }
         }
 
         if ($referer = request()->header('referer')) {
-            foreach (Site::all() as $site) {
+            foreach (Site::all()->reverse() as $site) {
                 if (Str::contains($referer, $site->url())) {
                     return $site;
                 }
@@ -87,5 +85,17 @@ class CookieDriver implements CartDriver
         }
 
         return Site::current();
+    }
+
+    protected function getKey(): string
+    {
+        $key = Config::get('simple-commerce.cart.key', 'simple-commerce-cart');
+        $site = $this->guessSiteFromRequest();
+
+        if (Site::hasMultiple() && ! Config::get('simple-commerce.cart.single_cart')) {
+            return $key . '-' . $site->handle();
+        }
+
+        return $key;
     }
 }

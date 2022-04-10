@@ -3,6 +3,7 @@
 namespace DoubleThreeDigital\SimpleCommerce\Fieldtypes;
 
 use DoubleThreeDigital\SimpleCommerce\Facades\Product;
+use DoubleThreeDigital\SimpleCommerce\Products\ProductType;
 use Statamic\Fields\Fieldtype;
 
 class ProductVariantFieldtype extends Fieldtype
@@ -43,12 +44,12 @@ class ProductVariantFieldtype extends Fieldtype
 
         $product = Product::find($value['product']);
 
-        if ($product->purchasableType() === 'product') {
+        if ($product->purchasableType() === ProductType::PRODUCT()) {
             return null;
         }
 
         $augmentedValue = $product
-            ->entry()
+            ->resource()
             ->augmentedValue('product_variants');
 
         if (! is_array($augmentedValue)) {

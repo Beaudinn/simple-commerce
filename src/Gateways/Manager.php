@@ -44,10 +44,14 @@ class Manager implements Contract
         $purchase = $this->resolve()->purchase(new Purchase($request, $order));
 
         if ($purchase->success()) {
-            Order::find($order->id())->data([
-                'gateway'      => $this->className,
-                'gateway_data' => $purchase->data(),
-            ])->save();
+            $order = Order::find($order->id());
+
+            $order->gateway([
+                'use' => $this->className,
+                'data' => $purchase->data(),
+            ]);
+
+            $order->save();
         } else {
             throw ValidationException::withMessages([$purchase->error()]);
         }
@@ -58,6 +62,11 @@ class Manager implements Contract
     public function purchaseRules()
     {
         return $this->resolve()->purchaseRules();
+    }
+
+    public function purchaseMessages()
+    {
+        return $this->resolve()->purchaseMessages();
     }
 
     public function getCharge($order)
@@ -75,14 +84,8 @@ class Manager implements Contract
     {
         $refund = $this->resolve()->refundCharge($order);
 
-        $cart = Order::find($order->id());
-
-        $cart->data([
-            'is_refunded'  => true,
-            'gateway_data' => array_merge($cart->get('gateway_data'), [
-                'refund' => $refund,
-            ]),
-        ])->save();
+        $order->fresh()->refund($refund);
+        $order->save();
 
         return $refund;
     }
@@ -94,6 +97,11 @@ class Manager implements Contract
         }
 
         return new GatewayCallbackMethodDoesNotExist("Gateway [{$this->className}] does not have a `callback` method.");
+    }
+
+    public function callbackUrl(array $extraParamters = [])
+    {
+        return $this->resolve()->callbackUrl($extraParamters);
     }
 
     public function webhook(Request $request)

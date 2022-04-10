@@ -5,7 +5,7 @@ namespace DoubleThreeDigital\SimpleCommerce\Tests\UpdateScripts;
 use DoubleThreeDigital\SimpleCommerce\Tests\RunsUpdateScripts;
 use DoubleThreeDigital\SimpleCommerce\Tests\SetupCollections;
 use DoubleThreeDigital\SimpleCommerce\Tests\TestCase;
-use DoubleThreeDigital\SimpleCommerce\UpdateScripts\MigrateLineItemMetadata;
+use DoubleThreeDigital\SimpleCommerce\UpdateScripts\v2_3\MigrateLineItemMetadata;
 use Illuminate\Support\Facades\File;
 use Statamic\Facades\Entry;
 
@@ -26,8 +26,6 @@ class MigrateLineItemMetadataTest extends TestCase
     /** @test */
     public function it_migrates_metadata_of_order_line_items()
     {
-        $this->setupOrders();
-
         $order = Entry::make()
             ->collection('orders')
             ->data([

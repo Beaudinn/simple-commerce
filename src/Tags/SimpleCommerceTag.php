@@ -2,8 +2,9 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Tags;
 
-use DoubleThreeDigital\SimpleCommerce\Support\Countries;
-use DoubleThreeDigital\SimpleCommerce\Support\Currencies;
+use DoubleThreeDigital\SimpleCommerce\Countries;
+use DoubleThreeDigital\SimpleCommerce\Currencies;
+use DoubleThreeDigital\SimpleCommerce\Regions;
 use Statamic\Tags\TagNotFoundException;
 use Statamic\Tags\Tags;
 
@@ -56,7 +57,11 @@ class SimpleCommerceTag extends Tags
 
     public function countries()
     {
-        $countries = Countries::values();
+        $countries = Countries::map(function ($country) {
+            return array_merge($country, [
+                'regions' => Regions::findByCountry($country)->toArray(),
+            ]);
+        })->sortBy('name')->values();
 
         if ($inclusions = $this->params->explode('only', [])) {
             $countries = $countries
@@ -73,6 +78,7 @@ class SimpleCommerceTag extends Tags
                         || in_array($country['name'], $exclusions));
                 });
             }
+
             if ($common = $this->params->explode('common', [])) {
                 $commonCountries = $countries
                     ->filter(function ($country) use ($common) {
@@ -105,6 +111,24 @@ class SimpleCommerceTag extends Tags
         return Currencies::toArray();
     }
 
+    public function regions()
+    {
+        $regions = collect(Regions::all());
+
+        if ($country = $this->params->get('country')) {
+            $regions->where('country_iso', $country);
+        }
+
+        return $regions
+            ->map(function ($region) {
+                return array_merge($region, [
+                    'country' => Countries::findByRegion($region)->first(),
+                ]);
+            })
+            ->sortBy('name')
+            ->toArray();
+    }
+
     public function errors()
     {
         if (! $this->hasErrors()) {
@@ -120,8 +144,12 @@ class SimpleCommerceTag extends Tags
         return $this->parseLoop($errors);
     }
 
-    public function hasErrors()
+    public function hasErrors(): bool
     {
-        return session()->has('errors');
+        if (! session()->has('errors')) {
+            return false;
+        }
+
+        return session()->get('errors')->hasBag('default');
     }
 }

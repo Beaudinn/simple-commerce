@@ -13,7 +13,6 @@ use DoubleThreeDigital\SimpleCommerce\Gateways\Response;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Http\Request;
 use Mollie\Api\MollieApiClient;
-use Mollie\Api\Resources\MethodCollection;
 use Mollie\Api\Types\PaymentStatus;
 use Statamic\Facades\Site;
 use Statamic\Statamic;
@@ -27,6 +26,16 @@ class MollieGateway extends BaseGateway implements Gateway
 		return 'Mollie';
 	}
 
+	public function methods(Order $order): MethodCollection
+	{
+		$this->setupMollie();
+		return $this->mollie->methods->allActive(['amount' => [
+			'currency' => Currency::get(Site::current())['code'],
+			'value' => (string)substr_replace($order->get('grand_total'), '.', -2, 0),
+		]]);
+
+	}
+
 	public function prepare(Prepare $data): Response
 	{
 		$this->setupMollie();
@@ -36,14 +45,14 @@ class MollieGateway extends BaseGateway implements Gateway
 		$payment = $this->mollie->payments->create([
 			'amount' => [
 				'currency' => Currency::get(Site::current())['code'],
-				'value' => (string)substr_replace($order->get('grand_total'), '.', -2, 0),
+				'value'    => (string) substr_replace($order->get('grand_total'), '.', -2, 0),
 			],
-			'description' => "Order {$order->title()}",
+			'description' => "Order {$order->get('title')}",
 			'redirectUrl' => $this->callbackUrl([
 				'_order_id' => $data->order()->id(),
 			]),
-			'webhookUrl' => $this->webhookUrl(),
-			'metadata' => [
+			'webhookUrl'  => $this->webhookUrl(),
+			'metadata'    => [
 				'order_id' => $order->id,
 			],
 		]);
@@ -53,57 +62,47 @@ class MollieGateway extends BaseGateway implements Gateway
 		], $payment->getCheckoutUrl());
 	}
 
-	protected function setupMollie()
-	{
-		$this->mollie = new MollieApiClient();
-		$this->mollie->setApiKey($this->config()->get('key'));
-
-		$this->mollie->addVersionString('Statamic/' . Statamic::version());
-		$this->mollie->addVersionString('SimpleCommerce/' . SimpleCommerce::version());
-	}
-
 	public function getCharge(Order $order): Response
 	{
 		$this->setupMollie();
 
-		$payment = $this->mollie->payments->get($order->data()['gateway_data']['id']);
+		$payment = $this->mollie->payments->get($order->get('gateway')['data']['id']);
 
 		return new Response(true, [
-			'id' => $payment->id,
-			'mode' => $payment->mode,
-			'amount' => $payment->amount,
-			'settlementAmount' => $payment->settlementAmount,
-			'amountRefunded' => $payment->amountRefunded,
-			'amountRemaining' => $payment->amountRemaining,
-			'description' => $payment->description,
-			'method' => $payment->method,
-			'status' => $payment->status,
-			'createdAt' => $payment->createdAt,
-			'paidAt' => $payment->paidAt,
-			'canceledAt' => $payment->canceledAt,
-			'expiresAt' => $payment->expiresAt,
-			'failedAt' => $payment->failedAt,
-			'profileId' => $payment->profileId,
-			'sequenceType' => $payment->sequenceType,
-			'redirectUrl' => $payment->redirectUrl,
-			'webhookUrl' => $payment->webhookUrl,
-			'mandateId' => $payment->mandateId,
-			'subscriptionId' => $payment->subscriptionId,
-			'orderId' => $payment->orderId,
-			'settlementId' => $payment->settlementId,
-			'locale' => $payment->locale,
-			'metadata' => $payment->metadata,
-			'details' => $payment->details,
+			'id'                              => $payment->id,
+			'mode'                            => $payment->mode,
+			'amount'                          => $payment->amount,
+			'settlementAmount'                => $payment->settlementAmount,
+			'amountRefunded'                  => $payment->amountRefunded,
+			'amountRemaining'                 => $payment->amountRemaining,
+			'description'                     => $payment->description,
+			'method'                          => $payment->method,
+			'status'                          => $payment->status,
+			'createdAt'                       => $payment->createdAt,
+			'paidAt'                          => $payment->paidAt,
+			'canceledAt'                      => $payment->canceledAt,
+			'expiresAt'                       => $payment->expiresAt,
+			'failedAt'                        => $payment->failedAt,
+			'profileId'                       => $payment->profileId,
+			'sequenceType'                    => $payment->sequenceType,
+			'redirectUrl'                     => $payment->redirectUrl,
+			'webhookUrl'                      => $payment->webhookUrl,
+			'mandateId'                       => $payment->mandateId,
+			'subscriptionId'                  => $payment->subscriptionId,
+			'orderId'                         => $payment->orderId,
+			'settlementId'                    => $payment->settlementId,
+			'locale'                          => $payment->locale,
+			'metadata'                        => $payment->metadata,
+			'details'                         => $payment->details,
 			'restrictPaymentMethodsToCountry' => $payment->restrictPaymentMethodsToCountry,
-			'_links' => $payment->_links,
-			'_embedded' => $payment->_embedded,
-			'isCancelable' => $payment->isCancelable,
-			'amountCaptured' => $payment->amountCaptured,
-			'applicationFeeAmount' => $payment->applicationFeeAmount,
-			'authorizedAt' => $payment->authorizedAt,
-			'expiredAt' => $payment->expiredAt,
-			'customerId' => $payment->customerId,
-			'countryCode' => $payment->countryCode,
+			'_links'                          => $payment->_links,
+			'_embedded'                       => $payment->_embedded,
+			'isCancelable'                    => $payment->isCancelable,
+			'amountCaptured'                  => $payment->amountCaptured,
+			'authorizedAt'                    => $payment->authorizedAt,
+			'expiredAt'                       => $payment->expiredAt,
+			'customerId'                      => $payment->customerId,
+			'countryCode'                     => $payment->countryCode,
 		]);
 	}
 
@@ -111,7 +110,7 @@ class MollieGateway extends BaseGateway implements Gateway
 	{
 		$this->setupMollie();
 
-		$payment = $this->mollie->payments->get($order->data()['gateway_data']['id']);
+		$payment = $this->mollie->payments->get($order->get('gateway')['data']['id']);
 		$payment->refund([]);
 
 		return new Response(true, []);
@@ -120,7 +119,7 @@ class MollieGateway extends BaseGateway implements Gateway
 	public function webhook(Request $request)
 	{
 		$this->setupMollie();
-		$mollieId = $request->id;
+		$mollieId = $request->get('id');
 
 		$payment = $this->mollie->payments->get($mollieId);
 
@@ -152,15 +151,12 @@ class MollieGateway extends BaseGateway implements Gateway
 		return true;
 	}
 
-	public function methods(Order $order): MethodCollection
+	protected function setupMollie()
 	{
+		$this->mollie = new MollieApiClient();
+		$this->mollie->setApiKey($this->config()->get('key'));
 
-		$this->setupMollie();
-
-		return $this->mollie->methods->allActive(['amount' => [
-			'currency' => Currency::get(Site::current())['code'],
-			'value' => (string)substr_replace($order->get('grand_total'), '.', -2, 0),
-		]]);
-
+		$this->mollie->addVersionString('Statamic/' . Statamic::version());
+		$this->mollie->addVersionString('SimpleCommerce/' . SimpleCommerce::version());
 	}
 }

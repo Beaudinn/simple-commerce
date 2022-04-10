@@ -22,28 +22,31 @@ class CalculatorTest extends TestCase
     {
         parent::setUp();
 
-        $this->setupCollections();
+        $this->useBasicTaxEngine();
     }
 
     /** @test */
     public function does_not_calculate_totals_if_order_is_paid()
     {
-        $product = Product::create([
-            'price' => 500,
-        ]);
+        $product = Product::make()->price(500);
+        $product->save();
 
-        $cart = Order::create([
-            'is_paid'     => true,
-            'grand_total' => 123,
-            'items_total' => 123,
-            'items'       => [
+        $cart = Order::make()
+            ->isPaid(true)
+            ->lineItems([
                 [
                     'product'  => $product->id,
                     'quantity' => 2,
                     'total'    => 123,
                 ],
-            ],
-        ]);
+            ])
+            ->grandTotal(123)
+            ->itemsTotal(123)
+            ->taxTotal(0)
+            ->shippingTotal(0)
+            ->couponTotal(0);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -61,24 +64,20 @@ class CalculatorTest extends TestCase
     /** @test */
     public function standard_product_price_is_calculated_correctly()
     {
-        Config::set('simple-commerce.sites.default.tax.rate', 0);
+        Config::set('simple-commerce.tax_engine_config.rate', 0);
 
-        $product = Product::create([
-            'price' => 500,
-        ]);
+        $product = Product::make()->price(500);
+        $product->save();
 
-        $cart = Order::create([
-            'is_paid'     => true,
-            'grand_total' => 500,
-            'items_total' => 500,
-            'items'       => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 1,
-                    'total'    => 500,
-                ],
+        $cart = Order::make()->isPaid(true)->lineItems([
+            [
+                'product'  => $product->id,
+                'quantity' => 1,
+                'total'    => 500,
             ],
-        ]);
+        ])->grandTotal(500)->itemsTotal(500)->taxTotal(0)->shippingTotal(0)->couponTotal(0);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -96,10 +95,10 @@ class CalculatorTest extends TestCase
     /** @test */
     public function variant_product_price_is_calculated_correctly()
     {
-        Config::set('simple-commerce.sites.default.tax.rate', 0);
+        Config::set('simple-commerce.tax_engine_config.rate', 0);
 
-        $product = Product::create([
-            'product_variants' => [
+        $product = Product::make()
+            ->productVariants([
                 'options' => [
                     [
                         'key'     => 'Red_Large',
@@ -107,22 +106,20 @@ class CalculatorTest extends TestCase
                         'price'   => 250,
                     ],
                 ],
-            ],
-        ]);
+            ]);
 
-        $cart = Order::create([
-            'is_paid'     => true,
-            'grand_total' => 250,
-            'items_total' => 250,
-            'items'       => [
-                [
-                    'product'  => $product->id,
-                    'variant'  => 'Red_Large',
-                    'quantity' => 1,
-                    'total'    => 250,
-                ],
+        $product->save();
+
+        $cart = Order::make()->isPaid(true)->lineItems([
+            [
+                'product'  => $product->id,
+                'variant'  => 'Red_Large',
+                'quantity' => 1,
+                'total'    => 250,
             ],
-        ]);
+        ])->grandTotal(250)->itemsTotal(250)->taxTotal(0)->shippingTotal(0)->couponTotal(0);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -140,24 +137,20 @@ class CalculatorTest extends TestCase
     /** @test */
     public function ensure_decimals_in_standard_product_prices_are_stripped_out()
     {
-        Config::set('simple-commerce.sites.default.tax.rate', 0);
+        Config::set('simple-commerce.tax_engine_config.rate', 0);
 
-        $product = Product::create([
-            'price' => 15.50,
-        ]);
+        $product = Product::make()->price(15.50);
+        $product->save();
 
-        $cart = Order::create([
-            'is_paid'     => true,
-            'grand_total' => 1550,
-            'items_total' => 1550,
-            'items'       => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 1,
-                    'total'    => 1550,
-                ],
+        $cart = Order::make()->isPaid(true)->lineItems([
+            [
+                'product'  => $product->id,
+                'quantity' => 1,
+                'total'    => 1550,
             ],
-        ]);
+        ])->grandTotal(1550)->itemsTotal(1550)->taxTotal(0)->shippingTotal(0)->couponTotal(0);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -175,10 +168,10 @@ class CalculatorTest extends TestCase
     /** @test */
     public function ensure_decimals_in_variant_product_prices_are_stripped_out()
     {
-        Config::set('simple-commerce.sites.default.tax.rate', 0);
+        Config::set('simple-commerce.tax_engine_config.rate', 0);
 
-        $product = Product::create([
-            'product_variants' => [
+        $product = Product::make()
+            ->productVariants([
                 'options' => [
                     [
                         'key'     => 'Red_Large',
@@ -186,22 +179,20 @@ class CalculatorTest extends TestCase
                         'price'   => 15.50,
                     ],
                 ],
-            ],
-        ]);
+            ]);
 
-        $cart = Order::create([
-            'is_paid'     => true,
-            'grand_total' => 1550,
-            'items_total' => 1550,
-            'items'       => [
-                [
-                    'product'  => $product->id,
-                    'variant'  => 'Red_Large',
-                    'quantity' => 1,
-                    'total'    => 1550,
-                ],
+        $product->save();
+
+        $cart = Order::make()->isPaid(true)->lineItems([
+            [
+                'product'  => $product->id,
+                'variant'  => 'Red_Large',
+                'quantity' => 1,
+                'total'    => 1550,
             ],
-        ]);
+        ])->grandTotal(1550)->itemsTotal(1550)->taxTotal(0)->shippingTotal(0)->couponTotal(0);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -217,130 +208,22 @@ class CalculatorTest extends TestCase
     }
 
     /** @test */
-    public function can_calculate_tax_correctly_when_included_in_prices()
+    public function can_calculate_correct_tax_amount()
     {
-        Config::set('simple-commerce.sites.default.tax.rate', 20);
-        Config::set('simple-commerce.sites.default.tax.included_in_prices', true);
+        Config::set('simple-commerce.tax_engine_config.rate', 20);
 
-        $product = Product::create([
-            'price' => 2000,
-        ]);
+        $product = Product::make()->price(1000);
+        $product->save();
 
-        $cart = Order::create([
-            'is_paid' => false,
-            'items'   => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 1,
-                    'total'    => 2000,
-                ],
+        $cart = Order::make()->isPaid(false)->lineItems([
+            [
+                'product'  => $product->id,
+                'quantity' => 2,
+                'total'    => 2000,
             ],
         ]);
 
-        $calculate = (new Calculator())->calculate($cart);
-
-        $this->assertIsArray($calculate);
-
-        $this->assertSame($calculate['grand_total'], 2000);
-        $this->assertSame($calculate['items_total'], 1667);
-        $this->assertSame($calculate['shipping_total'], 0);
-        $this->assertSame($calculate['tax_total'], 333);
-        $this->assertSame($calculate['coupon_total'], 0);
-
-        $this->assertSame($calculate['items'][0]['total'], 1667);
-    }
-
-    /**
-     * @test
-     * Inline with the fix suggested here: https://github.com/doublethreedigital/simple-commerce/pull/438#issuecomment-888498198
-     */
-    public function can_calulate_tax_correctly_when_not_included_in_prices()
-    {
-        Config::set('simple-commerce.sites.default.tax.rate', 10);
-        Config::set('simple-commerce.sites.default.tax.included_in_prices', false);
-
-        $product = Product::create([
-            'price' => 2000,
-        ]);
-
-        $cart = Order::create([
-            'is_paid' => false,
-            'items'   => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 1,
-                    'total'    => 2000,
-                ],
-            ],
-        ]);
-
-        $calculate = (new Calculator())->calculate($cart);
-
-        $this->assertIsArray($calculate);
-
-        $this->assertSame($calculate['grand_total'], 2200);
-        $this->assertSame($calculate['items_total'], 2000);
-        $this->assertSame($calculate['shipping_total'], 0);
-        $this->assertSame($calculate['tax_total'], 200);
-        $this->assertSame($calculate['coupon_total'], 0);
-
-        $this->assertSame($calculate['items'][0]['total'], 2000);
-    }
-
-    /** @test */
-    public function ensure_tax_is_subracted_from_item_total_if_included_in_price()
-    {
-        Config::set('simple-commerce.sites.default.tax.rate', 20);
-        Config::set('simple-commerce.sites.default.tax.included_in_prices', true);
-
-        $product = Product::create([
-            'price' => 1000,
-        ]);
-
-        $cart = Order::create([
-            'is_paid' => false,
-            'items'   => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 2,
-                    'total'    => 2000,
-                ],
-            ],
-        ]);
-
-        $calculate = (new Calculator())->calculate($cart);
-
-        $this->assertIsArray($calculate);
-
-        $this->assertSame($calculate['grand_total'], 2000);
-        $this->assertSame($calculate['items_total'], 1667);
-        $this->assertSame($calculate['shipping_total'], 0);
-        $this->assertSame($calculate['tax_total'], 333);
-        $this->assertSame($calculate['coupon_total'], 0);
-
-        $this->assertSame($calculate['items'][0]['total'], 1667);
-    }
-
-    /** @test */
-    public function ensure_tax_is_not_subtracted_from_item_total_if_not_included_in_prices()
-    {
-        Config::set('simple-commerce.sites.default.tax.rate', 20);
-        Config::set('simple-commerce.sites.default.tax.included_in_prices', false);
-
-        $product = Product::create([
-            'price' => 1000,
-        ]);
-
-        $cart = Order::create([
-            'is_paid' => false,
-            'items'   => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 2,
-                    'total'    => 2000,
-                ],
-            ],
-        ]);
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -356,63 +239,28 @@ class CalculatorTest extends TestCase
     }
 
     /** @test */
-    public function ensure_round_value_tax_is_calculated_correctly()
-    {
-        Config::set('simple-commerce.sites.default.tax.rate', 20);
-        Config::set('simple-commerce.sites.default.tax.included_in_prices', true);
-
-        $product = Product::create([
-            'price' => 2600,
-        ]);
-
-        $cart = Order::create([
-            'is_paid' => false,
-            'items'   => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 3,
-                    'total'    => 7800,
-                ],
-            ],
-        ]);
-
-        $calculate = (new Calculator())->calculate($cart);
-
-        $this->assertIsArray($calculate);
-
-        $this->assertSame($calculate['grand_total'], 7800);
-        $this->assertSame($calculate['items_total'], 6500);
-        $this->assertSame($calculate['shipping_total'], 0);
-        $this->assertSame($calculate['tax_total'], 1300);
-        $this->assertSame($calculate['coupon_total'], 0);
-
-        $this->assertSame($calculate['items'][0]['total'], 6500);
-    }
-
-    /** @test */
     public function ensure_shipping_price_is_applied_correctly()
     {
-        Config::set('simple-commerce.sites.default.tax.rate', 20);
+        Config::set('simple-commerce.tax_engine_config.rate', 20);
 
         Config::set('simple-commerce.sites.default.shipping.methods', [
             Postage::class,
         ]);
 
-        $product = Product::create([
-            'price' => 1000,
-        ]);
+        $product = Product::make()->price(1000);
+        $product->save();
 
-        $cart = Order::create([
-            'is_paid' => false,
-            'items'   => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 2,
-                    'total'    => 2000,
-                ],
+        $cart = Order::make()->isPaid(false)->lineItems([
+            [
+                'product'  => $product->id,
+                'quantity' => 2,
+                'total'    => 2000,
             ],
+        ])->merge([
             'shipping_method' => Postage::class,
         ]);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -430,37 +278,38 @@ class CalculatorTest extends TestCase
     /** @test */
     public function ensure_grand_total_is_calculated_correctly()
     {
-        Config::set('simple-commerce.sites.default.tax.rate', 20);
+        Config::set('simple-commerce.tax_engine_config.rate', 20);
 
         Config::set('simple-commerce.sites.default.shipping.methods', [
             Postage::class,
         ]);
 
-        $product = Product::create([
-            'price' => 1000,
-        ]);
+        $product = Product::make()->price(1000);
+        $product->save();
 
-        $coupon = Coupon::create([
-            'slug'               => 'half-price',
-            'title'              => 'Half Price',
-            'redeemed'           => 0,
-            'value'              => 50,
-            'type'               => 'percentage',
-            'minimum_cart_value' => null,
-        ])->save();
+        $coupon = Coupon::make()
+            ->code('half-price')
+            ->value(50)
+            ->type('percentage')
+            ->data([
+                'title'              => 'Half Price',
+                'redeemed'           => 0,
+                'minimum_cart_value' => null,
+            ]);
 
-        $cart = Order::create([
-            'is_paid' => false,
-            'items'   => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 2,
-                    'total'    => 2000,
-                ],
+        $coupon->save();
+
+        $cart = Order::make()->isPaid(false)->lineItems([
+            [
+                'product'  => $product->id,
+                'quantity' => 2,
+                'total'    => 2000,
             ],
+        ])->coupon($coupon->id)->merge([
             'shipping_method' => Postage::class,
-            'coupon' => $coupon->id,
         ]);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -478,33 +327,33 @@ class CalculatorTest extends TestCase
     /** @test */
     public function ensure_percentage_coupon_is_calculated_correctly_on_items_total()
     {
-        Config::set('simple-commerce.sites.default.tax.rate', 0);
+        Config::set('simple-commerce.tax_engine_config.rate', 0);
         Config::set('simple-commerce.sites.default.shipping.methods', []);
 
-        $product = Product::create([
-            'price' => 5000,
-        ]);
+        $product = Product::make()->price(5000);
+        $product->save();
 
-        $coupon = Coupon::create([
-            'slug'               => 'fifty-friday',
-            'title'              => 'Fifty Friday',
-            'redeemed'           => 0,
-            'value'              => 50,
-            'type'               => 'percentage',
-            'minimum_cart_value' => null,
-        ])->save();
+        $coupon = Coupon::make()
+            ->code('fifty-friday')
+            ->value(50)
+            ->type('percentage')
+            ->data([
+                'title'              => 'Fifty Friday',
+                'redeemed'           => 0,
+                'minimum_cart_value' => null,
+            ]);
 
-        $cart = Order::create([
-            'is_paid' => false,
-            'items'   => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 2,
-                    'total'    => 10000,
-                ],
+        $coupon->save();
+
+        $cart = Order::make()->isPaid(false)->lineItems([
+            [
+                'product'  => $product->id,
+                'quantity' => 2,
+                'total'    => 10000,
             ],
-            'coupon' => $coupon->id,
-        ]);
+        ])->coupon($coupon->id);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -522,33 +371,33 @@ class CalculatorTest extends TestCase
     /** @test */
     public function ensure_fixed_coupon_is_calculated_correctly_on_items_total()
     {
-        Config::set('simple-commerce.sites.default.tax.rate', 0);
+        Config::set('simple-commerce.tax_engine_config.rate', 0);
         Config::set('simple-commerce.sites.default.shipping.methods', []);
 
-        $product = Product::create([
-            'price' => 5000,
-        ]);
+        $product = Product::make()->price(5000);
+        $product->save();
 
-        $coupon = Coupon::create([
-            'slug'               => 'one-hundred-pence-off',
-            'title'              => 'One Hundred Pence Off (£1)',
-            'redeemed'           => 0,
-            'value'              => 100,
-            'type'               => 'fixed',
-            'minimum_cart_value' => null,
-        ])->save();
+        $coupon = Coupon::make()
+            ->code('one-hundred-pence-off')
+            ->value(100)
+            ->type('fixed')
+            ->data([
+                'title'              => 'One Hundred Pence Off (£1)',
+                'redeemed'           => 0,
+                'minimum_cart_value' => null,
+            ]);
 
-        $cart = Order::create([
-            'is_paid' => false,
-            'items'   => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 2,
-                    'total'    => 10000,
-                ],
+        $coupon->save();
+
+        $cart = Order::make()->isPaid(false)->lineItems([
+            [
+                'product'  => $product->id,
+                'quantity' => 2,
+                'total'    => 10000,
             ],
-            'coupon' => $coupon->id,
-        ]);
+        ])->coupon($coupon->id);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -569,30 +418,31 @@ class CalculatorTest extends TestCase
         Config::set('simple-commerce.sites.default.tax.rate', 20);
         Config::set('simple-commerce.sites.default.shipping.methods', []);
 
-        $product = Product::create([
-            'price' => 5000,
-        ]);
+        $product = Product::make()->price(5000);
+        $product->save();
 
-        $coupon = Coupon::create([
-            'slug'               => 'one-hundred-pence-off',
-            'title'              => 'One Hundred Pence Off (£1)',
-            'redeemed'           => 0,
-            'value'              => 100,
-            'type'               => 'percentage',
-            'minimum_cart_value' => null,
-        ])->save();
+        $coupon = Coupon::make()
+            ->code('one-hundred-pence-off')
+            ->value(100)
+            ->type('percentage')
+            ->data([
+                'title'              => 'One Hundred Pence Off (£1)',
+                'redeemed'           => 0,
+                'minimum_cart_value' => null,
+            ]);
 
-        $cart = Order::create([
-            'is_paid' => false,
-            'items'   => [
-                [
-                    'product'  => $product->id,
-                    'quantity' => 2,
-                    'total'    => 10000,
-                ],
+        $coupon->save();
+
+        $cart = Order::make()->isPaid(false)->lineItems([
+            [
+                'product'  => $product->id,
+                'quantity' => 2,
+                'total'    => 10000,
             ],
-            'coupon' => $coupon->id,
-        ]);
+        ])->coupon($coupon->id);
+
+        $cart->save();
+        $cart->fresh();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -610,26 +460,26 @@ class CalculatorTest extends TestCase
     /** @test */
     public function ensure_product_price_hook_is_used_to_determine_price_of_product()
     {
-        $product = Product::create([
-            'price' => 100,
-        ]);
+        $product = Product::make()->price(100);
+        $product->save();
 
         SimpleCommerce::productPriceHook(function ($order, $product) {
-            return $product->get('price') * 2;
+            return $product->price() * 2;
         });
 
-        $cart = Order::create([
-            'is_paid'     => false,
-            'grand_total' => 0,
-            'items_total' => 0,
-            'items'       => [
+        $cart = Order::make()
+            ->isPaid(false)
+            ->lineItems([
                 [
                     'product'  => $product->id,
                     'quantity' => 1,
                     'total'    => 0,
                 ],
-            ],
-        ]);
+            ])
+            ->grandTotal(0)
+            ->itemsTotal(0);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -642,13 +492,18 @@ class CalculatorTest extends TestCase
         $this->assertSame($calculate['coupon_total'], 0);
 
         $this->assertSame($calculate['items'][0]['total'], 200);
+
+        // Revert hook
+        SimpleCommerce::productPriceHook(function ($order, $product) {
+            return $product->price();
+        });
     }
 
     /** @test */
     public function ensure_product_variant_price_hook_is_used_to_determine_price_of_product_variant()
     {
-        $product = Product::create([
-            'product_variants' => [
+        $product = Product::make()
+            ->productVariants([
                 'variants' => [
                     [
                         'name'   => 'Colours',
@@ -670,26 +525,28 @@ class CalculatorTest extends TestCase
                         'price'   => 100,
                     ],
                 ],
-            ],
-        ]);
+            ]);
+
+        $product->save();
 
         SimpleCommerce::productVariantPriceHook(function ($order, $product, $variant) {
             return $variant->price() * 2;
         });
 
-        $cart = Order::create([
-            'is_paid'     => false,
-            'grand_total' => 0,
-            'items_total' => 0,
-            'items'       => [
+        $cart = Order::make()
+            ->isPaid(false)
+            ->lineItems([
                 [
                     'product'  => $product->id,
                     'variant'  => 'Red_Small',
                     'quantity' => 1,
                     'total'    => 0,
                 ],
-            ],
-        ]);
+            ])
+            ->grandTotal(0)
+            ->itemsTotal(0);
+
+        $cart->save();
 
         $calculate = (new Calculator())->calculate($cart);
 
@@ -702,6 +559,11 @@ class CalculatorTest extends TestCase
         $this->assertSame($calculate['coupon_total'], 0);
 
         $this->assertSame($calculate['items'][0]['total'], 200);
+
+        // Revert hook
+        SimpleCommerce::productVariantPriceHook(function ($order, $product, $variant) {
+            return $variant->price();
+        });
     }
 }
 
@@ -722,7 +584,7 @@ class Postage implements ShippingMethod
         return 250;
     }
 
-    public function checkAvailability(Address $address): bool
+    public function checkAvailability(OrderContract $order, Address $address): bool
     {
         return true;
     }

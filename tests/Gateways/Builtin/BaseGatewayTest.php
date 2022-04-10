@@ -6,17 +6,19 @@ use DoubleThreeDigital\SimpleCommerce\Events\OrderPaid;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order;
 use DoubleThreeDigital\SimpleCommerce\Facades\Product;
 use DoubleThreeDigital\SimpleCommerce\Gateways\BaseGateway;
+use DoubleThreeDigital\SimpleCommerce\Tests\SetupCollections;
 use DoubleThreeDigital\SimpleCommerce\Tests\TestCase;
 use Illuminate\Support\Facades\Event;
-use Statamic\Facades\Collection;
 
 class BaseGatewayTest extends TestCase
 {
+    use SetupCollections;
+
     public function setUp(): void
     {
         parent::setUp();
 
-        Collection::make('orders')->title('Order')->save();
+        $this->setupCollections();
     }
 
     /** @test */
@@ -26,29 +28,36 @@ class BaseGatewayTest extends TestCase
 
         $fakeGateway = new FakeOffsiteGateway();
 
-        $product = Product::create(['title' => 'Smth', 'price' => 1500, 'stock' => 10]);
+        $product = Product::make()
+            ->price(1500)
+            ->stock(10)
+            ->data([
+                'title' => 'Smth',
+            ]);
+
         $product->save();
 
-        $order = Order::create([
-            'items' => [
+        $order = Order::make()
+            ->lineItems([
                 [
                     'product' => $product->id(),
                     'quantity' => 1,
                     'total' => 1500,
                 ],
-            ],
-        ])->save();
+            ]);
+
+        $order->save();
 
         $markOrderAsPaid = $fakeGateway->markOrderAsPaid($order);
 
         // Assert order has been marked as paid
         $this->assertTrue($markOrderAsPaid);
-        $this->assertTrue($order->fresh()->get('is_paid'));
+        $this->assertTrue($order->fresh()->isPaid());
 
         Event::assertDispatched(OrderPaid::class);
 
         // Assert stock count has been updated
-        $this->assertSame($product->fresh()->get('stock'), 9);
+        $this->assertSame($product->fresh()->stock(), 9);
     }
 
     /** @test */
@@ -58,24 +67,30 @@ class BaseGatewayTest extends TestCase
 
         $fakeGateway = new FakeOnsiteGateway();
 
-        $product = Product::create(['title' => 'Smth', 'price' => 1500]);
+        $product = Product::make()
+            ->price(1500)
+            ->data([
+                'title' => 'Smth',
+            ]);
+
         $product->save();
 
-        $order = Order::create([
-            'items' => [
+        $order = Order::make()
+            ->lineItems([
                 [
                     'product' => $product->id(),
                     'quantity' => 1,
                     'total' => 1500,
                 ],
-            ],
-        ])->save();
+            ]);
+
+        $order->save();
 
         $markOrderAsPaid = $fakeGateway->markOrderAsPaid($order);
 
         // Assert order has been marked as paid
         $this->assertTrue($markOrderAsPaid);
-        $this->assertTrue($order->fresh()->get('is_paid'));
+        $this->assertTrue($order->fresh()->isPaid());
 
         Event::assertDispatched(OrderPaid::class);
     }
@@ -83,7 +98,7 @@ class BaseGatewayTest extends TestCase
 
 class FakeOnsiteGateway extends BaseGateway
 {
-    public function name()
+    public function name(): string
     {
         return 'Fake Onsite Gateway';
     }
@@ -96,7 +111,7 @@ class FakeOnsiteGateway extends BaseGateway
 
 class FakeOffsiteGateway extends BaseGateway
 {
-    public function name()
+    public function name(): string
     {
         return 'Fake Offsite Gateway';
     }

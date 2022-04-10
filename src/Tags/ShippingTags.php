@@ -2,7 +2,7 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Tags;
 
-use DoubleThreeDigital\SimpleCommerce\Facades\Currency;
+use DoubleThreeDigital\SimpleCommerce\Currency;
 use DoubleThreeDigital\SimpleCommerce\Facades\Shipping;
 use DoubleThreeDigital\SimpleCommerce\Orders\Cart\Drivers\CartDriver;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
@@ -24,7 +24,7 @@ class ShippingTags extends SubTag
                     return null;
                 }
 
-                if ($instance->checkAvailability($shipingAddress) === false) {
+                if ($instance->checkAvailability($order, $shipingAddress) === false) {
                     return null;
                 }
 

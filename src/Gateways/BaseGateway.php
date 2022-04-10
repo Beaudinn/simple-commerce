@@ -5,7 +5,9 @@ namespace DoubleThreeDigital\SimpleCommerce\Gateways;
 use DoubleThreeDigital\SimpleCommerce\Checkout\HandleStock;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\GatewayDoesNotSupportPurchase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class BaseGateway
 {
@@ -54,7 +56,7 @@ class BaseGateway
             '_error_redirect' => $this->errorRedirectUrl,
         ]);
 
-        return config('app.url').route('statamic.simple-commerce.gateways.callback', $data, false);
+        return config('app.url') . route('statamic.simple-commerce.gateways.callback', $data, false);
     }
 
     public function webhookUrl()
@@ -70,6 +72,16 @@ class BaseGateway
     public function displayName()
     {
         return $this->displayName;
+    }
+
+    public function name(): string
+    {
+        return Str::title(class_basename($this));
+    }
+
+    public function callback(Request $request): bool
+    {
+        return true;
     }
 
     public function isOffsiteGateway(): bool
@@ -91,24 +103,24 @@ class BaseGateway
         throw new GatewayDoesNotSupportPurchase("Gateway [{$this->handle}] does not support the 'purchase' method.");
     }
 
-    /**
-     * Should return any validation rules required for the gateway when submitting on-site purchases.
-     *
-     * @return array
-     */
-    public function purchaseRules(): array
-    {
-        return [];
-    }
+	/**
+	 * Should return any validation rules required for the gateway when submitting on-site purchases.
+	 *
+	 * @return array
+	 */
+	public function purchaseRules(): array
+	{
+		return [];
+	}
 
 	public function markOrderAsPaid(Order $order): bool
-    {
-        if ($this->isOffsiteGateway()) {
-            $this->handleStock($order);
-        }
+	{
+		if ($this->isOffsiteGateway()) {
+			$this->handleStock($order);
+		}
 
-        $order->markAsPaid();
+		$order->markAsPaid();
 
-        return true;
-    }
+		return true;
+	}
 }

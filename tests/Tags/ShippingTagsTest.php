@@ -35,14 +35,17 @@ class ShippingTagsTest extends TestCase
         SimpleCommerce::registerShippingMethod('default', RoyalMail::class);
         SimpleCommerce::registerShippingMethod('default', DPD::class);
 
-        $order = Order::create([
-            'shipping_name' => 'Santa',
-            'shipping_address' => 'Christmas Lane',
-            'shipping_city' => 'Snowcity',
-            'shipping_country' => 'North Pole',
-            'shipping_zip_code' => 'N0R P0L',
-            'shipping_region' => null,
-        ]);
+        $order = Order::make()
+            ->merge([
+                'shipping_name' => 'Santa',
+                'shipping_address' => 'Christmas Lane',
+                'shipping_city' => 'Snowcity',
+                'shipping_country' => 'North Pole',
+                'shipping_zip_code' => 'N0R P0L',
+                'shipping_region' => null,
+            ]);
+
+        $order->save();
 
         StaticCartDriver::use()->setCart($order);
 
@@ -73,7 +76,7 @@ class RoyalMail implements ShippingMethod
         return 0;
     }
 
-    public function checkAvailability(Address $address): bool
+    public function checkAvailability(OrderContract $order, Address $address): bool
     {
         return true;
     }
@@ -96,7 +99,7 @@ class DPD implements ShippingMethod
         return 0;
     }
 
-    public function checkAvailability(Address $address): bool
+    public function checkAvailability(OrderContract $order, Address $address): bool
     {
         return false;
     }
