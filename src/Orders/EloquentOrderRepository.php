@@ -91,7 +91,7 @@ class EloquentOrderRepository implements RepositoryContract
         $model->customer_id = optional($order->customer())->id();
         $model->coupon = $order->coupon();
         $model->gateway = $order->gateway();
-        $model->prices = $order->prices();
+        $model->prices = $order->get('prices');;
 
         $model->shipping_name = $order->get('shipping_name');
         $model->shipping_address = $order->get('shipping_address');

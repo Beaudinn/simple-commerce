@@ -113,6 +113,16 @@ class BaseGateway
 		return [];
 	}
 
+	/**
+	 * Should return any validation messages required for the gateway when submitting on-site purchases.
+	 *
+	 * @return array
+	 */
+	public function purchaseMessages(): array
+	{
+		return [];
+	}
+
 	public function markOrderAsPaid(Order $order): bool
 	{
 		if ($this->isOffsiteGateway()) {

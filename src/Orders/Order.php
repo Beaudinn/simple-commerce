@@ -19,6 +19,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Http\Resources\API\EntryResource;
+use Webhoek\Probo\Api\Resources\Price;
+use Webhoek\Probo\Api\Resources\PriceCollection;
+use Webhoek\Probo\Api\Resources\ResourceFactory;
 
 class    Order implements Contract
 {
@@ -190,6 +193,17 @@ class    Order implements Contract
 
 		return $this
 			->fluentlyGetOrSet('prices')
+			->getter(function ($prices) {
+				if (! $prices) {
+					return [];
+				}
+
+
+				return collect($prices)->mapWithKeys(function ($price){
+
+					return [ $price['delivery_date'] => ResourceFactory::createFromApiResult($price, new Price(app('probo.api.client')))];
+				});
+			})
 			->args(func_get_args());
 	}
 
@@ -302,6 +316,7 @@ class    Order implements Contract
 		$this->taxTotal($calculate['tax_total']);
 		$this->shippingTotal($calculate['shipping_total']);
 		$this->couponTotal($calculate['coupon_total']);
+		$this->prices($calculate['prices']);
 
 		$this->merge(Arr::except($calculate, 'items'));
 
@@ -390,7 +405,7 @@ class    Order implements Contract
 
 	public function toResource()
 	{
-		return new EntryResource($this->resource());
+		return $this->resource();// new EntryResource($this->resource());
 	}
 
 	public function toAugmentedArray(): array

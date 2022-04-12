@@ -14,7 +14,7 @@ Route::namespace('\DoubleThreeDigital\SimpleCommerce\Http\Controllers\Actions')-
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::get('/customer/{customer}', [CustomerController::class, 'index'])->name('customer.index');
 
-    //Route::middleware([EnsureFormParametersArriveIntact::class])->group(function () {
+    Route::middleware([EnsureFormParametersArriveIntact::class])->group(function () {
         Route::post('/cart', [CartController::class, 'update'])->name('cart.update');
         Route::delete('/cart', [CartController::class, 'destroy'])->name('cart.empty');
 
@@ -28,7 +28,7 @@ Route::namespace('\DoubleThreeDigital\SimpleCommerce\Http\Controllers\Actions')-
 
         Route::post('/coupon', [CouponController::class, 'store'])->name('coupon.store');
         Route::delete('/coupon', [CouponController::class, 'destroy'])->name('coupon.destroy');
-    //});
+    });
 
     Route::get('/gateways/{gateway}/callback', [GatewayCallbackController::class, 'index'])->name('gateways.callback');
     Route::post('/gateways/{gateway}/webhook', [GatewayWebhookController::class, 'index'])->name('gateways.webhook');
