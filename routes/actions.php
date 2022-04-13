@@ -30,6 +30,8 @@ Route::namespace('\DoubleThreeDigital\SimpleCommerce\Http\Controllers\Actions')-
         Route::delete('/coupon', [CouponController::class, 'destroy'])->name('coupon.destroy');
     });
 
+	Route::post('/probo/cart-items', [CartItemController::class, 'store'])->name('cart-items.probo.store');
+
     Route::get('/gateways/{gateway}/callback', [GatewayCallbackController::class, 'index'])->name('gateways.callback');
     Route::post('/gateways/{gateway}/webhook', [GatewayWebhookController::class, 'index'])->name('gateways.webhook');
 });

@@ -25,6 +25,7 @@ class CartItemController extends BaseActionController
 
 	public function store(StoreRequest $request)
 	{
+
 		$cart = $this->hasCart() ? $this->getCart() : $this->makeCart();
 		$product = Product::find($request->product);
 
@@ -147,6 +148,12 @@ class CartItemController extends BaseActionController
 				$item['variant'] = [
 					'variant' => $request->variant,
 					'product' => $request->product,
+				];
+			}
+
+			if ($request->has('calculation_input')) {
+				$item['probo'] = [
+					'calculation_input' => json_decode($request->calculation_input, true),
 				];
 			}
 

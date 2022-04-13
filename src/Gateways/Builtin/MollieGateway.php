@@ -12,6 +12,7 @@ use DoubleThreeDigital\SimpleCommerce\Gateways\BaseGateway;
 use DoubleThreeDigital\SimpleCommerce\Gateways\Prepare;
 use DoubleThreeDigital\SimpleCommerce\Gateways\Response;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
+use Mollie\Api\Resources\MethodCollection;
 use Illuminate\Http\Request;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Types\PaymentStatus;
@@ -31,11 +32,13 @@ class MollieGateway extends BaseGateway implements Gateway
 
 	public function methods(Order $order): MethodCollection
 	{
+
 		$this->setupMollie();
-		return $this->mollie->methods->allActive(['amount' => [
+
+		return $this->mollie->methods->allActive( $order->grandTotal() ? ['amount' => [
 			'currency' => Currency::get(Site::current())['code'],
-			'value' => (string)substr_replace($order->get('grand_total'), '.', -2, 0),
-		]]);
+			'value' => (string)substr_replace( $order->grandTotal(), '.', -2, 0),
+		]] : []);
 
 	}
 
@@ -60,6 +63,8 @@ class MollieGateway extends BaseGateway implements Gateway
 			],
 		]);
 
+
+		//return redirect($payment->getCheckoutUrl(), 303);
 		return new Response(true, [
 			'id' => $payment->id,
 		], $payment->getCheckoutUrl());
