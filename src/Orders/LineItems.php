@@ -24,6 +24,13 @@ trait LineItems
             ->args(func_get_args());
     }
 
+    public function proboItems(){
+    	return $this->lineItems()
+		    ->filter(function ($lineItem) {
+			    return isset($lineItem['probo'],$lineItem['probo']['calculation_input']);
+		    });
+    }
+
     public function lineItem($lineItemId): array
     {
         return $this->lineItems()->firstWhere('id', $lineItemId);
@@ -31,7 +38,7 @@ trait LineItems
 
     public function addLineItem(array $lineItemData): array
     {
-        $lineItemData['id'] = app('stache')->generateId();
+        $lineItemData['id'] = mt_rand(1000000000,9999999999); //app('stache')->generateId();
 
         $this->lineItems = $this->lineItems->push($lineItemData);
 
@@ -126,7 +133,9 @@ trait LineItems
             return $item['id'] === $lineItemId;
         });
 
+
         $this->save();
+
 
         if (! $this->withoutRecalculating) {
             $this->recalculate();

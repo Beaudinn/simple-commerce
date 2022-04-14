@@ -4,5 +4,5 @@ namespace DoubleThreeDigital\SimpleCommerce\Contracts;
 
 interface ConfigureProboProduct
 {
-    public function calculate( $data): object|null;
+    public function calculate( $data);
 }

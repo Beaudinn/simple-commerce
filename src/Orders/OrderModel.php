@@ -14,11 +14,11 @@ class OrderModel extends Model
     protected $table = 'orders';
 
     protected $fillable = [
-        'is_paid', 'is_shipped', 'is_refunded', 'items', 'grand_total', 'items_total', 'tax_total',
+        'is_paid', 'is_shipped', 'is_refunded', 'items', 'grand_total', 'rush_total', 'items_total', 'tax_total',
         'shipping_total', 'coupon_total', 'shipping_name', 'shipping_address', 'shipping_address_line2',
         'shipping_city', 'shipping_postal_code', 'shipping_region', 'shipping_country', 'billing_name',
         'billing_address', 'billing_address_line2', 'billing_city', 'billing_postal_code', 'billing_region',
-        'billing_country', 'use_shipping_address_for_billing', 'customer_id', 'coupon', 'gateway', 'data', 'prices'
+        'billing_country', 'use_shipping_address_for_billing', 'customer_id', 'coupon', 'gateway', 'data', 'deliveries', 'delivery_at', 'shipping_method'
     ];
 
     protected $casts = [
@@ -27,6 +27,7 @@ class OrderModel extends Model
         'is_refunded' => 'boolean',
         'items' => 'json',
         'grand_total' => 'integer',
+	    'rush_total' => 'integer',
         'items_total' => 'integer',
         'tax_total' => 'integer',
         'shipping_total' => 'integer',
@@ -34,7 +35,7 @@ class OrderModel extends Model
         'use_shipping_address_for_billing' => 'boolean',
         'gateway' => 'json',
         'data' => 'json',
-	    'prices' => 'json',
+	    'deliveries' => 'json',
     ];
 
     protected $appends = [

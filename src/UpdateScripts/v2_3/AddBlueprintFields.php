@@ -25,6 +25,7 @@ class AddBlueprintFields extends UpdateScript
             $this->console()->error("Could not migrate order blueprint. You're not using the entry content driver.");
         }
 
+        return;
         $orderCollection = SimpleCommerce::orderDriver()['collection'];
         $orderCollectionSingular = str_singular($orderCollection);
 

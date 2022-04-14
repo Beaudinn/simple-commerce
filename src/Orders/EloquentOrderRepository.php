@@ -39,14 +39,17 @@ class EloquentOrderRepository implements RepositoryContract
             ->isRefunded($model->is_refunded)
             ->lineItems($model->items)
             ->grandTotal($model->grand_total)
+	        ->rushTotal($model->rush_total)
             ->itemsTotal($model->items_total)
             ->taxTotal($model->tax_total)
             ->shippingTotal($model->shipping_total)
             ->couponTotal($model->coupon_total)
             ->customer($model->customer_id)
             ->coupon($model->coupon)
+	        ->deliveryAt($model->delivery_at)
+	        ->shippingMethod($model->shipping_method)
             ->gateway($model->gateway)
-	        ->prices($model->prices)
+	        ->deliveries($model->deliveries)
             ->data(collect($model->data)->merge([
                 'shipping_name' => $model->shipping_name,
                 'shipping_address' => $model->shipping_address,
@@ -84,14 +87,19 @@ class EloquentOrderRepository implements RepositoryContract
         $model->is_refunded = $order->isRefunded();
         $model->items = $order->lineItems();
         $model->grand_total = $order->grandTotal();
+        $model->rush_total = $order->rushTotal();
         $model->items_total = $order->itemsTotal();
         $model->tax_total = $order->taxTotal();
         $model->shipping_total = $order->shippingTotal();
         $model->coupon_total = $order->couponTotal();
         $model->customer_id = optional($order->customer())->id();
-        $model->coupon = $order->coupon();
+        $model->coupon = optional($order->coupon())->id();
+        //var_dump( $order->coupon());
         $model->gateway = $order->gateway();
-        $model->prices = $order->get('prices');;
+        $model->deliveries = $order->deliveries();
+        $model->delivery_at = $order->deliveryAt();
+
+        $model->shipping_method = $order->shippingMethod();
 
         $model->shipping_name = $order->get('shipping_name');
         $model->shipping_address = $order->get('shipping_address');
@@ -113,12 +121,14 @@ class EloquentOrderRepository implements RepositoryContract
 
         // We need to do this, otherwise we'll end up duplicating data unnecessarily sometimes.
         $model->data = $order->data()->except([
-            'is_paid', 'is_shipped', 'is_refunded', 'items', 'grand_total', 'items_total', 'tax_total',
+            'is_paid', 'is_shipped', 'is_refunded', 'items', 'grand_total', 'rush_total', 'items_total', 'tax_total',
             'shipping_total', 'coupon_total', 'shipping_name', 'shipping_address', 'shipping_address_line2',
             'shipping_city', 'shipping_postal_code', 'shipping_region', 'shipping_country', 'billing_name',
             'billing_address', 'billing_address_line2', 'billing_city', 'billing_postal_code', 'billing_region',
-            'billing_country', 'use_shipping_address_for_billing', 'customer_id', 'coupon', 'gateway',
+            'billing_country', 'use_shipping_address_for_billing', 'customer_id', 'coupon', 'deliveries', 'gateway', 'shipping_method'
         ]);
+
+
 
 
         $model->save();
@@ -131,12 +141,16 @@ class EloquentOrderRepository implements RepositoryContract
         $order->isRefunded = $model->is_refunded;
         $order->lineItems = collect($model->items);
         $order->grandTotal = $model->grand_total;
+        $order->rushTotal = $model->rush_total;
         $order->itemsTotal = $model->items_total;
         $order->taxTotal = $model->tax_total;
         $order->shippingTotal = $model->shipping_total;
         $order->couponTotal = $model->coupon_total;
         $order->customer = $model->customer_id ? Customer::find($model->customer_id) : null;
         $order->coupon = $model->coupon;
+        $order->delivery_at = $model->delivery_at;
+        $order->shipping_method = $model->shipping_method;
+        $order->deliveries = $model->deliveries;
         $order->gateway = $model->gateway;
 
         $order->data = collect($model->data)->merge([

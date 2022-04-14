@@ -103,34 +103,47 @@ class BaseGateway
         throw new GatewayDoesNotSupportPurchase("Gateway [{$this->handle}] does not support the 'purchase' method.");
     }
 
-	/**
-	 * Should return any validation rules required for the gateway when submitting on-site purchases.
-	 *
-	 * @return array
-	 */
-	public function purchaseRules(): array
-	{
-		return [];
-	}
+    /**
+     * Should return any validation rules required for the gateway when submitting on-site purchases.
+     *
+     * @return array
+     */
+    public function purchaseRules(): array
+    {
+        return [];
+    }
 
-	/**
-	 * Should return any validation messages required for the gateway when submitting on-site purchases.
-	 *
-	 * @return array
-	 */
-	public function purchaseMessages(): array
-	{
-		return [];
-	}
+    /**
+     * Should return any validation messages required for the gateway when submitting on-site purchases.
+     *
+     * @return array
+     */
+    public function purchaseMessages(): array
+    {
+        return [];
+    }
 
-	public function markOrderAsPaid(Order $order): bool
-	{
-		if ($this->isOffsiteGateway()) {
-			$this->handleStock($order);
-		}
+    /**
+     * Should return an array with text & a URL which will be displayed by the Gateway fieldtype in the CP.
+     *
+     * @return array
+     */
+    public function paymentDisplay($value): array
+    {
+        return [
+            'text' => isset($value['data']) ? $value['data']['id'] : $value['id'],
+            'url' => '#',
+        ];
+    }
 
-		$order->markAsPaid();
+    public function markOrderAsPaid(Order $order): bool
+    {
+        if ($this->isOffsiteGateway()) {
+            $this->handleStock($order);
+        }
 
-		return true;
-	}
+        $order->markAsPaid();
+
+        return true;
+    }
 }

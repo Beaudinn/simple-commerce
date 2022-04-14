@@ -20,16 +20,15 @@ class CartItemController extends BaseActionController
 	use CartDriver;
 
 	protected $reservedKeys = [
-		'product', 'quantity', 'variant', '_token', '_params', '_redirect',
+		'product', 'quantity', 'variant', '_token', '_redirect', '_error_redirect', '_request',
 	];
 
 	public function store(StoreRequest $request)
 	{
-
 		$cart = $this->hasCart() ? $this->getCart() : $this->makeCart();
 		$product = Product::find($request->product);
 
-		$items = $cart->has('items') ? $cart->get('items') : [];
+		$items = $cart->lineItems();
 
 		// Handle customer stuff..
 		if ($request->has('customer')) {
@@ -43,35 +42,56 @@ class CartItemController extends BaseActionController
 				}
 			} catch (CustomerNotFound $e) {
 				if (is_array($request->get('customer'))) {
-					$customer = Customer::create([
-						'name'  => isset($request->get('customer')['name']) ? $request->get('customer')['name'] : $request->get('customer')['email'],
-						'email' => $request->get('customer')['email'],
+					$customerData = [
 						'published' => true,
-					], $this->guessSiteFromRequest()->handle());
+					];
+
+					if ($request->get('customer')['name']) {
+						$customerData['name'] = $request->get('customer')['name'];
+					}
+
+					if ($request->get('customer')['first_name'] && $request->get('customer')['last_name']) {
+						$customerData['first_name'] = $request->get('customer')['first_name'];
+						$customerData['last_name'] = $request->get('customer')['last_name'];
+					}
+
+					$customer = Customer::make()
+						->email($request->get('customer')['email'])
+						->data($customerData);
+
+					$customer->save();
 				} elseif (is_string($request->get('customer'))) {
 					$customer = Customer::find($request->get('customer'));
 				}
 			}
 
-			$cart->data([
-				'customer' => $customer->id,
-			])->save();
+			$cart->customer($customer->id());
 		} elseif ($request->has('email')) {
 			try {
 				$customer = Customer::findByEmail($request->get('email'));
 			} catch (CustomerNotFound $e) {
-				$customer = Customer::create([
-					'name'  => $request->get('name') ?? $request->get('email'),
-					'email' => $request->get('email'),
+				$customerData = [
 					'published' => true,
-				], $this->guessSiteFromRequest()->handle());
+				];
+
+				if ($request->get('name')) {
+					$customerData['name'] = $request->get('name');
+				}
+
+				if ($request->get('first_name') && $request->get('last_name')) {
+					$customerData['first_name'] = $request->get('first_name');
+					$customerData['last_name'] = $request->get('last_name');
+				}
+
+				$customer = Customer::make()
+					->email($request->get('email'))
+					->data($customerData);
+
+				$customer->save();
 			}
 
-			$cart->data([
-				'customer' => $customer->id,
-			])->save();
+			$cart->customer($customer->id());
 		}
-
 
 		// Ensure there's enough stock to fulfill the customer's quantity
 		if ($product->purchasableType() === ProductType::PRODUCT()) {
@@ -101,23 +121,23 @@ class CartItemController extends BaseActionController
 
 			$hasPurchasedPrerequisiteProduct = $customer->orders()
 					->filter(function ($order) {
-						return $order->get('is_paid') === true;
+						return $order->isPaid() === true;
 					})
 					->filter(function ($order) use ($product) {
-						return collect($order->get('items'))
+						return $order->lineItems()
 								->where('product', $product->get('prerequisite_product'))
 								->count() > 0;
 					})
 					->count() > 0;
 
 			if (! $hasPurchasedPrerequisiteProduct) {
-				return $this->withErrors($request, __("Before purchasing this product, you must purchase {$prerequisiteProduct->title()} first."));
+				return $this->withErrors($request, __("Before purchasing this product, you must purchase {$prerequisiteProduct->get('title')} first."));
 			}
 		}
 
 		// Ensure the product doesn't already exist in the cart
-		$alreadyExistsQuery = collect($items);
-		$metadata = Arr::except($request->all(), $this->reservedKeys);
+		$alreadyExistsQuery = $items;
+		$metadata = Arr::only($request->all(), config('simple-commerce.field_whitelist.line_items'));
 
 		if ($request->has('variant')) {
 			$alreadyExistsQuery = $alreadyExistsQuery->where('variant', [
@@ -137,7 +157,6 @@ class CartItemController extends BaseActionController
 				'quantity' => (int) $alreadyExistsQuery->first()['quantity'] + $request->quantity,
 			]);
 		} else {
-
 			$item = [
 				'product'  => $request->product,
 				'quantity' => (int) $request->quantity,
@@ -153,6 +172,7 @@ class CartItemController extends BaseActionController
 
 			if ($request->has('calculation_input')) {
 				$item['probo'] = [
+					'code' => $request->product_id,
 					'calculation_input' => json_decode($request->calculation_input, true),
 				];
 			}
@@ -163,7 +183,6 @@ class CartItemController extends BaseActionController
 					'metadata' => $metadata,
 				]
 			);
-
 
 			$cart->addLineItem($item);
 		}
@@ -192,7 +211,7 @@ class CartItemController extends BaseActionController
 				[
 					'metadata' => array_merge(
 						isset($lineItem['metadata']) ? $lineItem['metadata'] : [],
-						Arr::except($request->all(), $this->reservedKeys),
+						Arr::only($request->all(), config('simple-commerce.field_whitelist.line_items')),
 					),
 				]
 			),

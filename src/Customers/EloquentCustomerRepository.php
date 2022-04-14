@@ -34,7 +34,7 @@ class EloquentCustomerRepository implements RepositoryContract
             ->resource($model)
             ->id($model->id)
             ->email($model->email)
-            ->data(array_merge($model->data, [
+            ->data(array_merge($model->data ?? [], [
                 'name' => $model->name,
             ]));
     }

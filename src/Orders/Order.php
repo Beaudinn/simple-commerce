@@ -2,6 +2,8 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Orders;
 
+use Carbon\Carbon;
+use Composer\Package\Loader\ValidatingArrayLoader;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Calculator as CalculatorContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Coupon as CouponContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Customer as CustomerContract;
@@ -34,6 +36,7 @@ class    Order implements Contract
 	public $isRefunded;
 	public $lineItems;
 	public $grandTotal;
+	public $rushTotal;
 	public $itemsTotal;
 	public $taxTotal;
 	public $shippingTotal;
@@ -42,7 +45,9 @@ class    Order implements Contract
 	public $coupon;
 	public $gateway;
 	public $data;
-	public $prices;
+	public $deliveries;
+	public $delivery_at;
+	public $shipping_method;
 	public $resource;
 
 	protected $withoutRecalculating = false;
@@ -55,10 +60,14 @@ class    Order implements Contract
 		$this->lineItems = collect();
 
 		$this->grandTotal = 0;
+		$this->rushTotal = 0;
 		$this->itemsTotal = 0;
 		$this->taxTotal = 0;
 		$this->shippingTotal = 0;
 		$this->couponTotal = 0;
+
+		$this->delivery_at = null;
+		$this->shipping_method = null;
 
 		$this->data = collect();
 	}
@@ -105,6 +114,13 @@ class    Order implements Contract
 			->args(func_get_args());
 	}
 
+	public function rushTotal($grandTotal = null)
+	{
+		return $this
+			->fluentlyGetOrSet('rushTotal')
+			->args(func_get_args());
+	}
+
 	public function itemsTotal($itemsTotal = null)
 	{
 		return $this
@@ -146,6 +162,18 @@ class    Order implements Contract
 					return $value->id();
 				}
 
+				return $value;
+			})
+			->getter(function ($value){
+				if (! $value) {
+					return null;
+				}
+
+
+				if ($value instanceof CustomerContract) {
+					return $value;
+				}
+
 				return Customer::find($value);
 			})
 			->args(func_get_args());
@@ -164,10 +192,40 @@ class    Order implements Contract
 					return $value->id();
 				}
 
+				return $value;
+			})
+			->getter(function ($value){
+				if (! $value) {
+					return null;
+				}
 				return Coupon::find($value);
 			})
 			->args(func_get_args());
 	}
+
+	public function deliveryAt($delivery_at = null)
+	{
+		return $this
+			->fluentlyGetOrSet('delivery_at')
+			->getter(function ($value){
+
+				if($value instanceof Carbon){
+					return $value->format('Y-m-d');
+				}
+
+				return Carbon::parse($value)->format('Y-m-d');
+			})
+			->args(func_get_args());
+	}
+
+
+	public function shippingMethod($shipping_method = null)
+	{
+		return $this
+			->fluentlyGetOrSet('shipping_method')
+			->args(func_get_args());
+	}
+
 
 	public function gateway($gateway = null)
 	{
@@ -189,22 +247,96 @@ class    Order implements Contract
 		return null;
 	}
 
-	public function prices(){
+	public function rushprices(){
+
+
+		$rush_prices = $this->lineItems()->map(function ($item){
+			return $item['rush_prices'] ?? [];
+		})->flatten(1)->groupBy(function ($item){
+			return Carbon::parse($item['delivery_date'])->format('Y-m-d');
+		})->sortBy(function ($item, $key) {
+			return $key;
+		});
+
+		$rush_prices = $rush_prices->map(function ($prices) {
+
+			$total = $prices->sum(function ($price){
+
+				return $price['prices_per_product']['purchase_rush_surcharge'] ?? 0;
+			});
+			$deliver_date = Carbon::parse($prices->first()['delivery_date']);
+			if ($deliver_date->isTomorrow()) {
+				$delivery_date_formatted = ucfirst($deliver_date->translatedFormat('\M\o\r\g\e\n d  F'));;// . ' - ' . Date::now()->hour . ' --- ' . $hours;
+			} else {
+				$delivery_date_formatted = ucfirst($deliver_date->translatedFormat('l d  F'));// . ' - ' . Date::now()->hour . ' --- ' . $hours;
+			}
+
+			return (object) [
+				'delivery_date_formatted' => $delivery_date_formatted,
+				'delivery_date' => Carbon::parse($prices->first()['delivery_date']),
+				'shipping_date' => Carbon::parse($prices->first()['shipping_date']),
+				'production_hours' => $prices->first()['production_hours'],
+				'price' => floatval($total),
+				'product_count' => count($prices),
+			];
+		});
+
+
+		//$rush_prices = $rush_prices->filter(function ($value, $key) {
+		//	return $value['product_count'] == count($this->lineItems());
+		//});
+
+		return $rush_prices;
+	}
+
+	public function deliveries($deliveries = null){
 
 		return $this
-			->fluentlyGetOrSet('prices')
-			->getter(function ($prices) {
-				if (! $prices) {
-					return [];
-				}
-
-
-				return collect($prices)->mapWithKeys(function ($price){
-
-					return [ $price['delivery_date'] => ResourceFactory::createFromApiResult($price, new Price(app('probo.api.client')))];
-				});
-			})
+			->fluentlyGetOrSet('deliveries')
+			//->getter(function ($deliveries) {
+			//	if (! $deliveries) {
+			//		return [];
+			//	}
+			//	return collect($deliveries)->mapWithKeys(function ($delivery, $key){
+			//
+			//		var_dump($delivery, $key); die();
+			//		$delivery['prices'] = (object) $delivery['prices'];
+			//		return [$key =>  (object) $delivery];
+			//	});
+			//})
 			->args(func_get_args());
+	}
+
+
+	public function getDeliveries($date){
+
+		if(!isset($this->deliveries()[$date])){
+
+			//get custom shipping prijse from probo
+			return  [];
+		}
+
+		$deliveries = [];
+		foreach ($this->deliveries()[$date] as $array){
+			$array['prices'] = (object) $array['prices'];
+			$array = (object) $array;
+			$overwrite = config('simple-commerce.shipping_methods_data.'.$array->shipping_method_api_code, []);
+
+			$array->prices->sales_price = $array->prices->purchase_price + (isset($overwrite['margin']) ? $overwrite['margin'] : 0);
+			$deliveries[] = (object) array_merge((array) $array, (array) $overwrite);
+
+		}
+		return $deliveries;
+	}
+
+	public function getShipping($shippingMethod = null){
+
+		if(!$shippingMethod)
+			$shippingMethod = $this->shippingMethod();
+
+		return collect($this->getDeliveries($this->deliveryAt()))->first(function ($delivery) use($shippingMethod){
+			return $delivery->shipping_method_api_code == $shippingMethod;
+		});
 	}
 
 	public function resource($resource = null)
@@ -312,17 +444,44 @@ class    Order implements Contract
 		$this->lineItems($calculate['items']);
 
 		$this->grandTotal($calculate['grand_total']);
+		$this->rushTotal($calculate['rush_total']);
 		$this->itemsTotal($calculate['items_total']);
 		$this->taxTotal($calculate['tax_total']);
 		$this->shippingTotal($calculate['shipping_total']);
 		$this->couponTotal($calculate['coupon_total']);
-		$this->prices($calculate['prices']);
+		$this->deliveries($calculate['deliveries']);
+
 
 		$this->merge(Arr::except($calculate, 'items'));
 
 		$this->save();
 
 		return $this;
+	}
+
+
+	public function setDeliveryAt(string $date)
+	{
+		$this->deliveryAt($date);
+
+		$this->save();
+
+		if (! $this->withoutRecalculating) {
+			$this->recalculate();
+		}
+	}
+
+	public function setShippingMethod(string $shipping_method)
+	{
+
+
+		$this->shippingMethod($shipping_method);
+
+		$this->save();
+
+		if (! $this->withoutRecalculating) {
+			$this->recalculate();
+		}
 	}
 
 	public function collection(): string
@@ -379,6 +538,7 @@ class    Order implements Contract
 		$this->isPaid = $freshOrder->isPaid;
 		$this->isShipped = $freshOrder->isShipped;
 		$this->lineItems = $freshOrder->lineItems;
+		$this->rushTotal = $freshOrder->rushTotal;
 		$this->grandTotal = $freshOrder->grandTotal;
 		$this->itemsTotal = $freshOrder->itemsTotal;
 		$this->taxTotal = $freshOrder->taxTotal;
@@ -388,7 +548,9 @@ class    Order implements Contract
 		$this->coupon = $freshOrder->coupon;
 		$this->gateway = $freshOrder->gateway;
 		$this->data = $freshOrder->data;
-		$this->prices = $freshOrder->prices;
+		$this->deliveries = $freshOrder->deliveries;
+		$this->delivery_at = $freshOrder->delivery_at;
+		$this->shipping_method = $freshOrder->shipping_method;
 		$this->resource = $freshOrder->resource;
 
 		return $this;
