@@ -73,8 +73,8 @@
 
 <script>
 import GridRow from '../../statamic/Row'
-import SortableList from '../../../../vendor/statamic/cms/resources/js/components/sortable/SortableList'
-import GridHeaderCell from '../../../../vendor/statamic/cms/resources/js/components/fieldtypes/grid/HeaderCell'
+import SortableList from '../../../../../../../vendor/statamic/cms/resources/js/components/sortable/SortableList'
+import GridHeaderCell from '../../../../../../../vendor/statamic/cms/resources/js/components/fieldtypes/grid/HeaderCell'
 import View from '../../statamic/View'
 
 export default {

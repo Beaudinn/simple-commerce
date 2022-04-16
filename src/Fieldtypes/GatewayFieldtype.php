@@ -53,8 +53,8 @@ class GatewayFieldtype extends Fieldtype
 
             'actions' => $actions,
             'action_url' => cp_route(
-                'collections.entries.actions.run',
-                $this->field->parent()->collection->handle()
+	            'collections.entries.actions.run',
+	            'gateways',//$this->field->parent()->collection->handle()
             ),
         ];
     }

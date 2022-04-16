@@ -13,7 +13,7 @@ interface Gateway
 
     public function prepare(Prepare $data): Response;
 
-    public function purchase(Purchase $data): Response;
+    public function purchase(Purchase $data);
 
     public function purchaseRules(): array;
 

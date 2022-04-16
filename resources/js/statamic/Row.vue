@@ -38,7 +38,7 @@
 <script>
 // import GridCell from '../../../vendor/statamic/cms/resources/js/components/fieldtypes/grid/Cell';
 import GridCell from './Cell'
-import { ValidatesFieldConditions } from '../../../vendor/statamic/cms/resources/js/components/field-conditions/FieldConditions.js';
+import { ValidatesFieldConditions } from '../../../../../../vendor/statamic/cms/resources/js/components/field-conditions/FieldConditions.js';
 
 export default {
 

@@ -50,6 +50,7 @@ class BaseGateway
 
     public function callbackUrl(array $extraParamters = [])
     {
+
         $data = array_merge($extraParamters, [
             'gateway'         => $this->handle,
             '_redirect'       => $this->redirectUrl,
@@ -98,7 +99,7 @@ class BaseGateway
      *
      * @throws GatewayDoesNotSupportPurchase
      */
-    public function purchase(Purchase $data): Response
+    public function purchase(Purchase $data)
     {
         throw new GatewayDoesNotSupportPurchase("Gateway [{$this->handle}] does not support the 'purchase' method.");
     }

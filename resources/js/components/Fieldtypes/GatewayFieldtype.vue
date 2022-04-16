@@ -37,7 +37,7 @@
 </template>
 
 <script>
-// import HasActions from '../../../../vendor/statamic/cms/resources/js/components/data-list/HasActions';
+// import HasActions from '../../../../../../../vendor/statamic/cms/resources/js/components/data-list/HasActions';
 
 export default {
     name: 'gateway-fieldtype',

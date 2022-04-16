@@ -26,6 +26,7 @@ class BaseActionController extends Controller
             ]);
         }
 
+
         return $request->_redirect ?
             redirect($request->_redirect)->with($data)
             : back()->with($data);

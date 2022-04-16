@@ -6,10 +6,12 @@ use DoubleThreeDigital\SimpleCommerce\Contracts\Gateway;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use DoubleThreeDigital\SimpleCommerce\Currency;
 use DoubleThreeDigital\SimpleCommerce\Events\PostCheckout;
+use DoubleThreeDigital\SimpleCommerce\Exceptions\GatewayDoesNotSupportPurchase;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\OrderNotFound;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderFacade;
 use DoubleThreeDigital\SimpleCommerce\Gateways\BaseGateway;
 use DoubleThreeDigital\SimpleCommerce\Gateways\Prepare;
+use DoubleThreeDigital\SimpleCommerce\Gateways\Purchase;
 use DoubleThreeDigital\SimpleCommerce\Gateways\Response;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Mollie\Api\Resources\MethodCollection;
@@ -17,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Types\PaymentStatus;
+use PayPalCheckoutSdk\Orders\OrdersGetRequest;
 use Statamic\Facades\Site;
 use Statamic\Statamic;
 
@@ -25,8 +28,9 @@ class MollieGateway extends BaseGateway implements Gateway
 
     protected $mollie;
 
-	public function methods(Order $order): MethodCollection
+	public function methods($data): MethodCollection
 	{
+		$order = $data->order();
 
 		$this->setupMollie();
 
@@ -44,15 +48,18 @@ class MollieGateway extends BaseGateway implements Gateway
 
     public function prepare(Prepare $data): Response
     {
+
         $this->setupMollie();
 
         $order = $data->order();
 
+        //TODO create mollie order just like drukhoek dose
         $payment = $this->mollie->payments->create([
             'amount' => [
                 'currency' => Currency::get(Site::current())['code'],
                 'value'    => (string) substr_replace($order->grandTotal(), '.', -2, 0),
             ],
+            'method' => ($data->request() && isset($data->request()['payment_method'])) ? $data->request()['payment_method'] : NULL,
             'description' => "Order {$order->get('title')}",
             'redirectUrl' => $this->callbackUrl([
                 '_order_id' => $data->order()->id(),
@@ -62,6 +69,7 @@ class MollieGateway extends BaseGateway implements Gateway
                 'order_id' => $order->id,
             ],
         ]);
+
 
         return new Response(true, [
             'id' => $payment->id,
@@ -171,7 +179,7 @@ class MollieGateway extends BaseGateway implements Gateway
 
     public function isOffsiteGateway(): bool
     {
-        return true;
+        return false;
     }
 
     public function paymentDisplay($value): array
@@ -190,6 +198,32 @@ class MollieGateway extends BaseGateway implements Gateway
             'url' => "https://www.mollie.com/dashboard/{$mollieOrganisation}/payments/{$molliePayment}",
         ];
     }
+
+	public function purchase(Purchase $data)
+	{
+
+		$this->setupMollie();
+		$order = $data->order();
+
+		$payment = $this->mollie->payments->create([
+			'amount' => [
+				'currency' => Currency::get(Site::current())['code'],
+				'value'    => (string) substr_replace($order->grandTotal(), '.', -2, 0),
+			],
+			'description' => "Order {$order->get('title')}",
+			'redirectUrl' => $this->callbackUrl([
+				'_order_id' => $data->order()->id(),
+			]),
+			'webhookUrl'  => $this->webhookUrl(),
+			'metadata'    => [
+				'order_id' => $order->id,
+			],
+		]);
+		return redirect($payment->getCheckoutUrl(), 303);
+		return new Response(true, [
+			'id' => $payment->id,
+		], $payment->getCheckoutUrl());
+	}
 
     protected function setupMollie()
     {

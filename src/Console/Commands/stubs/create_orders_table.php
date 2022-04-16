@@ -20,6 +20,7 @@ class CreateOrdersTable extends Migration
             $table->boolean('is_refunded')->default(false);
             $table->json('items')->nullable();
             $table->integer('grand_total')->default(0);
+            $table->integer('rush_total')->default(0);
             $table->integer('items_total')->default(0);
             $table->integer('tax_total')->default(0);
             $table->integer('shipping_total')->default(0);
@@ -39,10 +40,11 @@ class CreateOrdersTable extends Migration
             $table->string('billing_region')->nullable();
             $table->string('billing_country')->nullable();
             $table->boolean('use_shipping_address_for_billing')->default(false);
+	        $table->timestamp('delivery_at')->nullable();
+	        $table->timestamp('shipping_method')->nullable();
             $table->foreignId('customer_id')->nullable();
             $table->string('coupon')->nullable();
             $table->json('gateway')->nullable();
-            $table->json('data')->nullable();
             $table->timestamps();
         });
     }

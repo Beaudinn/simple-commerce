@@ -98,3 +98,8 @@ If you're in need of some help with Simple Commerce, [send me an email](mailto:h
 </p>
 
 <!-- /statamic:hide -->
+
+
+##Assets
+cd /Users/beaudinngreve/Documents/beaudinngreve/work/klanten/xpressing/sites/spandoekdiscounter2/vendor/statamic/cms
+yarn dev
