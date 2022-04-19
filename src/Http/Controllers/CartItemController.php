@@ -175,6 +175,9 @@ class CartItemController extends BaseActionController
 					'code' => $request->product_id,
 					'calculation_input' => json_decode($request->calculation_input, true),
 				];
+
+				$item['selected_options'] = $request->selected_options;
+				//getSelectedOptionsFromLastResponseWithoutInitial
 			}
 
 			$item = array_merge(

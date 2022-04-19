@@ -81,7 +81,7 @@ trait LineItems
 	 */
     public function incrementQuantityAt($lineItemId, $quantity = 1){
 	    $this->lineItems = $this->lineItems->map(function ($item) use ($lineItemId, $quantity) {
-		    if ($item['id'] !== $lineItemId) {
+		    if ($item['id'] !== (int) $lineItemId) {
 			    return $item;
 		    }
 
@@ -109,7 +109,7 @@ trait LineItems
 	public function decrementQuantityAt($lineItemId, $quantity = 1)
 	{
 		$this->lineItems = $this->lineItems->map(function ($item) use ($lineItemId, $quantity) {
-			if ($item['id'] !== $lineItemId) {
+			if ($item['id'] !== (int) $lineItemId) {
 				return $item;
 			}
 
@@ -130,7 +130,7 @@ trait LineItems
     {
 
         $this->lineItems = $this->lineItems->reject(function ($item) use ($lineItemId) {
-            return $item['id'] === $lineItemId;
+            return $item['id'] === (int) $lineItemId;
         });
 
 
