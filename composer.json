@@ -1,5 +1,5 @@
 {
-  "name": "doublethreedigital/simple-commerce",
+  "name": "webhoek/simple-commerce",
   "description": "A perfectly simple e-commerce addon for Statamic",
   "license": "proprietary",
   "autoload": {
