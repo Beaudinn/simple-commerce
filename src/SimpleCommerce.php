@@ -27,7 +27,7 @@ class SimpleCommerce
             return 'v3.0.0';
         }
 
-        return Addon::get('doublethreedigital/simple-commerce')->version();
+        return Addon::get('webhoek/simple-commerce')->version();
     }
 
     public static function bootGateways()

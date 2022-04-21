@@ -20,24 +20,24 @@ class MigrateLineItemMetadata extends UpdateScript
 
     public function update()
     {
-        if (SimpleCommerce::orderDriver()['repository'] !== Order::class) {
-            $this->console()->error("Could not migrate line item metadata. You're not using the entry content driver.");
-        }
-
-        EntryAPI::whereCollection(SimpleCommerce::orderDriver()['collection'])
-            ->each(function (Entry $entry) {
-                $lineItems = collect($entry->get('items'))
-                    ->map(function ($lineItem) {
-                        return array_merge(
-                            Arr::only($lineItem, $this->topLevelKeys),
-                            ['metadata' => Arr::except($lineItem, $this->topLevelKeys)]
-                        );
-                    })
-                    ->toArray();
-
-                $entry->set('items', $lineItems)->save();
-            });
-
-        $this->console()->info('Migrated line item metdata!');
+        //if (SimpleCommerce::orderDriver()['repository'] !== Order::class) {
+        //    $this->console()->error("Could not migrate line item metadata. You're not using the entry content driver.");
+        //}
+		//
+        //EntryAPI::whereCollection(SimpleCommerce::orderDriver()['collection'])
+        //    ->each(function (Entry $entry) {
+        //        $lineItems = collect($entry->get('items'))
+        //            ->map(function ($lineItem) {
+        //                return array_merge(
+        //                    Arr::only($lineItem, $this->topLevelKeys),
+        //                    ['metadata' => Arr::except($lineItem, $this->topLevelKeys)]
+        //                );
+        //            })
+        //            ->toArray();
+		//
+        //        $entry->set('items', $lineItems)->save();
+        //    });
+		//
+        //$this->console()->info('Migrated line item metdata!');
     }
 }

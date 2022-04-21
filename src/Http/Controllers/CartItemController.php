@@ -176,8 +176,21 @@ class CartItemController extends BaseActionController
 					'calculation_input' => json_decode($request->calculation_input, true),
 				];
 
-				$item['selected_options'] = $request->selected_options;
-				//getSelectedOptionsFromLastResponseWithoutInitial
+				$productProbo = $product->probo($request->all());
+
+				$selectedOption = $productProbo->getSelectedOptionsFromLastResponseWithoutInitial();
+				$item['options'] = $selectedOption->mapWithKeys(function ($item, $key) use($productProbo){
+					return [$productProbo::getName((object)$item) => $productProbo::getValue((object)$item)];
+				})->toArray();
+
+
+
+				$initial = $productProbo->getInitial();
+
+				if($initial && !empty($initial)) {
+					$item['initial'] = join(' x ',$productProbo->getInitial()). ' cm';
+				}
+
 			}
 
 			$item = array_merge(
