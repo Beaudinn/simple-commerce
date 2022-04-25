@@ -17,7 +17,8 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $actions = [
         Actions\MarkAsPaid::class,
-        Actions\MarkAsShipped::class,
+	    Actions\ApproveOrder::class,
+        //Actions\MarkAsShipped::class,
         Actions\RefundAction::class,
     ];
 

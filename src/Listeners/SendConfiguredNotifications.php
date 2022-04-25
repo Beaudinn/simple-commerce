@@ -20,6 +20,7 @@ class SendConfiguredNotifications implements ShouldQueue
 
         $notifications = collect(Config::get('simple-commerce.notifications'))->get($eventName);
 
+
         if (! $notifications) {
             return;
         }
@@ -48,6 +49,8 @@ class SendConfiguredNotifications implements ShouldQueue
 
     protected function getNotifiables(array $config, $notification, $event): ?array
     {
+
+
         if ($config['to'] === 'customer') {
             if ($customer = $event->order->customer()) {
                 return [

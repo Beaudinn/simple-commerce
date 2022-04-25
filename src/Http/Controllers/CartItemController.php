@@ -199,7 +199,7 @@ class CartItemController extends BaseActionController
 					'metadata' => $metadata,
 				]
 			);
-
+			$item['type'] = $product->purchasableType();
 			$cart->addLineItem($item);
 		}
 

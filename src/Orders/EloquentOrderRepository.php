@@ -51,20 +51,26 @@ class EloquentOrderRepository implements RepositoryContract
             ->gateway($model->gateway)
 	        ->deliveries($model->deliveries)
             ->data(collect($model->data)->merge([
-                'shipping_name' => $model->shipping_name,
-                'shipping_address' => $model->shipping_address,
-                'shipping_address_line2' => $model->shipping_address_line2,
-                'shipping_city' => $model->shipping_city,
-                'shipping_postal_code' => $model->shipping_postal_code,
-                'shipping_region' => $model->shipping_region,
-                'shipping_country' => $model->shipping_country,
-                'billing_name' => $model->billing_name,
-                'billing_address' => $model->billing_address,
-                'billing_address_line2' => $model->billing_address_line2,
-                'billing_city' => $model->billing_city,
-                'billing_postal_code' => $model->billing_postal_code,
-                'billing_region' => $model->billing_region,
-                'billing_country' => $model->billing_country,
+	            'shipping_company_name' => $model->shipping_company_name,
+	            'shipping_first_name' => $model->shipping_first_name,
+	            'shipping_last_name' => $model->shipping_last_name,
+	            'shipping_phone' => $model->shipping_phone,
+	            'shipping_postal_code' => $model->shipping_postal_code,
+	            'shipping_house_number' => $model->shipping_house_number,
+	            'shipping_addition' => $model->shipping_addition,
+	            'shipping_street' => $model->shipping_street,
+	            'shipping_city' => $model->shipping_city,
+	            'shipping_country' => $model->shipping_country,
+	            'billing_company_name' => $model->billing_company_name,
+	            'billing_first_name' => $model->billing_first_name,
+	            'billing_last_name' => $model->billing_last_name,
+	            'billing_phone' => $model->billing_phone,
+	            'billing_postal_code' => $model->billing_postal_code,
+	            'billing_house_number' => $model->billing_house_number,
+	            'billing_addition' => $model->billing_addition,
+	            'billing_street' => $model->billing_street,
+	            'billing_city' => $model->billing_city,
+	            'billing_country' => $model->billing_country,
                 'use_shipping_address_for_billing' => $model->use_shipping_address_for_billing,
             ]));
     }
@@ -96,36 +102,41 @@ class EloquentOrderRepository implements RepositoryContract
         $model->coupon = optional($order->coupon())->id();
         //var_dump( $order->coupon());
         $model->gateway = $order->gateway();
-        $model->deliveries = $order->deliveries();
+        //$model->deliveries = $order->deliveries();
         $model->delivery_at = $order->deliveryAt();
 
         $model->shipping_method = $order->shippingMethod();
 
-        $model->shipping_name = $order->get('shipping_name');
-        $model->shipping_address = $order->get('shipping_address');
-        $model->shipping_address_line2 = $order->get('shipping_address_line2');
-        $model->shipping_city = $order->get('shipping_city');
-        $model->shipping_postal_code = $order->get('shipping_postal_code');
-        $model->shipping_region = $order->get('shipping_region');
-        $model->shipping_country = $order->get('shipping_country');
+	    $model->shipping_company_name = $order->get('shipping_company_name');
+	    $model->shipping_first_name = $order->get('shipping_first_name');
+	    $model->shipping_last_name = $order->get('shipping_last_name');
+	    $model->shipping_phone = $order->get('shipping_phone');
+	    $model->shipping_postal_code = $order->get('shipping_postal_code');
+	    $model->shipping_house_number = $order->get('shipping_house_number');
+	    $model->shipping_addition = $order->get('shipping_addition');
+	    $model->shipping_street = $order->get('shipping_street');
+	    $model->shipping_city = $order->get('shipping_city');
+	    $model->shipping_country = $order->get('shipping_country');
 
-        $model->billing_name = $order->get('billing_name');
-        $model->billing_address = $order->get('billing_address');
-        $model->billing_address_line2 = $order->get('billing_address_line2');
-        $model->billing_city = $order->get('billing_city');
-        $model->billing_postal_code = $order->get('billing_postal_code');
-        $model->billing_region = $order->get('billing_region');
-        $model->billing_country = $order->get('billing_country');
 
+	    $model->billing_company_name = $order->get('billing_company_name');
+	    $model->billing_first_name = $order->get('billing_first_name');
+	    $model->billing_last_name = $order->get('billing_last_name');
+	    $model->billing_phone = $order->get('billing_phone');
+	    $model->billing_postal_code = $order->get('billing_postal_code');
+	    $model->billing_house_number = $order->get('billing_house_number');
+	    $model->billing_addition = $order->get('billing_addition');
+	    $model->billing_street = $order->get('billing_street');
+	    $model->billing_city = $order->get('billing_city');
+	    $model->billing_country = $order->get('billing_country');
         $model->use_shipping_address_for_billing = $order->get('use_shipping_address_for_billing') ?? false;
 
         // We need to do this, otherwise we'll end up duplicating data unnecessarily sometimes.
         $model->data = $order->data()->except([
             'is_paid', 'is_shipped', 'is_refunded', 'items', 'grand_total', 'rush_total', 'items_total', 'tax_total',
-            'shipping_total', 'coupon_total', 'shipping_name', 'shipping_address', 'shipping_address_line2',
-            'shipping_city', 'shipping_postal_code', 'shipping_region', 'shipping_country', 'billing_name',
-            'billing_address', 'billing_address_line2', 'billing_city', 'billing_postal_code', 'billing_region',
-            'billing_country', 'use_shipping_address_for_billing', 'customer_id', 'coupon', 'deliveries', 'gateway', 'shipping_method'
+            'shipping_total', 'coupon_total', 'shipping_company_name', 'shipping_first_name', 'shipping_last_name', 'shipping_phone', 'shipping_postal_code', 'shipping_house_number', 'shipping_addition', 'shipping_street', 'shipping_city', 'shipping_country',
+	        'use_shipping_address_for_billing', 'billing_company_name','billing_first_name','billing_last_name','billing_phone','billing_postal_code','billing_house_number','billing_addition','billing_street','billing_city','billing_country',
+	        'customer_id', 'coupon', 'gateway', 'shipping_method'
         ]);
 
 
@@ -150,27 +161,55 @@ class EloquentOrderRepository implements RepositoryContract
         $order->coupon = $model->coupon;
         $order->delivery_at = $model->delivery_at;
         $order->shipping_method = $model->shipping_method;
-        $order->deliveries = $model->deliveries;
         $order->gateway = $model->gateway;
 
         $order->data = collect($model->data)->merge([
-            'shipping_name' => $model->shipping_name,
-            'shipping_address' => $model->shipping_address,
-            'shipping_address_line2' => $model->shipping_address_line2,
-            'shipping_city' => $model->shipping_city,
-            'shipping_postal_code' => $model->shipping_postal_code,
-            'shipping_region' => $model->shipping_region,
-            'shipping_country' => $model->shipping_country,
-            'billing_name' => $model->billing_name,
-            'billing_address' => $model->billing_address,
-            'billing_address_line2' => $model->billing_address_line2,
-            'billing_city' => $model->billing_city,
-            'billing_postal_code' => $model->billing_postal_code,
-            'billing_region' => $model->billing_region,
-            'billing_country' => $model->billing_country,
+	        'shipping_company_name' => $model->shipping_company_name,
+	        'shipping_first_name' => $model->shipping_first_name,
+	        'shipping_last_name' => $model->shipping_last_name,
+	        'shipping_phone' => $model->shipping_phone,
+	        'shipping_postal_code' => $model->shipping_postal_code,
+	        'shipping_house_number' => $model->shipping_house_number,
+	        'shipping_addition' => $model->shipping_addition,
+	        'shipping_street' => $model->shipping_street,
+	        'shipping_city' => $model->shipping_city,
+	        'shipping_country' => $model->shipping_country,
+	        'billing_company_name' => $model->billing_company_name,
+	        'billing_first_name' => $model->billing_first_name,
+	        'billing_last_name' => $model->billing_last_name,
+	        'billing_phone' => $model->billing_phone,
+	        'billing_postal_code' => $model->billing_postal_code,
+	        'billing_house_number' => $model->billing_house_number,
+	        'billing_addition' => $model->billing_addition,
+	        'billing_street' => $model->billing_street,
+	        'billing_city' => $model->billing_city,
+	        'billing_country' => $model->billing_country,
             'use_shipping_address_for_billing' => $model->use_shipping_address_for_billing,
         ]);
     }
+
+
+	/**
+	 * Create an order number.
+	 */
+	protected function createOrderNumber(): string
+	{
+
+		$prefix = config('shop.order_number_prefix');
+		$number = config('shop.order_number_range');
+
+
+		if (!empty($number)) {
+			do {
+				$number++;
+
+				$count =  (new $this->model)->where('order_number', $prefix . $number)->count();
+
+			} while ($count);
+		}
+
+		return $prefix . $number;
+	}
 
     public function delete($order): void
     {

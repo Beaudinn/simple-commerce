@@ -2,6 +2,8 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Orders;
 
+use App\Models\Address;
+use App\Models\ShippingMethods;
 use Carbon\Carbon;
 use Composer\Package\Loader\ValidatingArrayLoader;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Calculator as CalculatorContract;
@@ -10,6 +12,7 @@ use DoubleThreeDigital\SimpleCommerce\Contracts\Customer as CustomerContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order as Contract;
 use DoubleThreeDigital\SimpleCommerce\Data\HasData;
 use DoubleThreeDigital\SimpleCommerce\Events\CouponRedeemed;
+use DoubleThreeDigital\SimpleCommerce\Events\OrderApproved as OrderApprovedEvent;
 use DoubleThreeDigital\SimpleCommerce\Events\OrderPaid as OrderPaidEvent;
 use DoubleThreeDigital\SimpleCommerce\Events\OrderSaved;
 use DoubleThreeDigital\SimpleCommerce\Events\OrderShipped as OrderShippedEvent;
@@ -20,12 +23,13 @@ use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Statamic\Contracts\Entries\Entry;
+use Statamic\Facades\Site;
 use Statamic\Http\Resources\API\EntryResource;
 use Webhoek\Probo\Api\Resources\Price;
 use Webhoek\Probo\Api\Resources\PriceCollection;
 use Webhoek\Probo\Api\Resources\ResourceFactory;
 
-class    Order implements Contract
+class Order implements Contract
 {
 	use HasData, LineItems;
 
@@ -54,6 +58,7 @@ class    Order implements Contract
 
 	public function __construct()
 	{
+		$this->shop = Site::current()->handle();
 		$this->isPaid = false;
 		$this->isShipped = false;
 		$this->isRefunded = false;
@@ -83,6 +88,13 @@ class    Order implements Contract
 	{
 		return $this
 			->fluentlyGetOrSet('orderNumber')
+			->args(func_get_args());
+	}
+
+	public function isApproved($isApproved = null)
+	{
+		return $this
+			->fluentlyGetOrSet('isApproved')
 			->args(func_get_args());
 	}
 
@@ -293,17 +305,6 @@ class    Order implements Contract
 
 		return $this
 			->fluentlyGetOrSet('deliveries')
-			//->getter(function ($deliveries) {
-			//	if (! $deliveries) {
-			//		return [];
-			//	}
-			//	return collect($deliveries)->mapWithKeys(function ($delivery, $key){
-			//
-			//		var_dump($delivery, $key); die();
-			//		$delivery['prices'] = (object) $delivery['prices'];
-			//		return [$key =>  (object) $delivery];
-			//	});
-			//})
 			->args(func_get_args());
 	}
 
@@ -318,11 +319,18 @@ class    Order implements Contract
 
 		$deliveries = [];
 		foreach ($this->deliveries()[$date] as $array){
-			$array['prices'] = (object) $array['prices'];
+			//$array['prices'] = (object) $array['prices'];
 			$array = (object) $array;
-			$overwrite = config('simple-commerce.shipping_methods_data.'.$array->shipping_method_api_code, []);
 
-			$array->prices->sales_price = $array->prices->purchase_price + (isset($overwrite['margin']) ? $overwrite['margin'] : 0);
+			$overwrite = [];
+			$array->prices->sales_price = $array->prices->purchase_price;
+
+			if($method = ShippingMethods::where('code',$array->shipping_method_api_code )->first()){
+				$overwrite = $method->overwritableArray();
+				$array->prices->sales_price = (float) $array->prices->purchase_price + (float) $overwrite['margin'];
+			}
+
+			
 			$deliveries[] = (object) array_merge((array) $array, (array) $overwrite);
 
 		}
@@ -356,7 +364,7 @@ class    Order implements Contract
 			return null;
 		}
 
-		return Address::from('billing', $this);
+		return Address::make($this);
 	}
 
 	public function shippingAddress()
@@ -365,7 +373,7 @@ class    Order implements Contract
 			return null;
 		}
 
-		return Address::from('shipping', $this);
+		return Address::make($this);
 	}
 
 	// TODO: refactor
@@ -385,13 +393,28 @@ class    Order implements Contract
 		return false;
 	}
 
+	public function markAsApproved(): self
+	{
+		$this->isApproved(true);
+
+		$this->merge([
+			//'paid_date' => now()->format('Y-m-d H:i'), //appoved_at
+			'published' => true,
+		]);
+
+		$this->save();
+
+		event(new OrderApprovedEvent($this));
+
+		return $this;
+	}
+
 	public function markAsPaid(): self
 	{
 		$this->isPaid(true);
 
 		$this->merge([
 			'paid_date' => now()->format('Y-m-d H:i'),
-			'published' => true,
 		]);
 
 		$this->save();

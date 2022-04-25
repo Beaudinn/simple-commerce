@@ -72,12 +72,12 @@ class OrderStatusFilter extends Filter
                 && $this->context['collection'] === SimpleCommerce::orderDriver()['collection'];
         }
 
-        if (isset(SimpleCommerce::orderDriver()['model'])) {
-            $orderModelClass = SimpleCommerce::orderDriver()['model'];
-            $runwayResource = \DoubleThreeDigital\Runway\Runway::findResourceByModel(new $orderModelClass);
-
-            return $key === "runway_{$runwayResource->handle()}";
-        }
+        //if (isset(SimpleCommerce::orderDriver()['model'])) {
+        //    $orderModelClass = SimpleCommerce::orderDriver()['model'];
+        //    $runwayResource = \DoubleThreeDigital\Runway\Runway::findResourceByModel(new $orderModelClass);
+		//
+        //    return $key === "runway_{$runwayResource->handle()}";
+        //}
 
         return false;
     }
