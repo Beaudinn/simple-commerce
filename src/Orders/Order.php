@@ -31,7 +31,7 @@ use Webhoek\Probo\Api\Resources\ResourceFactory;
 
 class Order implements Contract
 {
-	use HasData, LineItems, UpSells;
+	use HasData, LineItems, Upsells;
 
 	public $id;
 	public $orderNumber;
