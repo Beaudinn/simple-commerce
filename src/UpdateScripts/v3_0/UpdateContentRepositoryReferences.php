@@ -24,6 +24,7 @@ class UpdateContentRepositoryReferences extends UpdateScript
             ->remove('content.orders.driver')
             ->remove('content.products.driver')
             ->set('content.coupons.repository', EntryCouponRepository::class)
+	        ->set('content.upsell.repository', EntryUpsellRepository::class)
             ->set('content.customers.repository', EntryCustomerRepository::class)
             ->set('content.orders.repository', EntryOrderRepository::class)
             ->set('content.products.repository', EntryProductRepository::class)

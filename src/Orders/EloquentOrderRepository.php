@@ -33,11 +33,13 @@ class EloquentOrderRepository implements RepositoryContract
         return app(Order::class)
             ->resource($model)
             ->id($model->id)
+	        ->shop($model->shop)
             ->orderNumber($model->id)
             ->isPaid($model->is_paid)
             ->isShipped($model->is_shipped)
             ->isRefunded($model->is_refunded)
             ->lineItems($model->items)
+	        ->upsells($model->upsells)
             ->grandTotal($model->grand_total)
 	        ->rushTotal($model->rush_total)
             ->itemsTotal($model->items_total)
@@ -88,10 +90,12 @@ class EloquentOrderRepository implements RepositoryContract
             $model = new $this->model();
         }
 
+        $model->shop = $order->shop();
         $model->is_paid = $order->isPaid();
         $model->is_shipped = $order->isShipped();
         $model->is_refunded = $order->isRefunded();
         $model->items = $order->lineItems();
+        $model->upsells = $order->upsells();
         $model->grand_total = $order->grandTotal();
         $model->rush_total = $order->rushTotal();
         $model->items_total = $order->itemsTotal();
@@ -133,7 +137,7 @@ class EloquentOrderRepository implements RepositoryContract
 
         // We need to do this, otherwise we'll end up duplicating data unnecessarily sometimes.
         $model->data = $order->data()->except([
-            'is_paid', 'is_shipped', 'is_refunded', 'items', 'grand_total', 'rush_total', 'items_total', 'tax_total',
+            'is_paid', 'is_shipped', 'is_refunded', 'items', 'upsells', 'grand_total', 'rush_total', 'items_total', 'tax_total',
             'shipping_total', 'coupon_total', 'shipping_company_name', 'shipping_first_name', 'shipping_last_name', 'shipping_phone', 'shipping_postal_code', 'shipping_house_number', 'shipping_addition', 'shipping_street', 'shipping_city', 'shipping_country',
 	        'use_shipping_address_for_billing', 'billing_company_name','billing_first_name','billing_last_name','billing_phone','billing_postal_code','billing_house_number','billing_addition','billing_street','billing_city','billing_country',
 	        'customer_id', 'coupon', 'gateway', 'shipping_method'
@@ -147,10 +151,12 @@ class EloquentOrderRepository implements RepositoryContract
 
         $order->id = $model->id;
         $order->orderNumber = $model->id;
+        $order->shop = $model->shop;
         $order->isPaid = $model->is_paid;
         $order->isShipped = $model->is_shipped;
         $order->isRefunded = $model->is_refunded;
         $order->lineItems = collect($model->items);
+        $order->upsells = collect($model->upsells);
         $order->grandTotal = $model->grand_total;
         $order->rushTotal = $model->rush_total;
         $order->itemsTotal = $model->items_total;

@@ -171,7 +171,13 @@ class SimpleCommerce
         return config('simple-commerce.content.coupons');
     }
 
-    public static function customerDriver(): array
+
+	public static function upsellDriver(): array
+	{
+		return config('simple-commerce.content.upsells');
+	}
+
+	public static function customerDriver(): array
     {
         return config('simple-commerce.content.customers');
     }

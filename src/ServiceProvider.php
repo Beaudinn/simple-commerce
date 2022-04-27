@@ -182,9 +182,14 @@ class ServiceProvider extends AddonServiceProvider
             $bindings[Contracts\CouponRepository::class] = SimpleCommerce::couponDriver()['repository'];
         }
 
+	    if (isset(SimpleCommerce::upsellDriver()['repository'])) {
+		    $bindings[Contracts\UpsellRepository::class] = SimpleCommerce::upsellDriver()['repository'];
+	    }
+
         if (isset(SimpleCommerce::customerDriver()['repository'])) {
             $bindings[Contracts\CustomerRepository::class] = SimpleCommerce::customerDriver()['repository'];
         }
+
 
         if (isset(SimpleCommerce::orderDriver()['repository'])) {
             $bindings[Contracts\OrderRepository::class] = SimpleCommerce::orderDriver()['repository'];
@@ -202,6 +207,7 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->app->bind(Contracts\Order::class, Orders\Order::class);
         $this->app->bind(Contracts\Coupon::class, Coupons\Coupon::class);
+        $this->app->bind(Contracts\Upsell::class, Upsells\Upsell::class);
         $this->app->bind(Contracts\Customer::class, Customers\Customer::class);
         $this->app->bind(Contracts\Product::class, Products\Product::class);
 

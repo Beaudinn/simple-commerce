@@ -31,7 +31,7 @@ use Webhoek\Probo\Api\Resources\ResourceFactory;
 
 class Order implements Contract
 {
-	use HasData, LineItems;
+	use HasData, LineItems, UpSells;
 
 	public $id;
 	public $orderNumber;
@@ -39,6 +39,7 @@ class Order implements Contract
 	public $isShipped;
 	public $isRefunded;
 	public $lineItems;
+	public $upsells;
 	public $grandTotal;
 	public $rushTotal;
 	public $itemsTotal;
@@ -81,6 +82,14 @@ class Order implements Contract
 	{
 		return $this
 			->fluentlyGetOrSet('id')
+			->args(func_get_args());
+	}
+
+
+	public function shop($shop = null)
+	{
+		return $this
+			->fluentlyGetOrSet('shop')
 			->args(func_get_args());
 	}
 
@@ -303,6 +312,7 @@ class Order implements Contract
 
 	public function deliveries($deliveries = null){
 
+		//return $this->get('deliveries');
 		return $this
 			->fluentlyGetOrSet('deliveries')
 			->args(func_get_args());
@@ -311,15 +321,16 @@ class Order implements Contract
 
 	public function getDeliveries($date){
 
-		if(!isset($this->deliveries()[$date])){
+
+		if(!isset($this->get('deliveries', [])[$date])){
 
 			//get custom shipping prijse from probo
 			return  [];
 		}
 
 		$deliveries = [];
-		foreach ($this->deliveries()[$date] as $array){
-			//$array['prices'] = (object) $array['prices'];
+		foreach ($this->get('deliveries', [])[$date] as $array){
+			$array['prices'] = (object) $array['prices'];
 			$array = (object) $array;
 
 			$overwrite = [];
@@ -558,9 +569,11 @@ class Order implements Contract
 		$freshOrder = OrderFacade::find($this->id());
 
 		$this->id = $freshOrder->id;
+		$this->shop = $freshOrder->shop;
 		$this->isPaid = $freshOrder->isPaid;
 		$this->isShipped = $freshOrder->isShipped;
 		$this->lineItems = $freshOrder->lineItems;
+		$this->upsells = $freshOrder->upsells;
 		$this->rushTotal = $freshOrder->rushTotal;
 		$this->grandTotal = $freshOrder->grandTotal;
 		$this->itemsTotal = $freshOrder->itemsTotal;
