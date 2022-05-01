@@ -100,6 +100,20 @@ class Product implements Contract
 			->args(func_get_args());
 	}
 
+	public function marginType($margin_type = 'global')
+	{
+		return $this
+			->fluentlyGetOrSet('margin_type')
+			->args(func_get_args());
+	}
+
+	public function margin($margin = 30)
+	{
+		return $this
+			->fluentlyGetOrSet('margin')
+			->args(func_get_args());
+	}
+
 	public function purchasableType(): ProductType
 	{
 
@@ -114,6 +128,8 @@ class Product implements Contract
 
 		return ProductType::PRODUCT();
 	}
+
+
 
 	public function variantOptions(): Collection
 	{

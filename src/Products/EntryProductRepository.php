@@ -44,6 +44,14 @@ class EntryProductRepository implements RepositoryContract
             $product->productVariants($entry->get('product_variants'));
         }
 
+        if ($entry->has('margin_type')) {
+            $product->marginType($entry->get('margin_type'));
+        }
+
+        if ($entry->has('margin')) {
+            $product->margin($entry->get('margin'));
+        }
+
         if ($entry->has('stock')) {
             $product->stock($entry->get('stock'));
         }

@@ -5,7 +5,6 @@ namespace DoubleThreeDigital\SimpleCommerce\Orders;
 use App\Models\Address;
 use App\Models\ShippingMethods;
 use Carbon\Carbon;
-use Composer\Package\Loader\ValidatingArrayLoader;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Calculator as CalculatorContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Coupon as CouponContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Customer as CustomerContract;
@@ -266,6 +265,30 @@ class Order implements Contract
 		}
 
 		return null;
+	}
+
+
+	public function upsells(){
+
+		return $this
+			->fluentlyGetOrSet('upsells')
+			->args(func_get_args());
+
+		$upsells = $this->lineItems()->filter(function ($item){
+			return isset($item['upsells']) && !empty($item['upsells']);
+		})->map(function ($item){
+			return $item['upsells'];
+		})->groupBy(function ($item){
+			return key($item);
+		});
+
+
+		//->flatten(1)->groupBy(function ($item){
+		//	return Carbon::parse($item['delivery_date'])->format('Y-m-d');
+		//})->sortBy(function ($item, $key) {
+		//	return $key;
+		//});
+
 	}
 
 	public function rushprices(){
