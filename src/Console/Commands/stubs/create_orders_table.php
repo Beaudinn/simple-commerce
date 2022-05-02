@@ -52,6 +52,8 @@ class CreateOrdersTable extends Migration
             $table->foreignId('customer_id')->nullable();
             $table->string('coupon')->nullable();
             $table->json('gateway')->nullable();
+            $table->json('data')->nullable();
+            $table->dateTime('paid_date')->nullable();
             $table->timestamps();
         });
     }

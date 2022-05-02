@@ -40,6 +40,9 @@ class Calculator implements Contract
 
 		$data['items'] = $order
 			->lineItems()
+			->map(function ($lineItem) {
+				return $lineItem->toArray();
+			})
 			->map(function ($lineItem) use (&$data) {
 				$calculate = $this->calculateLineItem($data, $lineItem);
 
@@ -147,6 +150,7 @@ class Calculator implements Contract
 		$data['shipping_total'] = Shipping::site(Site::current()->handle())
 			->use($shippingMethod ?? $defaultShippingMethod)
 			->calculateCost($this->order);
+
 
 		return [
 			'data' => $data,

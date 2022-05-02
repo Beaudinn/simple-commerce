@@ -4,14 +4,13 @@ namespace DoubleThreeDigital\SimpleCommerce\Tests\Customers;
 
 use DoubleThreeDigital\SimpleCommerce\Contracts\Customer as CustomerContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order as ContractsOrder;
-use DoubleThreeDigital\SimpleCommerce\Customers\UserCustomer;
 use DoubleThreeDigital\SimpleCommerce\Facades\Customer;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order;
 use DoubleThreeDigital\SimpleCommerce\Tests\Invader;
 use DoubleThreeDigital\SimpleCommerce\Tests\TestCase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
-use Statamic\Contracts\Auth\User as AuthUser;
+use Statamic\Auth\User as StatamicAuthUser;
 use Statamic\Facades\User;
 use Statamic\Http\Resources\API\UserResource;
 use Statamic\Statamic;
@@ -162,8 +161,7 @@ class UserCustomerTest extends TestCase
 
         $customer = Customer::find('sam');
 
-        // $this->assertTrue($customer instanceof UserCustomer);
-        $this->assertTrue($customer->resource() instanceof AuthUser); // TODO
+        $this->assertTrue($customer->resource() instanceof StatamicAuthUser);
     }
 
     /** @test */
@@ -313,22 +311,6 @@ class UserCustomerTest extends TestCase
         $this->assertTrue($customer->orders()->first() instanceof ContractsOrder);
 
         $this->assertSame($customer->orders()->first()->get('title'), 'Order #0001');
-    }
-
-    /** @test */
-    public function can_add_order()
-    {
-        $order = Order::make()->merge(['title' => 'Order #0002']);
-        $order->save();
-
-        $user = User::make()->id('sam')->email('sam@example.com')->set('name', 'Sam Example');
-        $user->save();
-
-        $customer = Customer::find('sam');
-        $customer->addOrder($order->id())->save();
-
-        $this->assertSame($customer->orders()->count(), 1);
-        $this->assertSame($customer->orders()->first()->get('title'), 'Order #0002');
     }
 
     /** @test */

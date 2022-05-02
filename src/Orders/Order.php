@@ -18,19 +18,17 @@ use DoubleThreeDigital\SimpleCommerce\Events\OrderShipped as OrderShippedEvent;
 use DoubleThreeDigital\SimpleCommerce\Facades\Coupon;
 use DoubleThreeDigital\SimpleCommerce\Facades\Customer;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderFacade;
+use DoubleThreeDigital\SimpleCommerce\Http\Resources\BaseResource;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Facades\Site;
 use Statamic\Http\Resources\API\EntryResource;
-use Webhoek\Probo\Api\Resources\Price;
-use Webhoek\Probo\Api\Resources\PriceCollection;
-use Webhoek\Probo\Api\Resources\ResourceFactory;
 
 class Order implements Contract
 {
-	use HasData, LineItems, Upsells;
+	use HasData, LineItems, UpsellItems;
 
 	public $id;
 	public $orderNumber;
@@ -42,6 +40,7 @@ class Order implements Contract
 	public $grandTotal;
 	public $rushTotal;
 	public $itemsTotal;
+	public $upsellTotal;
 	public $taxTotal;
 	public $shippingTotal;
 	public $couponTotal;
@@ -63,21 +62,23 @@ class Order implements Contract
 		$this->isShipped = false;
 		$this->isRefunded = false;
 		$this->lineItems = collect();
+		$this->upsells = collect();
 
 		$this->grandTotal = 0;
 		$this->rushTotal = 0;
 		$this->itemsTotal = 0;
+		$this->upsellTotal = 0;
 		$this->taxTotal = 0;
 		$this->shippingTotal = 0;
 		$this->couponTotal = 0;
 
-		$this->delivery_at = null;
-		$this->shipping_method = null;
+		$this->delivery_at = NULL;
+		$this->shipping_method = NULL;
 
 		$this->data = collect();
 	}
 
-	public function id($id = null)
+	public function id($id = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('id')
@@ -85,97 +86,104 @@ class Order implements Contract
 	}
 
 
-	public function shop($shop = null)
+	public function shop($shop = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('shop')
 			->args(func_get_args());
 	}
 
-	public function orderNumber($orderNumber = null)
+	public function orderNumber($orderNumber = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('orderNumber')
 			->args(func_get_args());
 	}
 
-	public function isApproved($isApproved = null)
+	public function isApproved($isApproved = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('isApproved')
 			->args(func_get_args());
 	}
 
-	public function isPaid($isPaid = null)
+	public function isPaid($isPaid = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('isPaid')
 			->args(func_get_args());
 	}
 
-	public function isShipped($isShipped = null)
+	public function isShipped($isShipped = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('isShipped')
 			->args(func_get_args());
 	}
 
-	public function isRefunded($isRefunded = null)
+	public function isRefunded($isRefunded = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('isRefunded')
 			->args(func_get_args());
 	}
 
-	public function grandTotal($grandTotal = null)
+	public function grandTotal($grandTotal = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('grandTotal')
 			->args(func_get_args());
 	}
 
-	public function rushTotal($grandTotal = null)
+	public function rushTotal($grandTotal = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('rushTotal')
 			->args(func_get_args());
 	}
 
-	public function itemsTotal($itemsTotal = null)
+	public function itemsTotal($itemsTotal = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('itemsTotal')
 			->args(func_get_args());
 	}
 
-	public function taxTotal($taxTotal = null)
+	public function upsellTotal($upsellTotal = NULL)
+	{
+		return $this
+			->fluentlyGetOrSet('upsellTotal')
+			->args(func_get_args());
+	}
+
+	public function taxTotal($taxTotal = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('taxTotal')
 			->args(func_get_args());
 	}
 
-	public function shippingTotal($shippingTotal = null)
+	public function shippingTotal($shippingTotal = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('shippingTotal')
 			->args(func_get_args());
 	}
 
-	public function couponTotal($couponTotal = null)
+	public function couponTotal($couponTotal = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('couponTotal')
 			->args(func_get_args());
 	}
 
-	public function customer($customer = null)
+	public function customer($customer = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('customer')
 			->setter(function ($value) {
-				if (! $value) {
-					return null;
+				if (!$value) {
+					return NULL;
 				}
 
 				if ($value instanceof CustomerContract) {
@@ -184,9 +192,9 @@ class Order implements Contract
 
 				return $value;
 			})
-			->getter(function ($value){
-				if (! $value) {
-					return null;
+			->getter(function ($value) {
+				if (!$value) {
+					return NULL;
 				}
 
 
@@ -199,13 +207,13 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
-	public function coupon($coupon = null)
+	public function coupon($coupon = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('coupon')
 			->setter(function ($value) {
-				if (! $value) {
-					return null;
+				if (!$value) {
+					return NULL;
 				}
 
 				if ($value instanceof CouponContract) {
@@ -214,22 +222,22 @@ class Order implements Contract
 
 				return $value;
 			})
-			->getter(function ($value){
-				if (! $value) {
-					return null;
+			->getter(function ($value) {
+				if (!$value) {
+					return NULL;
 				}
 				return Coupon::find($value);
 			})
 			->args(func_get_args());
 	}
 
-	public function deliveryAt($delivery_at = null)
+	public function deliveryAt($delivery_at = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('delivery_at')
-			->getter(function ($value){
+			->getter(function ($value) {
 
-				if($value instanceof Carbon){
+				if ($value instanceof Carbon) {
 					return $value->format('Y-m-d');
 				}
 
@@ -239,7 +247,7 @@ class Order implements Contract
 	}
 
 
-	public function shippingMethod($shipping_method = null)
+	public function shippingMethod($shipping_method = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('shipping_method')
@@ -247,14 +255,14 @@ class Order implements Contract
 	}
 
 
-	public function gateway($gateway = null)
+	public function gateway($gateway = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('gateway')
 			->args(func_get_args());
 	}
 
-	public function currentGateway()
+	public function currentGateway(): ?array
 	{
 		if (is_string($this->gateway())) {
 			return collect(SimpleCommerce::gateways())->firstWhere('class', $this->gateway());
@@ -264,47 +272,24 @@ class Order implements Contract
 			return collect(SimpleCommerce::gateways())->firstWhere('class', $this->gateway()['use']);
 		}
 
-		return null;
+		return NULL;
 	}
 
 
-	public function upsells(){
+	public function rushprices()
+	{
+		$rush_prices = $this->lineItems()->map(function ($item) {
 
-		return $this
-			->fluentlyGetOrSet('upsells')
-			->args(func_get_args());
-
-		$upsells = $this->lineItems()->filter(function ($item){
-			return isset($item['upsells']) && !empty($item['upsells']);
-		})->map(function ($item){
-			return $item['upsells'];
-		})->groupBy(function ($item){
-			return key($item);
-		});
-
-
-		//->flatten(1)->groupBy(function ($item){
-		//	return Carbon::parse($item['delivery_date'])->format('Y-m-d');
-		//})->sortBy(function ($item, $key) {
-		//	return $key;
-		//});
-
-	}
-
-	public function rushprices(){
-
-
-		$rush_prices = $this->lineItems()->map(function ($item){
-			return $item['rush_prices'] ?? [];
-		})->flatten(1)->groupBy(function ($item){
-			return Carbon::parse($item['delivery_date'])->format('Y-m-d');
-		})->sortBy(function ($item, $key) {
+			return $item->rush_prices ?? [];
+		})->flatten(1)->groupBy(function ($rush) {
+			return Carbon::parse($rush['delivery_date'])->format('Y-m-d');
+		})->sortBy(function ($rush, $key) {
 			return $key;
 		});
 
 		$rush_prices = $rush_prices->map(function ($prices) {
 
-			$total = $prices->sum(function ($price){
+			$total = $prices->sum(function ($price) {
 
 				return $price['prices_per_product']['purchase_rush_surcharge'] ?? 0;
 			});
@@ -315,7 +300,7 @@ class Order implements Contract
 				$delivery_date_formatted = ucfirst($deliver_date->translatedFormat('l d  F'));// . ' - ' . Date::now()->hour . ' --- ' . $hours;
 			}
 
-			return (object) [
+			return (object)[
 				'delivery_date_formatted' => $delivery_date_formatted,
 				'delivery_date' => Carbon::parse($prices->first()['delivery_date']),
 				'shipping_date' => Carbon::parse($prices->first()['shipping_date']),
@@ -333,7 +318,8 @@ class Order implements Contract
 		return $rush_prices;
 	}
 
-	public function deliveries($deliveries = null){
+	public function deliveries($deliveries = NULL)
+	{
 
 		//return $this->get('deliveries');
 		return $this
@@ -342,46 +328,49 @@ class Order implements Contract
 	}
 
 
-	public function getDeliveries($date){
+	public function getDeliveries($date)
+	{
 
 
-		if(!isset($this->get('deliveries', [])[$date])){
+		if (!isset($this->get('deliveries', [])[$date])) {
 
 			//get custom shipping prijse from probo
-			return  [];
+			return [];
 		}
 
 		$deliveries = [];
-		foreach ($this->get('deliveries', [])[$date] as $array){
-			$array['prices'] = (object) $array['prices'];
-			$array = (object) $array;
+		foreach ($this->get('deliveries', [])[$date] as $array) {
+			$array['prices'] = (object)$array['prices'];
+			$array = (object)$array;
 
 			$overwrite = [];
 			$array->prices->sales_price = $array->prices->purchase_price;
 
-			if($method = ShippingMethods::where('code',$array->shipping_method_api_code )->first()){
+			if ($method = ShippingMethods::where('code', $array->shipping_method_api_code)->first()) {
 				$overwrite = $method->overwritableArray();
-				$array->prices->sales_price = (float) $array->prices->purchase_price + (float) $overwrite['margin'];
+				$array->prices->sales_price = (float)$array->prices->purchase_price + (float)$overwrite['margin'];
 			}
 
-			
-			$deliveries[] = (object) array_merge((array) $array, (array) $overwrite);
+
+			$deliveries[] = (object)array_merge((array)$array, (array)$overwrite);
+
 
 		}
 		return $deliveries;
 	}
 
-	public function getShipping($shippingMethod = null){
+	public function getShipping($shippingMethod = NULL)
+	{
 
-		if(!$shippingMethod)
+		if (!$shippingMethod)
 			$shippingMethod = $this->shippingMethod();
 
-		return collect($this->getDeliveries($this->deliveryAt()))->first(function ($delivery) use($shippingMethod){
+		return collect($this->getDeliveries($this->deliveryAt()))->first(function ($delivery) use ($shippingMethod) {
 			return $delivery->shipping_method_api_code == $shippingMethod;
 		});
 	}
 
-	public function resource($resource = null)
+	public function resource($resource = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('resource')
@@ -394,8 +383,8 @@ class Order implements Contract
 			return $this->shippingAddress();
 		}
 
-		if (! $this->has('billing_address') && ! $this->has('billing_address_line1')) {
-			return null;
+		if (!$this->has('billing_address') && !$this->has('billing_address_line1')) {
+			return NULL;
 		}
 
 		return Address::make($this);
@@ -403,8 +392,8 @@ class Order implements Contract
 
 	public function shippingAddress()
 	{
-		if (! $this->has('shipping_address') && ! $this->has('shipping_address_line1')) {
-			return null;
+		if (!$this->has('shipping_address') && !$this->has('shipping_address_line1')) {
+			return NULL;
 		}
 
 		return Address::make($this);
@@ -443,6 +432,7 @@ class Order implements Contract
 		return $this;
 	}
 
+
 	public function markAsPaid(): self
 	{
 		$this->isPaid(true);
@@ -463,7 +453,7 @@ class Order implements Contract
 		$this->isShipped(true);
 
 		$this->data([
-			'shipped_date'  => now()->format('Y-m-d H:i'),
+			'shipped_date' => now()->format('Y-m-d H:i'),
 		]);
 
 		$this->save();
@@ -499,10 +489,12 @@ class Order implements Contract
 
 
 		$this->lineItems($calculate['items']);
+		$this->upsells($calculate['upsells']);
 
 		$this->grandTotal($calculate['grand_total']);
 		$this->rushTotal($calculate['rush_total']);
 		$this->itemsTotal($calculate['items_total']);
+		$this->upsellTotal($calculate['upsell_total']);
 		$this->taxTotal($calculate['tax_total']);
 		$this->shippingTotal($calculate['shipping_total']);
 		$this->couponTotal($calculate['coupon_total']);
@@ -523,7 +515,7 @@ class Order implements Contract
 
 		$this->save();
 
-		if (! $this->withoutRecalculating) {
+		if (!$this->withoutRecalculating) {
 			$this->recalculate();
 		}
 	}
@@ -536,7 +528,7 @@ class Order implements Contract
 
 		$this->save();
 
-		if (! $this->withoutRecalculating) {
+		if (!$this->withoutRecalculating) {
 			$this->recalculate();
 		}
 	}
@@ -600,6 +592,7 @@ class Order implements Contract
 		$this->rushTotal = $freshOrder->rushTotal;
 		$this->grandTotal = $freshOrder->grandTotal;
 		$this->itemsTotal = $freshOrder->itemsTotal;
+		$this->upsellTotal = $freshOrder->upsellTotal;
 		$this->taxTotal = $freshOrder->taxTotal;
 		$this->shippingTotal = $freshOrder->shippingTotal;
 		$this->couponTotal = $freshOrder->couponTotal;
@@ -624,16 +617,22 @@ class Order implements Contract
 		return $toArray;
 	}
 
+
+
 	public function toResource()
 	{
-		return $this->resource();// new EntryResource($this->resource());
+		if (isset(SimpleCommerce::orderDriver()['collection'])) {
+			return new EntryResource($this->resource());
+		}
+
+		return new BaseResource($this);
 	}
 
-	public function toAugmentedArray(): array
+	public function toAugmentedArray($keys = null): array
 	{
 		if ($this->resource() instanceof Entry) {
 			$blueprintFields = $this->resource()->blueprint()->fields()->items()->reject(function ($field) {
-				return $field['handle'] === 'value';
+				return isset($field['import']) || $field['handle'] === 'value';
 			})->pluck('handle')->toArray();
 
 			$augmentedData = $this->resource()->toAugmentedArray($blueprintFields);
@@ -647,9 +646,12 @@ class Order implements Contract
 		if ($this->resource() instanceof Model) {
 			$resource = \DoubleThreeDigital\Runway\Runway::findResourceByModel($this->resource());
 
+
 			return $resource->augment($this->resource());
 		}
 
 		return [];
 	}
+
 }
+

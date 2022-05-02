@@ -78,7 +78,7 @@ class Coupon implements Contract
 
         if ($this->isProductSpecific()) {
             $couponProductsInOrder = $order->lineItems()->filter(function ($lineItem) {
-                return in_array($lineItem['product'], $this->get('products'));
+                return in_array($lineItem->product()->id(), $this->get('products'));
             });
 
             if ($couponProductsInOrder->count() === 0) {
@@ -172,10 +172,11 @@ class Coupon implements Contract
     public function toAugmentedArray($keys = null)
     {
         $blueprintFields = $this->resource()->blueprint()->fields()->items()->reject(function ($field) {
-            return $field['handle'] === 'value';
+            return isset($field['import']) || $field['handle'] === 'value';
         })->pluck('handle')->toArray();
 
         $augmentedData = $this->resource()->toAugmentedArray($blueprintFields);
+
 
         return array_merge(
             $this->toArray(),

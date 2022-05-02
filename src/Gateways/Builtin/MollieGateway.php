@@ -219,7 +219,7 @@ class MollieGateway extends BaseGateway implements Gateway
 				'order_id' => $order->id,
 			],
 		]);
-		return redirect($payment->getCheckoutUrl(), 303);
+		//return redirect($payment->getCheckoutUrl(), 303);
 		return new Response(true, [
 			'id' => $payment->id,
 		], $payment->getCheckoutUrl());

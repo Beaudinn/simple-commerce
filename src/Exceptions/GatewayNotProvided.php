@@ -7,7 +7,7 @@ use Facade\IgnitionContracts\BaseSolution;
 use Facade\IgnitionContracts\ProvidesSolution;
 use Facade\IgnitionContracts\Solution;
 
-class NoGatewayProvided extends Exception implements ProvidesSolution
+class GatewayNotProvided extends Exception implements ProvidesSolution
 {
     public function getSolution(): Solution
     {

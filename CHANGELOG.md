@@ -2,12 +2,14 @@
 
 ## Unreleased
 
-## v3.0.0 (2022-xx-xx)
+## v3.0.0 (2022-04-28)
 
 ### What's new
 
 - Support for storing [orders & customers in a database](https://simple-commerce.duncanmcclean.com/database-orders) #599
-- Brand new Gateway Fieldtype #609
+- Brand new 'Overview' CP page for a top-level view of your store #620
+- Brand new Gateway fieldtype #609
+- Brand new Shipping Method fieldtype #611
 - Statamic's new-ish ['title format'](https://statamic.dev/collections#titles) feature is now used to generate titles for order/customer entries #601
 - You can now use Simple Commerce's cart tags on the Order Confirmation page #605
 - Gateways may return their own validation messages #598
@@ -20,11 +22,74 @@
 - You may now specify a 'whitelist' of additional fields you wish to provide when submitting front-end forms #608
 - Order Numbers are stored in their own (hidden) field now #604
 - Improved the handling of first/last name fields
+- Line Items are no longer returned as arrays, they have their own DTO class now #612
 - Updated `moneyphp/money` to v4.0
+
+### What's fixed
+
+- £0 will be returned instead of `null` if Money value is empty
 
 ### Breaking changes
 
 There's quite a lot of breaking changes between v2.4 and v3.0. It's highly recommended you read the [upgrade guide](https://simple-commerce.duncanmcclean.com/upgrade-guide) before upgrading.
+
+## v3.0.0-beta.7 (2022-04-26)
+
+### What's improved
+
+- Cleanup default config file
+- Database Migrator now supports migrating from Users driver, not just from Customers collection
+- Implemented 'Top Customers' overview query for Users customer driver
+
+### What's fixed
+
+- Fixed an issue when augmenting a blueprint containing fieldset imports
+- Fixed an issue saving coupons when using database orders
+- Fixed incorrect imports for Runway fields in blueprint
+- Make the Gateway fieldtype work with database orders
+- Fixed an ordering issue for 'Recent Orders' query on overview, when using database orders
+- When refunding an order via Stripe, get the Stripe Payment Intent ID from the right place..
+
+## v3.0.0-beta.6 (2022-04-23)
+
+### What's new
+
+- Brand new 'Overview' CP page for a top-level view of your store #620
+
+### What's removed
+
+- Removed Dashboard 'Sales Widget'
+
+## v3.0.0-beta.5 (2022-04-16)
+
+### What's fixed
+
+- Removed the title field from Order & Customer blueprints (title formats - no need for them)
+- Gateway & Shipping Method fields are now marked as read-only when added via the upgrade script
+- Fixed an issue where collections were never created when running `sc:install` command
+- Fixed an issue where the upgrade script would grab the blueprint for the wrong collection when filling customer field whitelist during upgrade
+
+## v3.0.0-beta.4 (2022-04-16)
+
+### What's new
+
+- Shipping Method fieldtype #611
+
+### What's improved
+
+- Eloquent Orders are marked as 'read-only' in the CP
+- Line Items are no longer returned as arrays, they have their own DTO class now #612
+- Gateway & Shipping Method fields are now automatically added to order blueprints during upgrade #613
+- Title formats are now configured when installing Simple Commerce with `sc:install` command #614
+- Customer data updated via the `{{ sc:customer:update }}` tag is now also whitelisted #615
+- The Stripe webhook code now handles refunds (but technically we don't support webhooks yet 👀)
+- Updated interfaces & facade hints #616
+- Drop `addOrder` method from `Customer` class #617
+- And some small other tidy up bits...
+
+### What's fixed
+
+- £0 will be returned instead of `null` if Money value is empty
 
 ## v3.0.0-beta.3 (2022-04-13)
 
@@ -58,6 +123,18 @@ The first of a few beta releases of Simple Commerce v3.0! There's quite a lot of
 PS: A proper list of what's new/improved is available in the [draft v3.0 changelog](https://github.com/doublethreedigital/simple-commerce/blob/main/CHANGELOG.md#v300-2022-xx-xx).
 
 ---
+
+## v2.4.11 (2022-04-26)
+
+### What's fixed
+
+- Stripe: Payment Intent ID is now saved properly (meaning refunds will now work) #624 #625 by @duncanmcclean
+
+## v2.4.10 (2022-04-25)
+
+### What's fixed
+
+- Fixed an issue where checkout would fail OR a customer would get charged incorrectly when using a coupon with `maximum_uses` set #622
 
 ## v2.4.9 (2022-04-05)
 

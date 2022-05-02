@@ -171,11 +171,8 @@ class CartItemController extends BaseActionController
 			}
 
 			if ($request->has('calculation_input')) {
-				$item['probo'] = [
-					'code' => $request->product_id,
-					'calculation_input' => json_decode($request->calculation_input, true),
-				];
-
+				$metadata['code'] = $request->product_id;
+				$metadata['calculation_input'] = json_decode($request->calculation_input, true);
 				$productProbo = $product->probo($request->all());
 
 				$selectedOption = $productProbo->getSelectedOptionsFromLastResponseWithoutInitial();
@@ -186,6 +183,7 @@ class CartItemController extends BaseActionController
 
 
 				$initial = $productProbo->getInitial();
+
 
 				if($initial && !empty($initial)) {
 					$item['initial'] = join(' x ',$productProbo->getInitial()). ' cm';

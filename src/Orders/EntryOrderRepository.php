@@ -82,7 +82,7 @@ class EntryOrderRepository implements RepositoryContract
         return app(Order::class);
     }
 
-    public function save($order): void
+    public function save(Order $order): void
     {
         $entry = $order->resource();
 
@@ -110,7 +110,7 @@ class EntryOrderRepository implements RepositoryContract
                     'is_paid' => $order->isPaid(),
                     'is_shipped' => $order->isShipped(),
                     'is_refunded' => $order->isRefunded(),
-                    'items' => $order->lineItems()->toArray(),
+                    'items' => $order->lineItems()->map->toArray()->toArray(),
                     'grand_total' => $order->grandTotal(),
                     'items_total' => $order->itemsTotal(),
                     'tax_total' => $order->taxTotal(),
@@ -130,7 +130,7 @@ class EntryOrderRepository implements RepositoryContract
         $order->isPaid = $entry->get('is_paid');
         $order->isShipped = $entry->get('is_shipped');
         $order->isRefunded = $entry->get('is_refunded');
-        $order->lineItems = collect($entry->get('items'));
+        // $order->lineItems = collect($entry->get('items'));
         $order->grandTotal = $entry->get('grand_total');
         $order->itemsTotal = $entry->get('items_total');
         $order->taxTotal = $entry->get('tax_total');
@@ -147,7 +147,7 @@ class EntryOrderRepository implements RepositoryContract
         $order->resource = $entry;
     }
 
-    public function delete($order): void
+    public function delete(Order $order): void
     {
         $order->resource()->delete();
     }

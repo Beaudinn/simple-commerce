@@ -4,6 +4,7 @@ namespace DoubleThreeDigital\SimpleCommerce;
 
 use Barryvdh\Debugbar\Facade as Debugbar;
 use Statamic\Events\EntryBlueprintFound;
+use Statamic\Facades\Collection;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Providers\AddonServiceProvider;
@@ -38,6 +39,7 @@ class ServiceProvider extends AddonServiceProvider
         Fieldtypes\ProductVariantFieldtype::class,
         Fieldtypes\ProductVariantsFieldtype::class,
         Fieldtypes\RegionFieldtype::class,
+        Fieldtypes\ShippingMethodFieldtype::class,
         Fieldtypes\TaxCategoryFieldtype::class,
 
         Fieldtypes\Variables\LineItemTax::class,
@@ -90,10 +92,6 @@ class ServiceProvider extends AddonServiceProvider
         Tags\TotalIncludingTax::class,
     ];
 
-    protected $widgets = [
-        Widgets\SalesWidget::class,
-    ];
-
     protected $updateScripts = [
         UpdateScripts\v2_3\AddBlueprintFields::class,
         UpdateScripts\v2_3\MigrateConfig::class,
@@ -104,6 +102,7 @@ class ServiceProvider extends AddonServiceProvider
         UpdateScripts\v2_4\MigrateSingleCartConfig::class,
         UpdateScripts\v2_4\MigrateTaxConfiguration::class,
 
+        UpdateScripts\v3_0\AddNewFieldsToOrderBlueprint::class,
         UpdateScripts\v3_0\ConfigureTitleFormats::class,
         UpdateScripts\v3_0\ConfigureWhitelistedFields::class,
         UpdateScripts\v3_0\UpdateContentRepositoryReferences::class,
@@ -123,6 +122,8 @@ class ServiceProvider extends AddonServiceProvider
         SimpleCommerce::bootGateways();
         SimpleCommerce::bootTaxEngine();
         SimpleCommerce::bootShippingMethods();
+
+        Overview::bootCoreWidgets();
 
         Statamic::booted(function () {
             $this
@@ -260,33 +261,97 @@ class ServiceProvider extends AddonServiceProvider
 
     protected function createNavItems()
     {
-        if (SimpleCommerce::isUsingStandardTaxEngine()) {
-            Nav::extend(function ($nav) {
-                $nav->create(__('Tax Rates'))
+        Nav::extend(function ($nav) {
+            $nav->create(__('Overview'))
+                ->section(__('Simple Commerce'))
+                ->route('simple-commerce.overview')
+                ->can('view simple commerce overview')
+                ->icon('charts');
+
+            if (isset(SimpleCommerce::orderDriver()['collection'])) {
+                $nav->create(__('Orders'))
                     ->section(__('Simple Commerce'))
-                    ->route('simple-commerce.tax-rates.index')
+                    ->route('collections.show', SimpleCommerce::orderDriver()['collection'])
+                    ->can('view', SimpleCommerce::orderDriver()['collection'])
+                    ->icon(SimpleCommerce::svg('shop'));
+            } elseif (isset(SimpleCommerce::orderDriver()['model'])) {
+                $orderModelClass = SimpleCommerce::orderDriver()['model'];
+                $orderResource = \DoubleThreeDigital\Runway\Runway::findResourceByModel(new $orderModelClass);
+
+                $nav->create(__('Orders'))
+                    ->section(__('Simple Commerce'))
+                    ->route('runway.index', ['resourceHandle' => $orderResource->handle()])
+                    ->can("View {$orderResource->plural()}")
+                    ->icon(SimpleCommerce::svg('shop'));
+            }
+
+            if (isset(SimpleCommerce::customerDriver()['collection'])) {
+                $nav->create(__('Customers'))
+                    ->section(__('Simple Commerce'))
+                    ->route('collections.show', SimpleCommerce::customerDriver()['collection'])
+                    ->can('view', SimpleCommerce::customerDriver()['collection'])
+                    ->icon('user');
+            } elseif (isset(SimpleCommerce::customerDriver()['model'])) {
+                $customerModelClass = SimpleCommerce::customerDriver()['model'];
+                $customerResource = \DoubleThreeDigital\Runway\Runway::findResourceByModel(new $customerModelClass);
+
+                $nav->create(__('Customers'))
+                    ->section(__('Simple Commerce'))
+                    ->route('runway.index', ['resourceHandle' => $customerResource->handle()])
+                    ->can("View {$customerResource->plural()}")
+                    ->icon('user');
+            }
+
+            $nav->create(__('Products'))
+                ->section(__('Simple Commerce'))
+                ->route('collections.show', SimpleCommerce::productDriver()['collection'])
+                ->can('view', SimpleCommerce::productDriver()['collection'])
+                ->icon('entries');
+
+            $nav->create(__('Coupons'))
+                ->section(__('Simple Commerce'))
+                ->route('collections.show', SimpleCommerce::couponDriver()['collection'])
+                ->can('view', SimpleCommerce::couponDriver()['collection'])
+                ->icon('tags');
+
+            if (SimpleCommerce::isUsingStandardTaxEngine()) {
+                $nav->create(__('Tax'))
+                    ->section(__('Simple Commerce'))
+                    ->route('simple-commerce.tax')
                     ->can('view tax rates')
                     ->icon(SimpleCommerce::svg('money-cash-file-dollar'));
+            }
 
-                $nav->create(__('Tax Categories'))
-                    ->section(__('Simple Commerce'))
-                    ->route('simple-commerce.tax-categories.index')
-                    ->can('view tax categories')
-                    ->icon('tags');
+            // Drop any collection items from 'Collections' nav
+            $collections = $nav->content('Collections');
 
-                $nav->create(__('Tax Zones'))
-                    ->section(__('Simple Commerce'))
-                    ->route('simple-commerce.tax-zones.index')
-                    ->can('view tax zones')
-                    ->icon(SimpleCommerce::svg('travel-map'));
+            $children = $collections->children()()
+                ->reject(function ($child) {
+                    return in_array(
+                        $child->name(),
+                        collect(config('simple-commerce.content'))
+                            ->pluck('collection')
+                            ->filter()
+                            ->map(function ($collectionHandle) {
+                                return __(Collection::find($collectionHandle)->title());
+                            })
+                            ->toArray(),
+                    );
+                });
+
+            $collections->children(function () use ($children) {
+                return $children;
             });
-        }
+        });
 
         return $this;
     }
 
     protected function registerPermissions()
     {
+        Permission::register('view simple commerce overview')
+            ->label('View Simple Commerce Overview');
+
         if (SimpleCommerce::isUsingStandardTaxEngine()) {
             Permission::register('view tax rates', function ($permission) {
                 $permission->children([

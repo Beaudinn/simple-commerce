@@ -74,6 +74,7 @@ class EloquentOrderRepository implements RepositoryContract
 	            'billing_city' => $model->billing_city,
 	            'billing_country' => $model->billing_country,
                 'use_shipping_address_for_billing' => $model->use_shipping_address_for_billing,
+                'paid_date' => $model->paid_date,
             ]));
     }
 
@@ -94,17 +95,17 @@ class EloquentOrderRepository implements RepositoryContract
         $model->is_paid = $order->isPaid();
         $model->is_shipped = $order->isShipped();
         $model->is_refunded = $order->isRefunded();
-        $model->items = $order->lineItems();
-        $model->upsells = $order->upsells();
+	    $model->items = $order->lineItems()->map->toArray();
+	    $model->upsells = $order->upsells()->map->toArray();
         $model->grand_total = $order->grandTotal();
         $model->rush_total = $order->rushTotal();
         $model->items_total = $order->itemsTotal();
+        $model->upsell_total = $order->upsellTotal();
         $model->tax_total = $order->taxTotal();
         $model->shipping_total = $order->shippingTotal();
         $model->coupon_total = $order->couponTotal();
         $model->customer_id = optional($order->customer())->id();
         $model->coupon = optional($order->coupon())->id();
-        //var_dump( $order->coupon());
         $model->gateway = $order->gateway();
         //$model->deliveries = $order->deliveries();
         $model->delivery_at = $order->deliveryAt();
@@ -137,15 +138,13 @@ class EloquentOrderRepository implements RepositoryContract
 
         // We need to do this, otherwise we'll end up duplicating data unnecessarily sometimes.
         $model->data = $order->data()->except([
-            'is_paid', 'is_shipped', 'is_refunded', 'items', 'upsells', 'grand_total', 'rush_total', 'items_total', 'tax_total',
+            'is_paid', 'is_shipped', 'is_refunded', 'items', 'grand_total', 'rush_total', 'items_total', 'upsell_total', 'tax_total',
             'shipping_total', 'coupon_total', 'shipping_company_name', 'shipping_first_name', 'shipping_last_name', 'shipping_phone', 'shipping_postal_code', 'shipping_house_number', 'shipping_addition', 'shipping_street', 'shipping_city', 'shipping_country',
 	        'use_shipping_address_for_billing', 'billing_company_name','billing_first_name','billing_last_name','billing_phone','billing_postal_code','billing_house_number','billing_addition','billing_street','billing_city','billing_country',
 	        'customer_id', 'coupon', 'gateway', 'shipping_method'
         ]);
 
-
-
-
+        $model->paid_date = $order->get('paid_date');
         $model->save();
 
 
@@ -155,11 +154,14 @@ class EloquentOrderRepository implements RepositoryContract
         $order->isPaid = $model->is_paid;
         $order->isShipped = $model->is_shipped;
         $order->isRefunded = $model->is_refunded;
-        $order->lineItems = collect($model->items);
-        $order->upsells = collect($model->upsells);
+
+        //$order->lineItems = collect($model->items);
+        //$order->upsells = collect($model->upsells);
+
         $order->grandTotal = $model->grand_total;
         $order->rushTotal = $model->rush_total;
         $order->itemsTotal = $model->items_total;
+        $order->upsellTotal = $model->upsell_total;
         $order->taxTotal = $model->tax_total;
         $order->shippingTotal = $model->shipping_total;
         $order->couponTotal = $model->coupon_total;
@@ -191,6 +193,7 @@ class EloquentOrderRepository implements RepositoryContract
 	        'billing_city' => $model->billing_city,
 	        'billing_country' => $model->billing_country,
             'use_shipping_address_for_billing' => $model->use_shipping_address_for_billing,
+            'paid_date' => $model->paid_date,
         ]);
     }
 

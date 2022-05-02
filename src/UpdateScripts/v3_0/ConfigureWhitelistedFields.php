@@ -4,6 +4,7 @@ namespace DoubleThreeDigital\SimpleCommerce\UpdateScripts\v3_0;
 
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Statamic\Facades\Collection;
+use Statamic\Facades\User;
 use Statamic\UpdateScripts\UpdateScript;
 use Stillat\Proteus\Support\Facades\ConfigWriter;
 
@@ -33,11 +34,31 @@ class ConfigureWhitelistedFields extends UpdateScript
             })
             ->toArray();
 
+        $customersFieldWhitelist = [];
+
+        if (isset(SimpleCommerce::orderDriver()['collection'])) {
+            $customersFieldWhitelist = Collection::findByHandle(SimpleCommerce::customerDriver()['collection'])
+                ->entryBlueprint()
+                ->fields()
+                ->items()
+                ->pluck('handle')
+                ->toArray();
+        } else {
+            $customersFieldWhitelist = User::blueprint()
+                ->fields()
+                ->items()
+                ->pluck('handle')
+                ->toArray();
+        }
+
         ConfigWriter::edit('simple-commerce')
             ->set('field_whitelist', [
                 'orders' => $ordersFieldWhitelist,
                 'line_items' => [],
+                'customers' => $customersFieldWhitelist,
             ])
             ->save();
+
+        $this->console()->info("Simple Commerce has added the 'field_whitelist' config setting to your config file. You should update the list as needed.");
     }
 }

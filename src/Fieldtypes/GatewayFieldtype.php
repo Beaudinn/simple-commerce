@@ -10,93 +10,107 @@ use Statamic\Fields\Fieldtype;
 
 class GatewayFieldtype extends Fieldtype
 {
-    public static function title()
-    {
-        return 'Gateway';
-    }
+	public static function title()
+	{
+		return 'Gateway';
+	}
 
-    public function preload()
-    {
-        return [
-            'gateways' => SimpleCommerce::gateways(),
-        ];
-    }
+	public function preload()
+	{
+		return [
+			'gateways' => SimpleCommerce::gateways(),
+		];
+	}
 
-    public function preProcess($value)
-    {
-        if (! $value) {
-            return null;
-        }
+	public function preProcess($value)
+	{
+		if (! $value) {
+			return null;
+		}
 
-        $gateway = collect(SimpleCommerce::gateways())
-            ->where('class', isset($value['use']) ? $value['use'] : $value)
-            ->first();
+		$actionUrl = null;
 
-        if (! $gateway) {
-            return null;
-        }
+		$gateway = collect(SimpleCommerce::gateways())
+			->where('class', isset($value['use']) ? $value['use'] : $value)
+			->first();
 
-        $actions = Action::for($this->field->parent())
-            ->filter(function ($action) {
-                return in_array(get_class($action), [
-                    RefundAction::class,
-                ]);
-            })
-            ->values();
+		if (! $gateway) {
+			return null;
+		}
 
-        return [
-            'data' => $value,
-            'entry' => optional($this->field->parent())->id(),
+		$actions = Action::for($this->field->parent())
+			->filter(function ($action) {
+				return in_array(get_class($action), [
+					RefundAction::class,
+				]);
+			})
+			->values();
 
-            'gateway_class' => $gateway['class'],
-            'payment_display' => Gateway::use($gateway['class'])->paymentDisplay($value),
+		if (isset(SimpleCommerce::orderDriver()['collection'])) {
+			$actionUrl = cp_route(
+				'collections.entries.actions.run',
+				$this->field->parent()->collection->handle()
+			);
+		}
 
-            'actions' => $actions,
-            'action_url' => cp_route(
-	            'collections.entries.actions.run',
-	            'gateways',//$this->field->parent()->collection->handle()
-            ),
-        ];
-    }
+		if (isset(SimpleCommerce::orderDriver()['model'])) {
+			$orderModel = SimpleCommerce::orderDriver()['model'];
 
-    public function process($value)
-    {
-        if (isset($value['data'])) {
-            return $value['data'];
-        }
+			$actionUrl = cp_route('runway.actions.run', [
+				'resourceHandle' => \DoubleThreeDigital\Runway\Runway::findResourceByModel(new $orderModel)->handle(),
+			]);
+		}
 
-        return $value;
-    }
+		return [
+			'data' => $value,
+			'entry' => optional($this->field->parent())->id(),
 
-    public function augment($value)
-    {
-        $gateway = collect(SimpleCommerce::gateways())
-            ->where('class', isset($value['use']) ? $value['use'] : $value)
-            ->first();
+			'gateway_class' => $gateway['class'],
+			'payment_display' => Gateway::use($gateway['class'])->paymentDisplay($value),
 
-        if (! $gateway) {
-            return null;
-        }
+			'actions' => $actions,
+			'action_url' => $actionUrl,
+		];
+	}
 
-        return array_merge($gateway, [
-            'data' => array_pull($value, 'data', []),
-        ]);
-    }
+	public function process($value)
+	{
+		if (isset($value['data'])) {
+			return $value['data'];
+		}
 
-    public function preProcessIndex($value)
-    {
-        if (! $value) {
-            return;
-        }
+		return $value;
+	}
 
-        $gateway = collect(SimpleCommerce::gateways())
-            ->where('class', isset($value['use']) ? $value['use'] : $value)
-            ->first();
+	public function augment($value)
+	{
+		$gateway = collect(SimpleCommerce::gateways())
+			->where('class', isset($value['use']) ? $value['use'] : $value)
+			->first();
 
-        if (! $gateway) {
-            return null;
-        }
+		if (! $gateway) {
+			return null;
+		}
 
-        return $gateway['name'];
-    }
+		return array_merge($gateway, [
+			'data' => array_pull($value, 'data', []),
+		]);
+	}
+
+	public function preProcessIndex($value)
+	{
+		if (! $value) {
+			return;
+		}
+
+		$gateway = collect(SimpleCommerce::gateways())
+			->where('class', isset($value['use']) ? $value['use'] : $value)
+			->first();
+
+		if (! $gateway) {
+			return null;
+		}
+
+		return $gateway['name'];
+	}
 }

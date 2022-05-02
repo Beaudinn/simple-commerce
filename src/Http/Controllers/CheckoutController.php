@@ -7,7 +7,7 @@ use DoubleThreeDigital\SimpleCommerce\Events\PostCheckout;
 use DoubleThreeDigital\SimpleCommerce\Events\PreCheckout;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\CheckoutProductHasNoStockException;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\CustomerNotFound;
-use DoubleThreeDigital\SimpleCommerce\Exceptions\NoGatewayProvided;
+use DoubleThreeDigital\SimpleCommerce\Exceptions\GatewayNotProvided;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\PreventCheckout;
 use DoubleThreeDigital\SimpleCommerce\Facades\Coupon;
 use DoubleThreeDigital\SimpleCommerce\Facades\Customer;
@@ -16,6 +16,7 @@ use DoubleThreeDigital\SimpleCommerce\Http\Requests\AcceptsFormRequests;
 use DoubleThreeDigital\SimpleCommerce\Http\Requests\Checkout\StoreRequest;
 use DoubleThreeDigital\SimpleCommerce\Orders\Cart\Drivers\CartDriver;
 use DoubleThreeDigital\SimpleCommerce\Rules\ValidCoupon;
+use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Statamic\Facades\Site;
@@ -46,10 +47,10 @@ class CheckoutController extends BaseActionController
                 ->postCheckout();
         } catch (CheckoutProductHasNoStockException $e) {
             $lineItem = $this->cart->lineItems()->filter(function ($lineItem) use ($e) {
-                return $lineItem['product'] === $e->product->id();
+                return $lineItem->product()->id() === $e->product->id();
             })->first();
 
-            $this->cart->removeLineItem($lineItem['id']);
+            $this->cart->removeLineItem($lineItem->id());
             $this->cart->save();
 
             return $this->withErrors($this->request, __('Checkout failed. A product in your cart has no stock left. The product has been removed from your cart.'));
@@ -190,10 +191,6 @@ class CheckoutController extends BaseActionController
             $this->excludedKeys[] = 'coupon';
         }
 
-        if ($this->cart->coupon()) {
-            $this->cart->coupon()->redeem();
-        }
-
         return $this;
     }
 
@@ -240,7 +237,7 @@ class CheckoutController extends BaseActionController
         }
 
         if (! $this->request->has('gateway') && $this->cart->isPaid() === false && $this->cart->grandTotal() !== 0) {
-            throw new NoGatewayProvided('No gateway provided.');
+            throw new GatewayNotProvided('No gateway provided.');
         }
 
         $purchase = Gateway::use($this->request->gateway)->purchase($this->request, $this->cart);
@@ -258,12 +255,22 @@ class CheckoutController extends BaseActionController
 
     protected function postCheckout()
     {
-        if ($this->cart->customer()) {
-            $this->cart->customer()->addOrder($this->cart->id);
+        if (! isset(SimpleCommerce::customerDriver()['model']) && $this->cart->customer()) {
+            $this->cart->customer()->merge([
+                'orders' => $this->cart->customer()->orders()
+                    ->push($this->cart->id())
+                    ->toArray(),
+            ]);
+
+            $this->cart->customer()->save();
         }
 
         if (! $this->request->has('gateway') && $this->cart->isPaid() === false && $this->cart->grandTotal() === 0) {
             $this->cart->markAsPaid();
+        }
+
+        if ($this->cart->coupon()) {
+            $this->cart->coupon()->redeem();
         }
 
         $this->forgetCart();

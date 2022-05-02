@@ -115,9 +115,15 @@ class StripeGateway extends BaseGateway implements Gateway
     {
         $this->setUpWithStripe();
 
-        $paymentIntent = isset($order->get('stripe')['intent'])
-            ? $order->get('stripe')['intent']
-            : null;
+        $paymentIntent = null;
+
+        if (isset($order->gateway()['data']['payment_intent'])) {
+            $paymentIntent = $order->gateway()['data']['payment_intent'];
+        }
+
+        if (isset($order->get('stripe')['intent'])) {
+            $paymentIntent = $order->get('stripe')['intent'];
+        }
 
         if (! $paymentIntent) {
             throw new StripePaymentIntentNotProvided('Stripe: No Payment Intent was provided to fetch.');
@@ -132,9 +138,15 @@ class StripeGateway extends BaseGateway implements Gateway
     {
         $this->setUpWithStripe();
 
-        $paymentIntent = isset($order->get('stripe')['intent'])
-            ? $order->get('stripe')['intent']
-            : null;
+        $paymentIntent = null;
+
+        if (isset($order->gateway()['data']['payment_intent'])) {
+            $paymentIntent = $order->gateway()['data']['payment_intent'];
+        }
+
+        if (isset($order->get('stripe')['intent'])) {
+            $paymentIntent = $order->get('stripe')['intent'];
+        }
 
         if (! $paymentIntent) {
             throw new RefundFailed('Stripe: No Payment Intent was provided to action a refund.');
@@ -180,7 +192,15 @@ class StripeGateway extends BaseGateway implements Gateway
             return new Response('Webhook handled', 200);
         }
 
-        // TODO: implement refund handling
+        if ($method === 'handleChargeRefunded') {
+            $order = Order::find($data['metadata']['order_id']);
+
+            if (! $order->isRefunded()) {
+                $order->refund($payload['data']['object']);
+            }
+
+            return new Response('Webhook handled', 200);
+        }
 
         return new Response();
     }

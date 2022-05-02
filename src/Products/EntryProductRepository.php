@@ -78,7 +78,7 @@ class EntryProductRepository implements RepositoryContract
         return app(Product::class);
     }
 
-    public function save($product): void
+    public function save(Product $product): void
     {
         $entry = $product->resource();
 
@@ -123,15 +123,10 @@ class EntryProductRepository implements RepositoryContract
         $product->resource = $entry;
     }
 
-    public function delete($product): void
+    public function delete(Product $product): void
     {
         $product->resource()->delete();
     }
-
-    // protected function isUsingEloquentDriverWithIncrementingIds(): bool
-    // {
-    //     return config('statamic.eloquent-driver.entries.model') === \Statamic\Eloquent\Entries\EntryModel::class;
-    // }
 
     public static function bindings(): array
     {
