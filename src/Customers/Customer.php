@@ -39,7 +39,7 @@ class Customer implements Contract
 	public function resource($resource = null)
 	{
 		return $this
-			->fluentlyGetOrSet('resource')
+			->fluentlxyGetOrSet('resource')
 			->args(func_get_args());
 	}
 

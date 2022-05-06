@@ -325,23 +325,23 @@ class ServiceProvider extends AddonServiceProvider
             // Drop any collection items from 'Collections' nav
             $collections = $nav->content('Collections');
 
-            $children = $collections->children()()
-                ->reject(function ($child) {
-                    return in_array(
-                        $child->name(),
-                        collect(config('simple-commerce.content'))
-                            ->pluck('collection')
-                            ->filter()
-                            ->map(function ($collectionHandle) {
-                                return __(Collection::find($collectionHandle)->title());
-                            })
-                            ->toArray(),
-                    );
-                });
-
-            $collections->children(function () use ($children) {
-                return $children;
-            });
+            //$children = $collections->children()()
+            //    ->reject(function ($child) {
+            //        return in_array(
+            //            $child->name(),
+            //            collect(config('simple-commerce.content'))
+            //                ->pluck('collection')
+            //                ->filter()
+            //                ->map(function ($collectionHandle) {
+            //                    return __(Collection::find($collectionHandle)->title());
+            //                })
+            //                ->toArray(),
+            //        );
+            //    });
+			//
+            //$collections->children(function () use ($children) {
+            //    return $children;
+            //});
         });
 
         return $this;
