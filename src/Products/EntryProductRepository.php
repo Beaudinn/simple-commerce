@@ -60,9 +60,15 @@ class EntryProductRepository implements RepositoryContract
             $product->taxCategory($entry->get('tax_category'));
         }
 
+
+	    //if ($hasOrigin = $entry->hasOrigin()) {
+		//    [$originValues, $originMeta] = $this->extractFromFields($entry->origin(), $blueprint);
+	    //}
+
+
         return $product->data(array_merge(
             Arr::except(
-                $entry->data()->toArray(),
+                $entry->values()->toArray(),
                 ['price', 'product_variants', 'stock', 'tax_category']
             ),
             [

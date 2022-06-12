@@ -27,7 +27,6 @@ class CartItemController extends BaseActionController
 	{
 		$cart = $this->hasCart() ? $this->getCart() : $this->makeCart();
 		$product = Product::find($request->product);
-
 		$items = $cart->lineItems();
 
 		// Handle customer stuff..

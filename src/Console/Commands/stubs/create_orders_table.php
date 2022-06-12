@@ -25,6 +25,7 @@ class CreateOrdersTable extends Migration
             $table->integer('tax_total')->default(0);
             $table->integer('shipping_total')->default(0);
             $table->integer('coupon_total')->default(0);
+	        $table->integer('upsell_total')->default(0);
 
 	        $table->string('shipping_company_name')->nullable();
 	        $table->string('shipping_first_name')->nullable();
