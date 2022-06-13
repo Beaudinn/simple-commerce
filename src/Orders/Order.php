@@ -28,7 +28,8 @@ use Statamic\Http\Resources\API\EntryResource;
 
 class Order implements Contract
 {
-	use HasData, LineItems, UpsellItems;
+
+	use HasData, HasLineItems, UpsellItems;
 
 	public $id;
 	public $orderNumber;
@@ -177,29 +178,17 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
-	public function customer($customer = NULL)
+	public function customer($customer = null)
 	{
 		return $this
 			->fluentlyGetOrSet('customer')
 			->setter(function ($value) {
-				if (!$value) {
-					return NULL;
+				if (! $value) {
+					return null;
 				}
 
 				if ($value instanceof CustomerContract) {
 					return $value->id();
-				}
-
-				return $value;
-			})
-			->getter(function ($value) {
-				if (!$value) {
-					return NULL;
-				}
-
-
-				if ($value instanceof CustomerContract) {
-					return $value;
 				}
 
 				return Customer::find($value);
@@ -207,25 +196,19 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
-	public function coupon($coupon = NULL)
+	public function coupon($coupon = null)
 	{
 		return $this
 			->fluentlyGetOrSet('coupon')
 			->setter(function ($value) {
-				if (!$value) {
-					return NULL;
+				if (! $value) {
+					return null;
 				}
 
 				if ($value instanceof CouponContract) {
 					return $value->id();
 				}
 
-				return $value;
-			})
-			->getter(function ($value) {
-				if (!$value) {
-					return NULL;
-				}
 				return Coupon::find($value);
 			})
 			->args(func_get_args());
@@ -272,7 +255,7 @@ class Order implements Contract
 			return collect(SimpleCommerce::gateways())->firstWhere('class', $this->gateway()['use']);
 		}
 
-		return NULL;
+		return null;
 	}
 
 
@@ -310,13 +293,55 @@ class Order implements Contract
 			];
 		});
 
-
-		//$rush_prices = $rush_prices->filter(function ($value, $key) {
-		//	return $value['product_count'] == count($this->lineItems());
-		//});
-
 		return $rush_prices;
 	}
+
+
+    public function resource($resource = null)
+    {
+        return $this
+            ->fluentlyGetOrSet('resource')
+            ->args(func_get_args());
+    }
+
+    public function billingAddress(): ?Address
+    {
+        if ($this->get('use_shipping_address_for_billing', false)) {
+            return $this->shippingAddress();
+        }
+
+        if (! $this->has('billing_address') && ! $this->has('billing_address_line1')) {
+            return null;
+        }
+
+        return Address::from('billing', $this);
+    }
+
+    public function shippingAddress(): ?Address
+    {
+        if (! $this->has('shipping_address') && ! $this->has('shipping_address_line1')) {
+            return null;
+        }
+
+        return Address::from('shipping', $this);
+    }
+
+	public function redeemCoupon(string $code): bool
+	{
+		$coupon = Coupon::findByCode($code);
+
+		if ($coupon->isValid($this)) {
+			$this->coupon($coupon);
+			$this->save();
+
+			event(new CouponRedeemed($coupon));
+
+			return true;
+		}
+
+		return false;
+	}
+
 
 	public function deliveries($deliveries = NULL)
 	{
@@ -370,51 +395,6 @@ class Order implements Contract
 		});
 	}
 
-	public function resource($resource = NULL)
-	{
-		return $this
-			->fluentlyGetOrSet('resource')
-			->args(func_get_args());
-	}
-
-	public function billingAddress()
-	{
-		if ($this->get('use_shipping_address_for_billing', false)) {
-			return $this->shippingAddress();
-		}
-
-		if (!$this->has('billing_address') && !$this->has('billing_address_line1')) {
-			return NULL;
-		}
-
-		return Address::make($this);
-	}
-
-	public function shippingAddress()
-	{
-		if (!$this->has('shipping_address') && !$this->has('shipping_address_line1')) {
-			return NULL;
-		}
-
-		return Address::make($this);
-	}
-
-	// TODO: refactor
-	public function redeemCoupon(string $code): bool
-	{
-		$coupon = Coupon::findByCode($code);
-
-		if ($coupon->isValid($this)) {
-			$this->coupon($coupon);
-			$this->save();
-
-			event(new CouponRedeemed($coupon));
-
-			return true;
-		}
-
-		return false;
-	}
 
 	public function markAsApproved(): self
 	{
@@ -483,31 +463,6 @@ class Order implements Contract
 		return $this;
 	}
 
-	public function recalculate(): self
-	{
-		$calculate = resolve(CalculatorContract::class)->calculate($this);
-
-
-		$this->lineItems($calculate['items']);
-		$this->upsells($calculate['upsells']);
-
-		$this->grandTotal($calculate['grand_total']);
-		$this->rushTotal($calculate['rush_total']);
-		$this->itemsTotal($calculate['items_total']);
-		$this->upsellTotal($calculate['upsell_total']);
-		$this->taxTotal($calculate['tax_total']);
-		$this->shippingTotal($calculate['shipping_total']);
-		$this->couponTotal($calculate['coupon_total']);
-		$this->deliveries($calculate['deliveries']);
-
-
-		$this->merge(Arr::except($calculate, 'items'));
-
-		$this->save();
-
-		return $this;
-	}
-
 
 	public function setDeliveryAt(string $date)
 	{
@@ -537,6 +492,32 @@ class Order implements Contract
 	{
 		return SimpleCommerce::orderDriver()['collection'];
 	}
+
+	public function recalculate(): self
+	{
+		$calculate = resolve(CalculatorContract::class)->calculate($this);
+
+
+		$this->lineItems($calculate['items']);
+		$this->upsells($calculate['upsells']);
+
+		$this->grandTotal($calculate['grand_total']);
+		$this->rushTotal($calculate['rush_total']);
+		$this->itemsTotal($calculate['items_total']);
+		$this->upsellTotal($calculate['upsell_total']);
+		$this->taxTotal($calculate['tax_total']);
+		$this->shippingTotal($calculate['shipping_total']);
+		$this->couponTotal($calculate['coupon_total']);
+		$this->deliveries($calculate['deliveries']);
+
+
+		$this->merge(Arr::except($calculate, 'items'));
+
+		$this->save();
+
+		return $this;
+	}
+
 
 	public function withoutRecalculating(callable $callback)
 	{
@@ -645,7 +626,6 @@ class Order implements Contract
 
 		if ($this->resource() instanceof Model) {
 			$resource = \DoubleThreeDigital\Runway\Runway::findResourceByModel($this->resource());
-
 
 			return $resource->augment($this->resource());
 		}

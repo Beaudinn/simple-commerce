@@ -2,7 +2,6 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Http\Controllers;
 
-use DoubleThreeDigital\SimpleCommerce\Checkout\HandleStock;
 use DoubleThreeDigital\SimpleCommerce\Events\PostCheckout;
 use DoubleThreeDigital\SimpleCommerce\Events\PreCheckout;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\CheckoutProductHasNoStockException;
@@ -17,6 +16,7 @@ use DoubleThreeDigital\SimpleCommerce\Http\Requests\Checkout\StoreRequest;
 use DoubleThreeDigital\SimpleCommerce\Orders\Cart\Drivers\CartDriver;
 use DoubleThreeDigital\SimpleCommerce\Rules\ValidCoupon;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
+use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Statamic\Facades\Site;
@@ -24,7 +24,7 @@ use Statamic\Sites\Site as SitesSite;
 
 class CheckoutController extends BaseActionController
 {
-    use CartDriver, AcceptsFormRequests, HandleStock;
+    use CartDriver, AcceptsFormRequests;
 
     public $cart;
     public StoreRequest $request;
@@ -41,7 +41,7 @@ class CheckoutController extends BaseActionController
                 ->handleValidation()
                 ->handleCustomerDetails()
                 ->handleCoupon()
-                ->handleStock($this->cart)
+                ->handleStock()
                 ->handleRemainingData()
                 ->handlePayment()
                 ->postCheckout();
@@ -180,6 +180,18 @@ class CheckoutController extends BaseActionController
         return $this;
     }
 
+    protected function handleStock()
+    {
+        $this->cart = app(Pipeline::class)
+            ->send($this->cart)
+            ->through([
+                \DoubleThreeDigital\SimpleCommerce\Orders\Checkout\HandleStock::class,
+            ])
+            ->thenReturn();
+
+        return $this;
+    }
+
     protected function handleCoupon()
     {
         if ($coupon = $this->request->get('coupon')) {
@@ -258,6 +270,7 @@ class CheckoutController extends BaseActionController
         if (! isset(SimpleCommerce::customerDriver()['model']) && $this->cart->customer()) {
             $this->cart->customer()->merge([
                 'orders' => $this->cart->customer()->orders()
+                    ->pluck('id')
                     ->push($this->cart->id())
                     ->toArray(),
             ]);

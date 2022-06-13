@@ -25,16 +25,18 @@ class CartItemController extends BaseActionController
 
 	public function store(StoreRequest $request)
 	{
+
 		$cart = $this->hasCart() ? $this->getCart() : $this->makeCart();
 		$product = Product::find($request->product);
+
 		$items = $cart->lineItems();
 
 		// Handle customer stuff..
 		if ($request->has('customer')) {
 			try {
-				if ($cart->customer() && $cart->customer() !== null) {
+				if ($cart->customer() && $cart->customer() !== NULL) {
 					$customer = $cart->customer();
-				} elseif ($request->has('email') && $request->get('email') !== null) {
+				} elseif ($request->has('email') && $request->get('email') !== NULL) {
 					$customer = Customer::findByEmail($request->get('email'));
 				} else {
 					throw new CustomerNotFound("Customer with ID [{$request->get('customer')}] could not be found.");
@@ -94,13 +96,13 @@ class CartItemController extends BaseActionController
 
 		// Ensure there's enough stock to fulfill the customer's quantity
 		if ($product->purchasableType() === ProductType::PRODUCT()) {
-			if ($product->stock() && $product->stock() !== null && $product->stock() < $request->quantity) {
+			if ($product->stock() && $product->stock() !== NULL && $product->stock() < $request->quantity) {
 				return $this->withErrors($request, __("There's not enough stock to fulfil the quantity you selected. Please try again later."));
 			}
 		} elseif ($product->purchasableType() === ProductType::VARIANT()) {
 			$variant = $product->variant($request->get('variant'));
 
-			if ($variant !== null && $variant->stock() !== null && $variant->stock() < $request->quantity) {
+			if ($variant !== NULL && $variant->stock() !== NULL && $variant->stock() < $request->quantity) {
 				return $this->withErrors($request, __("There's not enough stock to fulfil the quantity you selected. Please try again later."));
 			}
 		} elseif ($product->purchasableType() === ProductType::PROBO()) {
@@ -112,7 +114,7 @@ class CartItemController extends BaseActionController
 			/** @var \DoubleThreeDigital\SimpleCommerce\Contracts\Customer $customer */
 			$customer = $cart->customer();
 
-			if (! $customer) {
+			if (!$customer) {
 				return $this->withErrors($request, __('Please login/register before purchasing this product.'));
 			}
 
@@ -129,7 +131,7 @@ class CartItemController extends BaseActionController
 					})
 					->count() > 0;
 
-			if (! $hasPurchasedPrerequisiteProduct) {
+			if (!$hasPurchasedPrerequisiteProduct) {
 				return $this->withErrors($request, __("Before purchasing this product, you must purchase {$prerequisiteProduct->get('title')} first."));
 			}
 		}
@@ -153,13 +155,13 @@ class CartItemController extends BaseActionController
 
 		if ($alreadyExistsQuery->count() >= 1) {
 			$cart->updateLineItem($alreadyExistsQuery->first()['id'], [
-				'quantity' => (int) $alreadyExistsQuery->first()['quantity'] + $request->quantity,
+				'quantity' => (int)$alreadyExistsQuery->first()['quantity'] + $request->quantity,
 			]);
 		} else {
 			$item = [
-				'product'  => $request->product,
-				'quantity' => (int) $request->quantity,
-				'total'    => 0000,
+				'product' => $request->product,
+				'quantity' => (int)$request->quantity,
+				'total' => 0000,
 			];
 
 			if ($request->has('variant')) {
@@ -183,17 +185,15 @@ class CartItemController extends BaseActionController
 				$productProbo = $product->probo($request->all());
 
 				$selectedOption = $productProbo->getSelectedOptionsFromLastResponseWithoutInitial();
-				$item['options'] = $selectedOption->mapWithKeys(function ($item, $key) use($productProbo){
+				$item['options'] = $selectedOption->mapWithKeys(function ($item, $key) use ($productProbo) {
 					return [$productProbo::getName((object)$item) => $productProbo::getValue((object)$item)];
 				})->toArray();
-
-
 
 				$initial = $productProbo->getInitial();
 
 
-				if($initial && !empty($initial)) {
-					$item['initial'] = join(' x ',$productProbo->getInitial()). ' cm';
+				if ($initial && !empty($initial)) {
+					$item['initial'] = join(' x ', $productProbo->getInitial()) . ' cm';
 				}
 
 			}
@@ -210,7 +210,7 @@ class CartItemController extends BaseActionController
 
 		return $this->withSuccess($request, [
 			'message' => __('simple-commerce.messages.cart_item_added'),
-			'cart'    => $cart->toResource(),
+			'cart' => $cart->toResource(),
 		]);
 	}
 
@@ -222,7 +222,7 @@ class CartItemController extends BaseActionController
 		$data = Arr::only($request->all(), 'quantity', 'variant');
 
 		if (isset($data['quantity']) && is_string($data['quantity'])) {
-			$data['quantity'] = (int) $data['quantity'];
+			$data['quantity'] = (int)$data['quantity'];
 		}
 
 		$cart->updateLineItem(
@@ -230,17 +230,14 @@ class CartItemController extends BaseActionController
 			array_merge(
 				$data,
 				[
-					'metadata' => array_merge(
-						isset($lineItem['metadata']) ? $lineItem['metadata'] : [],
-						Arr::only($request->all(), config('simple-commerce.field_whitelist.line_items')),
-					),
+					'metadata' => $lineItem->metadata()->merge(Arr::only($request->all(), config('simple-commerce.field_whitelist.line_items')))->toArray(),
 				]
 			),
 		);
 
 		return $this->withSuccess($request, [
 			'message' => __('simple-commerce.messages.cart_item_updated'),
-			'cart'    => $cart->toResource(),
+			'cart' => $cart->toResource(),
 		]);
 	}
 
@@ -252,7 +249,7 @@ class CartItemController extends BaseActionController
 
 		return $this->withSuccess($request, [
 			'message' => __('simple-commerce.messages.cart_item_deleted'),
-			'cart'    => $cart->toResource(),
+			'cart' => $cart->toResource(),
 		]);
 	}
 

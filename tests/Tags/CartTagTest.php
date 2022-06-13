@@ -297,6 +297,47 @@ class CartTagTest extends TestCase
     }
 
     /** @test */
+    public function can_output_update_item_form_with_product_parameter()
+    {
+        $cart = $this->fakeCart();
+
+        $product = Product::make()
+            ->price(1000)
+            ->data([
+                'title' => 'Dog Food',
+            ]);
+
+        $product->save();
+
+        $lineItem = $cart->withoutRecalculating(function () use (&$cart, $product) {
+            return $cart->addLineItem([
+                'product' => $product->id,
+                'quantity' => 1,
+                'total' => 1000,
+            ]);
+        });
+
+        $this->tag->setParameters([
+            'product' => $product->id,
+        ]);
+
+        $this->tag->setContent('
+            <h2>Update Item</h2>
+
+            Product: {{ product }}
+
+            <input type="number" name="quantity">
+            <button type="submit">Update item in cart</submit>
+        ');
+
+        $usage = $this->tag->updateItem();
+
+        $this->assertStringContainsString('<input type="hidden" name="_token"', $usage);
+        $this->assertStringContainsString('method="POST" action="http://localhost/!/simple-commerce/cart-items/' . $lineItem->id . '"', $usage);
+        $this->assertStringContainsString('Product: ' . $product->id, $usage);
+    }
+
+    /** @test */
     public function can_output_remove_item_form()
     {
         $this->tag->setParameters([
@@ -313,6 +354,46 @@ class CartTagTest extends TestCase
 
         $this->assertStringContainsString('<input type="hidden" name="_token"', $usage);
         $this->assertStringContainsString('method="POST" action="http://localhost/!/simple-commerce/cart-items/smelly-cat"', $usage);
+    }
+
+    /** @test */
+    public function can_output_remove_item_form_with_product_parameter()
+    {
+        $cart = $this->fakeCart();
+
+        $product = Product::make()
+            ->price(1000)
+            ->data([
+                'title' => 'Dog Food',
+            ]);
+
+        $product->save();
+
+        $lineItem = $cart->withoutRecalculating(function () use (&$cart, $product) {
+            return $cart->addLineItem([
+                'product' => $product->id,
+                'quantity' => 1,
+                'total' => 1000,
+            ]);
+        });
+
+        $this->tag->setParameters([
+            'product' => $product->id,
+        ]);
+
+        $this->tag->setContent('
+            <h2>Remove item from cart?</h2>
+
+            Product: {{ product }}
+
+            <button type="submit">Update item in cart</submit>
+        ');
+
+        $usage = $this->tag->removeItem();
+
+        $this->assertStringContainsString('<input type="hidden" name="_token"', $usage);
+        $this->assertStringContainsString('method="POST" action="http://localhost/!/simple-commerce/cart-items/' . $lineItem->id . '"', $usage);
+        $this->assertStringContainsString('Product: ' . $product->id, $usage);
     }
 
     /** @test */
@@ -474,6 +555,41 @@ class CartTagTest extends TestCase
     }
 
     /** @test */
+    public function cant_output_if_product_does_not_already_exist_in_cart_because_there_is_no_cart()
+    {
+        $product = Product::make()
+            ->price(1000)
+            ->data([
+                'title' => 'Dog Food',
+            ]);
+
+        $product->save();
+
+        Session::shouldReceive('get')
+            ->with('simple-commerce-cart')
+            ->andReturn(null);
+
+        Session::shouldReceive('token')
+            ->andReturn('random-token');
+
+        Session::shouldReceive('has')
+            ->with('simple-commerce-cart')
+            ->andReturn(false);
+
+        Session::shouldReceive('has')
+            ->with('errors')
+            ->andReturn([]);
+
+        $this->tag->setParameters([
+            'product' => $product->id,
+        ]);
+
+        $usage = $this->tag->alreadyExists();
+
+        $this->assertFalse($usage);
+    }
+
+    /** @test */
     public function can_get_data_from_cart()
     {
         $cart = Order::make()->merge([
@@ -491,6 +607,42 @@ class CartTagTest extends TestCase
         // Statamic 3.3: From 3.3, this will return a Value instance
         $this->assertTrue($usage instanceof \Statamic\Fields\Value || is_string($usage));
         $this->assertSame($usage instanceof \Statamic\Fields\Value ? $usage->value() : $usage, 'Deliver by front door.');
+    }
+
+    /**
+     * @test
+     * https://github.com/doublethreedigital/simple-commerce/pull/650
+     */
+    public function can_get_data_from_cart_when_method_should_be_converted_to_studly_case()
+    {
+        $cart = Order::make()->merge([
+            'title' => '#0001',
+            'note'  => 'Deliver by front door.',
+        ])->grandTotal(1590);
+
+        $cart->save();
+
+        $this->session(['simple-commerce-cart' => $cart->id]);
+        $this->tag->setParameters([]);
+
+        $usage = $this->tag->wildcard('raw_grand_total');
+
+        // Statamic 3.3: From 3.3, this will return a Value instance
+        $this->assertTrue($usage instanceof \Statamic\Fields\Value || is_int($usage));
+        $this->assertSame($usage instanceof \Statamic\Fields\Value ? $usage->value() : $usage, 1590);
+    }
+
+    /** @test */
+    public function cant_get_data_from_cart_if_there_is_no_cart()
+    {
+        $this->session(['simple-commerce-cart' => null]);
+        $this->tag->setParameters([]);
+
+        $usage = $this->tag->wildcard('note');
+
+        // Statamic 3.3: From 3.3, this will return a Value instance
+        $this->assertFalse($usage instanceof \Statamic\Fields\Value || is_string($usage));
+        $this->assertSame($usage instanceof \Statamic\Fields\Value ? $usage->value() : $usage, null);
     }
 
     protected function tag($tag)
@@ -522,5 +674,7 @@ class CartTagTest extends TestCase
         Session::shouldReceive('has')
             ->with('errors')
             ->andReturn([]);
+
+        return $cart;
     }
 }

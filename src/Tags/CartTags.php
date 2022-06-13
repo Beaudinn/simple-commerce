@@ -4,6 +4,7 @@ namespace DoubleThreeDigital\SimpleCommerce\Tags;
 
 use DoubleThreeDigital\SimpleCommerce\Facades\Product;
 use DoubleThreeDigital\SimpleCommerce\Orders\Cart\Drivers\CartDriver;
+use Illuminate\Support\Str;
 
 class CartTags extends SubTag
 {
@@ -161,22 +162,50 @@ class CartTags extends SubTag
 
     public function updateItem()
     {
+        $lineItemId = $this->params->get('item');
+
+        if ($product = $this->params->get('product')) {
+            $lineItemId = collect($this->getCart()->lineItems()->map->toArray())
+                ->where('product', $product)
+                ->when($this->params->get('variant'), function ($query, $variant) {
+                    $query->where('variant', $variant);
+                })
+                ->pluck('id')
+                ->first();
+        }
+
+        $lineItem = $this->getCart()->lineItem($lineItemId);
+
         return $this->createForm(
             route('statamic.simple-commerce.cart-items.update', [
-                'item' => $this->params->get('item'),
+                'item' => $lineItemId,
             ]),
-            [],
+            optional($lineItem)->toArray() ?? [],
             'POST'
         );
     }
 
     public function removeItem()
     {
+        $lineItemId = $this->params->get('item');
+
+        if ($product = $this->params->get('product')) {
+            $lineItemId = collect($this->getCart()->lineItems()->map->toArray())
+                ->where('product', $product)
+                ->when($this->params->get('variant'), function ($query, $variant) {
+                    $query->where('variant', $variant);
+                })
+                ->pluck('id')
+                ->first();
+        }
+
+        $lineItem = $this->getCart()->lineItem($lineItemId);
+
         return $this->createForm(
             route('statamic.simple-commerce.cart-items.destroy', [
-                'item' => $this->params->get('item'),
+                'item' => $lineItemId,
             ]),
-            [],
+            optional($lineItem)->toArray() ?? [],
             'DELETE'
         );
     }
@@ -203,6 +232,10 @@ class CartTags extends SubTag
 
     public function alreadyExists()
     {
+        if (! $this->hasCart()) {
+            return false;
+        }
+
         return $this->getCart()->lineItems()
             ->where('product', Product::find($this->params->get('product')))
             ->where('variant', $this->params->get('variant'))
@@ -211,10 +244,20 @@ class CartTags extends SubTag
 
     public function wildcard($method)
     {
+        if (! $this->hasCart()) {
+            return null;
+        }
+
         $cart = $this->getCart();
 
         if (method_exists($this, $method)) {
             return $this->{$method}();
+        }
+
+        $camelCaseMethod = Str::camel($method);
+
+        if ($camelCaseMethod != $method && method_exists($this, $camelCaseMethod)) {
+            return $this->{$camelCaseMethod}();
         }
 
         if (property_exists($cart, $method)) {

@@ -2,6 +2,111 @@
 
 ## Unreleased
 
+## v3.2.7 (2022-06-09)
+
+### What's improved
+
+- Added support for underscore cart tag parameters #650
+
+### What's fixed
+
+- Fixed some issues with coupon calculations when using float/decimal values #651 #655
+
+## v3.2.6 (2022-06-07)
+
+### What's fixed
+
+- Database Orders: Fixed an issue where customers & coupon's weren't being saved on orders correctly #648
+
+## v3.2.5 (2022-06-03)
+
+### What's improved
+
+- Improved the layout of the default Orders blueprint
+
+#### What's fixed
+
+- Refactored the `{{ sc:customer:orders }}` tag to fix a couple of issues #645 #646
+- Fixed an issue where Debugbar would create orders even if you don't need it to. #647
+
+## v3.2.4 (2022-06-03)
+
+### What's fixed
+
+- Fixed an issue post-install when using a language other than English
+
+## v3.2.3 (2022-06-03)
+
+### What's fixed
+
+- Fixed another cause of 'ghost orders'
+
+## v3.2.2 (2022-06-02)
+
+### What's fixed
+
+- Actually add the upgrade script to the list of upgrade scripts..
+
+## v3.2.1 (2022-06-02)
+
+### What's fixed
+
+- Actually add the upgrade script to the list of upgrade scripts..
+
+## v3.2.0 (2022-06-02)
+
+**Note:** During the update process, the 'Value' field on your coupon blueprint will be renamed to `coupon_value`.
+
+### What's new
+
+- Added a `product` parameter to the `{{ sc:cart:updateItem }}` and `{{ sc:cart:removeItem }}` tags #644
+- Added a `{{ sc:gateways:count }}` tag that returns a count of available gateways
+
+### What's fixed
+
+- Renamed the 'Value' field on coupons to `coupon_value` (to avoid conflicts with Statamic) #642
+- Squashed the bug that caused 'ghost orders' to be created 👻
+- Fixed a bug with the `{{ sc:customer:orders }}` tag #641
+- Fixed a bug where the data from the PayPal Gateway wasn't being saved properly #643
+- Checking out via an off-site gateway will now redeem coupons & add the order to the customer's list of orders
+
+## v3.1.0 (2022-05-24)
+
+### What's new
+
+- Support for custom database columns on Order/Customer tables #634 #637
+
+### What's fixed
+
+- Fixed PSR-4 warnings #635 #636
+- Removed gateway name from back-office order emails
+
+## v3.0.4 (2022-05-16)
+
+### What's fixed
+
+- Fixed an issue where the order number would be regenerated after every save #632
+
+## v3.0.3 (2022-05-13)
+
+### What's fixed
+
+- Fixed `sc:cart:cleanup` command when storing orders as entries #631
+
+## v3.0.2 (2022-05-12)
+
+### What's fixed
+
+- Fixed a few issues when checking out with an existing customer #629 #630
+
+## v3.0.1 (2022-05-07)
+
+### What's fixed
+
+- Database orders: Fixed an issue where you'd end up with multiple orders when creating a new one #627
+- Session Cart Driver: If there's no current cart, create one.
+- Fixed an issue where you could get a 'stale' version of the cart when using the `{{ sc:cart:addItem }}` tag with AJAX.
+
 ## v3.0.0 (2022-04-28)
 
 ### What's new
@@ -121,8 +226,6 @@ There's quite a lot of breaking changes between v2.4 and v3.0. It's highly recom
 The first of a few beta releases of Simple Commerce v3.0! There's quite a lot of breaking changes between v2.4 & v3.0, so I'd highly recommend you read the [upgrade guide](./docs/upgrade-guide.md) before upgrading.
 
 PS: A proper list of what's new/improved is available in the [draft v3.0 changelog](https://github.com/doublethreedigital/simple-commerce/blob/main/CHANGELOG.md#v300-2022-xx-xx).
-
----
 
 ## v2.4.11 (2022-04-26)
 

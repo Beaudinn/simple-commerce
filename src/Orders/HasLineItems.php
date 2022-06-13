@@ -6,23 +6,8 @@ use DoubleThreeDigital\SimpleCommerce\Facades\Product as ProductAPI;
 use DoubleThreeDigital\SimpleCommerce\Products\ProductType;
 use Illuminate\Support\Collection;
 
-trait LineItems
+trait HasLineItems
 {
-
-	public function proboItems(){
-		return $this->lineItems()
-			->filter(function ($lineItem) {
-				return $lineItem->product->purchasableType() === ProductType::PROBO();
-			});
-	}
-
-	public function productItems(){
-
-		return $this->lineItems()->filter(function ($lineItem){
-			return $lineItem->product->purchasableType() === ProductType::UPSELL();
-		});
-	}
-
 	public function lineItems($lineItems = null)
 	{
 		return $this
@@ -55,6 +40,7 @@ trait LineItems
 						->product($item['product'])
 						->quantity($item['quantity'])
 						->total($item['total']);
+
 
 					if (isset($item['variant'])) {
 						$lineItem->variant($item['variant']);
@@ -100,7 +86,7 @@ trait LineItems
 		$product = ProductAPI::find($lineItemData['product']);
 
 		$lineItem = (new LineItem)
-			->id(mt_rand(1000000000,9999999999))
+			->id(mt_rand(1000000000,9999999999)) //->id(app('stache')->generateId())
 			->product($lineItemData['product'])
 			->quantity($lineItemData['quantity'])
 			->total($lineItemData['total']);
@@ -259,8 +245,7 @@ trait LineItems
 	public function removeLineItem($lineItemId): Collection
 	{
 		$this->lineItems = $this->lineItems->reject(function ($item) use ($lineItemId) {
-
-			return $item->id() == $lineItemId;
+			return $item->id() === $lineItemId;
 		});
 
 		$this->save();
@@ -285,5 +270,18 @@ trait LineItems
 		return $this->lineItems();
 	}
 
+	public function proboItems(){
+		return $this->lineItems()
+			->filter(function ($lineItem) {
+				return $lineItem->product->purchasableType() === ProductType::PROBO();
+			});
+	}
+
+	public function productItems(){
+
+		return $this->lineItems()->filter(function ($lineItem){
+			return $lineItem->product->purchasableType() === ProductType::UPSELL();
+		});
+	}
 
 }

@@ -2,18 +2,18 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Gateways;
 
-use DoubleThreeDigital\SimpleCommerce\Checkout\HandleStock;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
+use DoubleThreeDigital\SimpleCommerce\Events\PostCheckout;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\GatewayDoesNotSupportPurchase;
+use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Http\Request;
+use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Statamic\Facades\Site;
 
 class BaseGateway
 {
-    use HandleStock;
-
     protected array $config = [];
     protected string $handle = '';
     protected string $webhookUrl = '';
@@ -142,7 +142,33 @@ class BaseGateway
     public function markOrderAsPaid(Order $order): bool
     {
         if ($this->isOffsiteGateway()) {
-            $this->handleStock($order);
+            $order = app(Pipeline::class)
+                ->send($order)
+                ->through([
+                    \DoubleThreeDigital\SimpleCommerce\Orders\Checkout\HandleStock::class,
+                ])
+                ->thenReturn();
+
+            if (! isset(SimpleCommerce::customerDriver()['model']) && $order->customer()) {
+                $order->customer()->merge([
+                    'orders' => $order->customer()->orders()
+                        ->pluck('id')
+                        ->push($order->id())
+                        ->toArray(),
+                ]);
+
+                $order->customer()->save();
+            }
+
+            $order->markAsPaid();
+
+            if ($order->coupon()) {
+                $order->coupon()->redeem();
+            }
+
+            event(new PostCheckout($order, request()));
+
+            return true;
         }
 
         $order->markAsPaid();

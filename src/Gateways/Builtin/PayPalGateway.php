@@ -5,7 +5,6 @@ namespace DoubleThreeDigital\SimpleCommerce\Gateways\Builtin;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Gateway;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use DoubleThreeDigital\SimpleCommerce\Currency;
-use DoubleThreeDigital\SimpleCommerce\Events\PostCheckout;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\CustomerNotFound;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\GatewayDoesNotSupportPurchase;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\PayPalDetailsMissingOnOrderException;
@@ -94,11 +93,15 @@ class PayPalGateway extends BaseGateway implements Gateway
         $this->setupPayPal();
 
         $request = new OrdersGetRequest($data->request()->payment_id);
+        // $request->path .= 'fields=payment_source';
 
         /** @var \PayPalHttp\HttpResponse $response */
         $response = $this->paypalClient->execute($request);
 
-        return new Response($response->result->status === 'APPROVED');
+        return new Response(
+            $response->result->status === 'APPROVED',
+            json_decode(json_encode($response->result), true)
+        );
     }
 
     public function purchaseRules(): array
@@ -116,9 +119,7 @@ class PayPalGateway extends BaseGateway implements Gateway
     {
         $this->setupPayPal();
 
-        $paypalOrderId = isset($order->get('paypal')['result']['id'])
-            ? $order->get('paypal')['result']['id']
-            : null;
+        $paypalOrderId = $order->gateway()['data']['id'];
 
         if (! $paypalOrderId) {
             throw new PayPalDetailsMissingOnOrderException("Order [{$order->id()}] does not have a PayPal Order ID.");
@@ -135,6 +136,14 @@ class PayPalGateway extends BaseGateway implements Gateway
     public function refundCharge(Order $order): Response
     {
         $this->setupPayPal();
+
+        // Because PayPal is sometimes an utter pain, we don't get any captures in the
+        // response. So we just have to tell the user we can't process the refund.
+        if (! isset($order->gateway()['data']['purchase_units'][0]['payments']['captures'][0]['id'])) {
+            return new Response(false, [
+                'message' => 'Sorry, a capture ID could not be found for this order.',
+            ]);
+        }
 
         $request = new CapturesRefundRequest($order->gateway()['data']['purchase_units'][0]['payments']['captures'][0]['id']);
 
@@ -154,9 +163,7 @@ class PayPalGateway extends BaseGateway implements Gateway
             return false;
         }
 
-        $paypalOrderId = isset($order->get('paypal')['result']['id'])
-            ? $order->get('paypal')['result']['id']
-            : null;
+        $paypalOrderId = $order->gateway()['data']['id'];
 
         if (! $paypalOrderId) {
             throw new PayPalDetailsMissingOnOrderException("Order [{$order->id()}] does not have a PayPal Order ID.");
@@ -228,8 +235,6 @@ class PayPalGateway extends BaseGateway implements Gateway
             $order->save();
 
             $this->markOrderAsPaid($order);
-
-            event(new PostCheckout($order, $request));
         }
 
         return new HttpResponse();

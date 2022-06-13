@@ -8,18 +8,24 @@
 
 Simple Commerce is a simple, yet powerful e-commerce addon for Statamic. You have complete control over the content structure and front-end of your site.
 
+> "Simple Commerce is the perfect e-commerce companion to Statamic. It gives you all the backend goodness you need for your e-commerce site, such as product management, orders and coupons, while letting you keep control over the customer-facing experience. Duncan has baked-in lots of flexibility, so if you need to roll your own payment provider, shipping integration or even tax calculations, you can do it. If you are looking to sell on Statamic, this should be your go to, our developers love working with it and our clients love using it!"
+>
+> **Ryan Mitchell, [Thought Collective](https://www.thoughtcollective.com/)**
+
 ### Everything's just an entry
 
 Stay with what you love - Statamic entries. With Simple Commerce, all of your products, orders, customers & coupons are Statamic entries. Giving you the flexibility you need to build bespoke e-commerce sites for your clients.
 
-### Payment gateways
+And, when your site grows, it's easy to [move your orders & customers](/database-orders) into a traditional database.
+
+### Payment Gateways
 
 Out-of-the-box, Simple Commerce ships with support for three of the big payment gateways: Stripe, PayPal and Mollie. Use whichever one you need, or if you need something else: it's easy to build one.
 
 - [Documentation: Payment Gateways](https://simple-commerce.duncanmcclean.com/gateways)
 - [Documentation: Building custom gateways](https://simple-commerce.duncanmcclean.com/extending/custom-gateways)
 
-### Flexible shipping
+### Flexible Shipping
 
 Provide your customers with different shipping options depending on their address.
 
@@ -31,7 +37,7 @@ Simple Commerce has support for discount coupons. You can limit coupons to certa
 
 - [Documentation: Coupons](https://simple-commerce.duncanmcclean.com/coupons)
 
-### Product variants
+### Product Variants
 
 Sometimes you need to sell different versions of the same product. Like a t-shirt, you might want to sell it in Small, Medium & Large - each with different prices and stock levels. That's where Product Variants come in. Create a single product and configure the variants inside it.
 
@@ -75,7 +81,7 @@ Simple Commerce is a commercial addon - you **must purchase a license** via the 
 
 ## Security
 
-Only the latest version of Simple Commerce (v2.4) will receive security updates if a vulnerability is found.
+Only the latest version of Simple Commerce (v3.x) will receive security updates if a vulnerability is found.
 
 If you discover a security vulnerability, please report it to Duncan straight away, [via email](mailto:security@doublethree.digital). Please don't report security issues through GitHub Issues.
 

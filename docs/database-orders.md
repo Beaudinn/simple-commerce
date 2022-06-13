@@ -38,15 +38,75 @@ php please sc:migrate-to-database
 
 One thing worth noting is that the above command will not delete the order/customer entries or the collections. That's something you should do yourself after you're satisfied with the migration.
 
+If you receive this error (You must run the `sc:switch-to-database` command before running this command.) when running the `sc:migrate-to-database` command, you should ensure your SC 'content config' looks like this:
+
+```php
+// config/simple-commerce.php
+
+'content' => [
+    'coupons' => [
+        'repository' => \DoubleThreeDigital\SimpleCommerce\Coupons\EntryCouponRepository::class,
+        'collection' => 'coupons',
+    ],
+
+    'customers' => [
+        'repository' => \DoubleThreeDigital\SimpleCommerce\Customers\EloquentCustomerRepository::class,
+        'model' => \DoubleThreeDigital\SimpleCommerce\Customers\CustomerModel::class,
+    ],
+
+    'orders' => [
+        'repository' => \DoubleThreeDigital\SimpleCommerce\Orders\EloquentOrderRepository::class,
+        'model' => \DoubleThreeDigital\SimpleCommerce\Orders\OrderModel::class,
+    ],
+
+    'products' => [
+        'repository' => \DoubleThreeDigital\SimpleCommerce\Products\EntryProductRepository::class,
+        'collection' => 'products',
+    ],
+],
+```
+
+If you re-run the command, it should then run as expected.
+
 ## Control Panel interface
 
 When you make the switch, Simple Commerce will install [Runway](https://statamic.com/runway), another addon by me (Duncan McClean). Runway is the thing which lets you manage your database records/Eloquent models in the Control Panel.
 
 Runway has it's own documentation site - you may [read it if you please](https://runway.duncanmcclean.com/control-panel).
 
-## Overriding
+## Custom Columns
 
-If you need to add a column or do something special, you can override the Eloquent Model or the Repository used by Simple Commerce.
+There are cases where you may wish to add columns to either of the provided tables: `orders`/`customers`. You may do this by simply writing a migration to add a column to the table:
+
+```
+php artisan make:migration AddPickupPointColumnToOrdersTable
+```
+
+```php
+/**
+ * Run the migrations.
+ *
+ * @return void
+ */
+public function up()
+{
+    Schema::table('orders', function (Blueprint $table) {
+        $table->string('pickup_point')->after('gateway');
+    });
+}
+```
+
+You should then run your migrations:
+
+```
+php artisan migrate
+```
+
+Once migrated, Simple Commerce will get/set any order or customer data to your custom column, rather than relying on it being saved to the `data` column.
+
+## Customization
+
+If you need to, there's way to customise/override the Eloquent model used, along with the 'repository'.
 
 ### The Model
 

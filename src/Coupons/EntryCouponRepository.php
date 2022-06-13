@@ -36,10 +36,10 @@ class EntryCouponRepository implements RepositoryContract
             ->resource($entry)
             ->id($entry->id())
             ->code($entry->slug())
-            ->value($entry->get('value'))
             ->type($entry->get('type'))
+            ->value($entry->get('coupon_value') ?? $entry->get('value')) // TODO 4.0: Only coupon_value should be supported
             ->data(array_merge(
-                $entry->data()->except(['value', 'type'])->toArray(),
+                $entry->data()->except(['coupon_value', 'value', 'type'])->toArray(),
                 [
                     'site' => optional($entry->site())->handle(),
                     'slug' => $entry->slug(),
@@ -91,8 +91,8 @@ class EntryCouponRepository implements RepositoryContract
             array_merge(
                 Arr::except($coupon->data()->toArray(), ['id', 'site', 'slug', 'published']),
                 [
-                    'value' => $coupon->value(),
                     'type' => $coupon->type(),
+                    'coupon_value' => $coupon->value(),
                 ]
             )
         );
@@ -101,8 +101,8 @@ class EntryCouponRepository implements RepositoryContract
 
         $coupon->id = $entry->id();
         $coupon->code = $entry->slug();
-        $coupon->value = $entry->get('value');
         $coupon->type = $entry->get('type');
+        $coupon->value = $entry->get('coupon_value');
         $coupon->resource = $entry;
 
         $coupon->merge([
