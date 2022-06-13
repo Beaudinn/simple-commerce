@@ -34,6 +34,7 @@ class OrderModel extends Model
         'gateway' => 'json',
         'data' => 'json',
         'paid_date' => 'datetime',
+	    'delivery_at' => 'datetime',
     ];
 
     protected $appends = [

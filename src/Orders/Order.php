@@ -214,28 +214,20 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
-	public function deliveryAt($delivery_at = NULL)
-	{
-		return $this
-			->fluentlyGetOrSet('delivery_at')
-			->getter(function ($value) {
-
-				if ($value instanceof Carbon) {
-					return $value->format('Y-m-d');
-				}
-
-				return Carbon::parse($value)->format('Y-m-d');
-			})
-			->args(func_get_args());
-	}
-
-
-	public function shippingMethod($shipping_method = NULL)
-	{
-		return $this
-			->fluentlyGetOrSet('shipping_method')
-			->args(func_get_args());
-	}
+	//public function deliveryAt($delivery_at = NULL)
+	//{
+	//	return $this
+	//		->fluentlyGetOrSet('delivery_at')
+	//		->getter(function ($value) {
+	//
+	//			if ($value instanceof Carbon) {
+	//				return $value->format('Y-m-d');
+	//			}
+	//
+	//			return Carbon::parse($value)->format('Y-m-d');
+	//		})
+	//		->args(func_get_args());
+	//}
 
 
 	public function gateway($gateway = NULL)
@@ -356,6 +348,9 @@ class Order implements Contract
 	public function getDeliveries($date)
 	{
 
+		if($date instanceof Carbon){
+			$date = $date->format('Y-m-d');
+		}
 
 		if (!isset($this->get('deliveries', [])[$date])) {
 
@@ -388,9 +383,9 @@ class Order implements Contract
 	{
 
 		if (!$shippingMethod)
-			$shippingMethod = $this->shippingMethod();
+			$shippingMethod = $this->get('shipping_method');
 
-		return collect($this->getDeliveries($this->deliveryAt()))->first(function ($delivery) use ($shippingMethod) {
+		return collect($this->getDeliveries($this->get('delivery_at')))->first(function ($delivery) use ($shippingMethod) {
 			return $delivery->shipping_method_api_code == $shippingMethod;
 		});
 	}
@@ -463,10 +458,9 @@ class Order implements Contract
 		return $this;
 	}
 
-
 	public function setDeliveryAt(string $date)
 	{
-		$this->deliveryAt($date);
+		$this->set('delivery_at',$date);
 
 		$this->save();
 
@@ -479,7 +473,7 @@ class Order implements Contract
 	{
 
 
-		$this->shippingMethod($shipping_method);
+		$this->set('shipping_method', $shipping_method);
 
 		$this->save();
 

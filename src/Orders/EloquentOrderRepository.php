@@ -67,8 +67,6 @@ class EloquentOrderRepository implements RepositoryContract
 			->couponTotal($model->coupon_total)
 			->customer($model->customer_id)
 			->coupon($model->coupon)
-			->deliveryAt($model->delivery_at)
-			->shippingMethod($model->shipping_method)
 			->gateway($model->gateway)
 			->deliveries($model->deliveries)
 			->data(collect($model->data)->merge([
@@ -154,9 +152,6 @@ class EloquentOrderRepository implements RepositoryContract
 		$model->coupon = $order->coupon() instanceof CouponContract ? $order->coupon()->id() : $order->coupon();
 		$model->gateway = $order->gateway();
 		//$model->deliveries = $order->deliveries();
-		$model->delivery_at = $order->deliveryAt();
-
-		$model->shipping_method = $order->shippingMethod();
 
 		$model->shipping_company_name = $order->get('shipping_company_name');
 		$model->shipping_first_name = $order->get('shipping_first_name');
