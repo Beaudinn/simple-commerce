@@ -229,7 +229,8 @@ class MollieGateway extends BaseGateway implements Gateway
     {
 	    $currentSite = Site::current();
         $this->mollie = new MollieApiClient();
-        $this->mollie->setApiKey($this->config()->get("sites.{$currentSite->handle()}.key"));
+    	$sites = $this->config()->get("sites");
+        $this->mollie->setApiKey($sites[$currentSite->handle()]['key']);
 
         $this->mollie->addVersionString('Statamic/' . Statamic::version());
         $this->mollie->addVersionString('SimpleCommerce/' . SimpleCommerce::version());
