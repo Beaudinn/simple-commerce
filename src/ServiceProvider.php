@@ -265,14 +265,14 @@ class ServiceProvider extends AddonServiceProvider
     {
         Nav::extend(function ($nav) {
             $nav->create(__('Overview'))
-                ->section(__('Simple Commerce'))
+                ->section(__('Sales'))
                 ->route('simple-commerce.overview')
                 ->can('view simple commerce overview')
                 ->icon('charts');
 
             if (isset(SimpleCommerce::orderDriver()['collection'])) {
                 $nav->create(__('Orders'))
-                    ->section(__('Simple Commerce'))
+                    ->section(__('Sales'))
                     ->route('collections.show', SimpleCommerce::orderDriver()['collection'])
                     ->can('view', SimpleCommerce::orderDriver()['collection'])
                     ->icon(SimpleCommerce::svg('shop'));
@@ -281,7 +281,7 @@ class ServiceProvider extends AddonServiceProvider
                 $orderResource = \DoubleThreeDigital\Runway\Runway::findResourceByModel(new $orderModelClass);
 
                 $nav->create(__('Orders'))
-                    ->section(__('Simple Commerce'))
+                    ->section(__('Sales'))
                     ->route('runway.index', ['resourceHandle' => $orderResource->handle()])
                     ->can("View {$orderResource->plural()}")
                     ->icon(SimpleCommerce::svg('shop'));
@@ -289,7 +289,7 @@ class ServiceProvider extends AddonServiceProvider
 
             if (isset(SimpleCommerce::customerDriver()['collection'])) {
                 $nav->create(__('Customers'))
-                    ->section(__('Simple Commerce'))
+                    ->section(__('Sales'))
                     ->route('collections.show', SimpleCommerce::customerDriver()['collection'])
                     ->can('view', SimpleCommerce::customerDriver()['collection'])
                     ->icon('user');
@@ -298,27 +298,27 @@ class ServiceProvider extends AddonServiceProvider
                 $customerResource = \DoubleThreeDigital\Runway\Runway::findResourceByModel(new $customerModelClass);
 
                 $nav->create(__('Customers'))
-                    ->section(__('Simple Commerce'))
+                    ->section(__('Sales'))
                     ->route('runway.index', ['resourceHandle' => $customerResource->handle()])
                     ->can("View {$customerResource->plural()}")
                     ->icon('user');
             }
 
             $nav->create(__('Products'))
-                ->section(__('Simple Commerce'))
+                ->section(__('Sales'))
                 ->route('collections.show', SimpleCommerce::productDriver()['collection'])
                 ->can('view', SimpleCommerce::productDriver()['collection'])
                 ->icon('entries');
 
             $nav->create(__('Coupons'))
-                ->section(__('Simple Commerce'))
+                ->section(__('Sales'))
                 ->route('collections.show', SimpleCommerce::couponDriver()['collection'])
                 ->can('view', SimpleCommerce::couponDriver()['collection'])
                 ->icon('tags');
 
             if (SimpleCommerce::isUsingStandardTaxEngine()) {
                 $nav->create(__('Tax'))
-                    ->section(__('Simple Commerce'))
+                    ->section(__('Sales'))
                     ->route('simple-commerce.tax')
                     ->can('view tax rates')
                     ->icon(SimpleCommerce::svg('money-cash-file-dollar'));
@@ -356,7 +356,7 @@ class ServiceProvider extends AddonServiceProvider
     protected function registerPermissions()
     {
         Permission::register('view simple commerce overview')
-            ->label('View Simple Commerce Overview');
+            ->label('View Sales Overview');
 
         if (SimpleCommerce::isUsingStandardTaxEngine()) {
             Permission::register('view tax rates', function ($permission) {

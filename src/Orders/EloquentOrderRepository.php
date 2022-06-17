@@ -2,6 +2,7 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Orders;
 
+use Composer\Package\Loader\ValidatingArrayLoader;
 use Doctrine\DBAL\Schema\Column;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Coupon as CouponContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Customer as CustomerContract;
@@ -44,6 +45,7 @@ class EloquentOrderRepository implements RepositoryContract
 	public function find($id): ?Order
 	{
 		$model = (new $this->model)->find($id);
+
 
 		if (!$model) {
 			throw new OrderNotFound("Order [{$id}] could not be found.");

@@ -6,16 +6,21 @@ use DoubleThreeDigital\SimpleCommerce\Contracts\Gateway;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use DoubleThreeDigital\SimpleCommerce\Currency;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\OrderNotFound;
+use DoubleThreeDigital\SimpleCommerce\Exceptions\PayPalDetailsMissingOnOrderException;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderFacade;
 use DoubleThreeDigital\SimpleCommerce\Gateways\BaseGateway;
 use DoubleThreeDigital\SimpleCommerce\Gateways\Prepare;
 use DoubleThreeDigital\SimpleCommerce\Gateways\Response;
+use DoubleThreeDigital\SimpleCommerce\Products\ProductType;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
+use DoubleThreeDigital\SimpleCommerce\Tax\Standard\TaxEngine;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\MethodCollection;
 use Mollie\Api\Types\PaymentStatus;
+use PayPalCheckoutSdk\Orders\OrdersGetRequest;
 use Statamic\Facades\Site;
 use Statamic\Statamic;
 
@@ -48,12 +53,150 @@ class MollieGateway extends BaseGateway implements Gateway
 				'order_id' => $order->id,
 			],
 		]);
+		//
+		//$payment = $this->mollie->orders->create([
+		//	'amount' => [
+		//		'currency' => Currency::get(Site::current())['code'],
+		//		'value'    =>  (string) $this->mollieAmount($order->grandTotal() / 100),
+		//	],
+		//	'billingAddress' => [
+		//		'givenName' => $order->get('billing_first_name') ? $order->get('billing_first_name') : 'Niet bekent',
+		//		'familyName' => $order->get('billing_last_name') ? $order->get('billing_last_name') : 'Niet bekent',
+		//		'streetAndNumber' => $order->get('billing_street'). ', ' .$order->get('billing_house_number') . $order->get('billing_addition'),
+		//		'city' => $order->get('billing_city'),
+		//		'postalCode' => $order->get('billing_postal_code'),
+		//		'country' => $order->get('billing_country'),
+		//		'email' => $order->customer()->email(),
+		//	],
+		//	'shippingAddress' => [
+		//		'givenName' => $order->get('shipping_first_name') ? $order->get('shipping_first_name') : 'Niet bekent',
+		//		'familyName' => $order->get('shipping_last_name') ? $order->get('shipping_last_name') : 'Niet bekent',
+		//		'streetAndNumber' => $order->get('shipping_street'). ', ' .$order->get('shipping_house_number') . $order->get('shipping_addition'),
+		//		'city' => $order->get('shipping_city'),
+		//		'postalCode' => $order->get('shipping_postal_code'),
+		//		'country' => $order->get('shipping_country'),
+		//		'email' => $order->customer()->email(),
+		//	],
+		//	//metadata
+		//	'orderNumber' => "18475",
+		//	'locale' => Site::current()->locale(),
+		//	'lines' => $this->mapItems($order),
+		//	//'description' => "Order {$order->get('title')}",
+		//	'redirectUrl' => $this->callbackUrl([
+		//		'_order_id' => $data->order()->id(),
+		//	]),
+		//	'webhookUrl'  => $this->webhookUrl(),
+		//	'metadata'    => [
+		//		'order_id' => $order->id,
+		//	],
+		//]);
 
 		return new Response(true, [
 			'id' => $payment->id,
 		], $payment->getCheckoutUrl());
 	}
 
+	/**
+	 * The line items to need to be send in a specific format.
+	 *
+	 * https://docs.mollie.com/reference/v2/orders-api/create-order#order-lines-details
+	 */
+	private function mapItems($order): array
+	{
+		//Examples
+		//https://github.com/mollie/Shopware/blob/26e43071bf15cc4aa33569aba2a0d8e87b4bf4b1/Components/TransactionBuilder/Services/ItemBuilder/TransactionItemBuilder.php
+		//https://github.com/QualityWorks/mollie/blob/62e9461585de86baa534b1dd26c1f072e02fb656/catalog/controller/payment/mollie.php
+
+		$items = $order->lineItems()->map(function ($item) use($order) {
+
+			$name = $item->product()->toAugmentedArray()['title']->raw();
+
+			if($item->product()->purchasableType() == ProductType::PROBO()){
+				$name = $name . ' ' . $item->initial();
+			}
+
+			//TODO make dynamic
+			$taxRate =  21;
+
+			# this line is from the Mollie API
+			# it tells us how the vat amount has to be calculated
+			# https://docs.mollie.com/reference/v2/orders-api/create-order
+			$totalAmount = $item->total() / 100;
+			$vatAmount = $totalAmount * ($taxRate / ($taxRate + 100));
+			# also round in the end!
+			//$vatAmount = round($vatAmount, 2);
+
+			//$item->tax()
+			/*array(3) {
+			  ["amount"]=>
+			  int(2577)
+			  ["rate"]=>
+			  int(21)
+			  ["price_includes_tax"]=>
+			  bool(false)
+			}
+			*/
+
+			$tax = (new TaxEngine)->calculate($order, $item->toArray());
+			var_dump($tax); die();
+			return [
+				'type' => 'physical',
+				'sku' => $item->product()->id(),
+				//'productUrl' => $item->product()->toAugmentedArray()['url']->raw(),
+				'name' => $name,
+				'imageUrl' => isset($item->product()->toAugmentedArray()['image']) ? url($item->product()->toAugmentedArray()['image']) : NULL,
+				'quantity' => $item->quantity(),
+				'vatRate' =>  (string) "21.00",
+				'unitPrice' => [
+					'currency' => Currency::get(Site::current())['code'],
+					'value' => (string) $this->mollieAmount(($item->total() /100) / $item->quantity()),
+				],
+				'totalAmount' => [
+					'currency' => Currency::get(Site::current())['code'],
+					'value' => (string)$this->mollieAmount(($item->total() /100)),
+				],
+				'vatAmount' => [
+					'currency' => Currency::get(Site::current())['code'],
+					'value' =>(string) $this->mollieAmount($item->tax()['amount']),
+				],
+			];
+		});
+
+
+		//if ($rushLine) {
+		//	$items->push([
+		//		'type' => 'shipping_fee',
+		//		'name' => 'RUSHPRICE'. $rushLine['production_hours'],
+		//		'quantity' => 1,
+		//		'vatRate' => 21.00,
+		//		'unitPrice' => [
+		//			'currency' => config('shop.currency_isoCode'),
+		//			'value' => $this->mollieAmount($rushLine['sales_price_incl_vat']),
+		//		],
+		//		'totalAmount' => [
+		//			'currency' => config('shop.currency_isoCode'),
+		//			'value' => $this->mollieAmount($rushLine['sales_price_incl_vat']),
+		//		],
+		//		'vatAmount' => [
+		//			'currency' => config('shop.currency_isoCode'),
+		//			'value' => $this->mollieAmount($rushLine['sales_price_incl_vat'] - $rushLine['sales_price']),
+		//		],
+		//	]);
+		//}
+
+
+
+		$items = $items->toArray();
+		return $items;
+		return $this->addShippingToLineItems($items, $shippings);
+	}
+
+	private function mollieAmount(string $value): string
+	{
+		$value = str_replace(',', '.', $value);
+
+		return number_format($value, 2, '.', '');
+	}
 	public function getCharge(Order $order): Response
 	{
 		$this->setupMollie();
@@ -160,6 +303,7 @@ class MollieGateway extends BaseGateway implements Gateway
 
 	public function paymentDisplay($value): array
 	{
+
 		if (! isset($value['data']['id'])) {
 			return ['text' => 'Unknown', 'url' => null];
 		}
@@ -203,6 +347,45 @@ class MollieGateway extends BaseGateway implements Gateway
 			'currency' => Currency::get(Site::current())['code'],
 			'value' => (string)substr_replace( $order->grandTotal(), '.', -2, 0),
 		]] : []);
+
+	}
+
+	public function callback(Request $request): bool
+	{
+		$this->setupMollie();
+
+		$order = OrderFacade::find($request->get('_order_id'));
+
+		if (! $order) {
+			return false;
+		}
+
+		$moloieOrderId = $order->get('mollie')['id'];
+
+		if (! $moloieOrderId) {
+			throw new PayPalDetailsMissingOnOrderException("Order [{$order->id()}] does not have a PayPal Order ID.");
+		}
+
+		$payment = $this->mollie->payments->get($moloieOrderId);
+
+		switch ($payment->status)  {
+			case 'paid':
+				return true;
+				//$this->isPaid($order, Carbon::parse($payment->paidAt), $payment->method);
+				break;
+			case 'authorized':
+				//$this->isAuthorized($order, Carbon::parse($payment->authorizedAt), $payment->method);
+				break;
+			case 'completed':
+				//$this->isCompleted($order, Carbon::parse($payment->completedAt), $payment->method);
+				break;
+			case 'expired':
+				//$this->isExpired($order, Carbon::parse($payment->expiredAt));
+				break;
+			case 'canceled':
+				//$this->isCanceled($order, Carbon::parse($payment->canceledAt));
+				break;
+		}
 
 	}
 }

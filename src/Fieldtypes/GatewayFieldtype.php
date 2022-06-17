@@ -45,6 +45,7 @@ class GatewayFieldtype extends Fieldtype
 				]);
 			})
 			->values();
+		//var_dump(Action::for($this->field->parent())); die();
 
 		if (isset(SimpleCommerce::orderDriver()['collection'])) {
 			$actionUrl = cp_route(

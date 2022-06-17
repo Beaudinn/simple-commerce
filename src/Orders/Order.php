@@ -397,9 +397,9 @@ class Order implements Contract
 
 		$this->merge([
 			//'paid_date' => now()->format('Y-m-d H:i'), //appoved_at
-			'published' => true,
+			'is_approved' => true,
+			//'published' => true,
 		]);
-
 		$this->save();
 
 		event(new OrderApprovedEvent($this));
@@ -469,7 +469,7 @@ class Order implements Contract
 		}
 	}
 
-	public function setShippingMethod(string $shipping_method)
+	public function setShippingMethod(string|null $shipping_method)
 	{
 
 

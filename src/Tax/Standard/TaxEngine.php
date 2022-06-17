@@ -8,7 +8,7 @@ use DoubleThreeDigital\SimpleCommerce\Exceptions\PreventCheckout;
 use DoubleThreeDigital\SimpleCommerce\Facades\Product;
 use DoubleThreeDigital\SimpleCommerce\Facades\TaxRate;
 use DoubleThreeDigital\SimpleCommerce\Facades\TaxZone;
-use DoubleThreeDigital\SimpleCommerce\Orders\Address;
+//use DoubleThreeDigital\SimpleCommerce\Orders\Address;
 use DoubleThreeDigital\SimpleCommerce\Tax\Standard\TaxRate as StandardTaxRate;
 use DoubleThreeDigital\SimpleCommerce\Tax\TaxCalculation;
 use Illuminate\Support\Facades\Config;
@@ -45,6 +45,8 @@ class TaxEngine implements Contract
     protected function decideOnRate(Order $order, array $lineItem): ?StandardTaxRate
     {
         $product = Product::find($lineItem['product']);
+
+        var_dump( TaxRate::all()); die();
 
         /** @var \DoubleThreeDigital\SimpleCommerce\Orders\Address */
         $address = config('simple-commerce.tax_engine_config.address') === 'billing'

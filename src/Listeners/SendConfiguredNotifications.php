@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionParameter;
 
-class SendConfiguredNotifications implements ShouldQueue
+class CreateInvoiceOrderApprovedEvent implements ShouldQueue
 {
     public function handle($event)
     {

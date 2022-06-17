@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Statamic\Facades\Site;
 
 class OrderModel extends Model
 {
@@ -38,10 +39,20 @@ class OrderModel extends Model
     ];
 
     protected $appends = [
-       // 'order_number',
+    	'title',
+       'order_number',
+	    'published'
     ];
 
+	//public function scopeRunwayListing($query)
+	//{
+	//	return $query->where('is_paid', true);
+	//}
 
+	//public function scopeRunway($query)
+	//{
+	//	$query->where('site', Site::selected()->handle());
+	//}
 
     //protected function items(): Attribute
     //{
@@ -61,11 +72,42 @@ class OrderModel extends Model
 	//    );
     //}
 
+	public function getTitleAttribute()
+	{
+		if (array_key_exists('order_number', $this->data)) {
+			return $this->data['order_number'];
+		}
+
+		return "#{$this->id}";
+	}
+
+	public function getOrderNumberAttribute()
+	{
+		if (array_key_exists('title', $this->data)) {
+			return $this->data['title'];
+		}
+
+		return "#{$this->id}";
+	}
+
+
+	public function getPublishedAttribute()
+	{
+		return $this->is_approved;
+	}
 
 
     public function customer(): BelongsTo
     {
         return $this->belongsTo(CustomerModel::class);
     }
+
+	/**
+	 * Get the parent orderable model (Supplier1 or Supplier2).
+	 */
+	public function orderable()
+	{
+		return $this->morphTo();
+	}
 
 }

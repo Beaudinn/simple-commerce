@@ -27,6 +27,7 @@ class RefundAction extends Action
         if (isset(SimpleCommerce::orderDriver()['model'])) {
             $orderModelClass = SimpleCommerce::orderDriver()['model'];
 
+	        return true;
             return $item instanceof $orderModelClass
                 && $item->is_paid
                 && ! $item->is_refunded;

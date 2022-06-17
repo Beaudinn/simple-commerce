@@ -19,13 +19,18 @@ class ApproveOrder extends Action
         if (isset(SimpleCommerce::orderDriver()['collection'])) {
             return $item instanceof Entry
                 && $item->collectionHandle() === SimpleCommerce::orderDriver()['collection']
-                && $item->get('is_paid') !== true;
+	            && $item->get('is_paid')
+                && $item->get('is_approved') !== true;
         }
 
         if (isset(SimpleCommerce::orderDriver()['model'])) {
             $orderModelClass = SimpleCommerce::orderDriver()['model'];
 
+            //var_dump($item->items); die();
             return $item instanceof $orderModelClass
+	            && count($item->items)
+	            && $item->delivery_at
+	            && $item->customer()
                 && ! $item->is_approved;
         }
 

@@ -1,5 +1,5 @@
 {
-  "name": "doublethreedigital/simple-commerce",
+  "name": "webhoek/simple-commerce",
   "description": "A perfectly simple e-commerce addon for Statamic",
   "license": "proprietary",
   "autoload": {
@@ -14,7 +14,7 @@
   },
   "extra": {
     "download-dist": {
-      "url": "https://github.com/doublethreedigital/simple-commerce/releases/download/{$version}/dist.tar.gz",
+      "url": "https://github.com/doublethreedigital/simple-commerce/releases/download/v3.2.7/dist.tar.gz",
       "path": "resources/dist"
     },
     "statamic": {
@@ -40,7 +40,6 @@
     "stripe/stripe-php": "^7.7"
   },
   "require-dev": {
-    "doctrine/dbal": "^3.3",
     "nunomaduro/collision": "^5.0 || ^6.1",
     "orchestra/testbench": "^6.0 || ^7.0",
     "spatie/ray": "^1.17",
