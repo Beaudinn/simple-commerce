@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -17,6 +18,7 @@ class CreateCustomersTable extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->string('email')->unique();
+	        $table->string('locale')->nullable();
             $table->json('data')->nullable();
             $table->timestamps();
         });

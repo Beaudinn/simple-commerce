@@ -319,6 +319,22 @@ class MollieGateway extends BaseGateway implements Gateway
 		];
 	}
 
+
+	public function orderDisplay($value): array
+	{
+
+		if (! isset($value['data']['id'])) {
+			return [];
+		}
+
+		$molliePayment = $value['data']['id'];
+
+		return [
+			'PaymentMethod' => 'ideal', //TODO get payment method from data
+			'TransactionID' => $molliePayment,
+		];
+	}
+
 	protected function setupMollie()
 	{
 		$this->mollie = new MollieApiClient();

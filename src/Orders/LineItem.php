@@ -16,6 +16,8 @@ class LineItem
     public $quantity;
     public $total;
     public $tax;
+    public $purchase_price;
+	public $purchase_price_incl_vat;
     public $initial;
 	public $options;
 	public $uploader;

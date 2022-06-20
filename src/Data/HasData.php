@@ -12,7 +12,7 @@ trait HasData
 	{
 		return $this
 			->fluentlyGetOrSet('data')
-			->setter(function ($data) {
+			->getter(function ($data) {
 				if (is_array($data)) {
 					$data = collect($data);
 				}

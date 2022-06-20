@@ -54,7 +54,7 @@ class EloquentOrderRepository implements RepositoryContract
 		return app(Order::class)
 			->resource($model)
 			->id($model->id)
-			->shop($model->shop)
+			->locale($model->locale)
 			->orderNumber($model->id)
 			->isPaid($model->is_paid)
 			->isShipped($model->is_shipped)
@@ -137,7 +137,7 @@ class EloquentOrderRepository implements RepositoryContract
 			$model = new $this->model();
 		}
 
-		$model->shop = $order->shop();
+		$model->locale = $order->locale();
 		$model->is_paid = $order->isPaid();
 		$model->is_shipped = $order->isShipped();
 		$model->is_refunded = $order->isRefunded();

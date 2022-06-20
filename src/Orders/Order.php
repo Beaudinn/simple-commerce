@@ -58,7 +58,6 @@ class Order implements Contract
 
 	public function __construct()
 	{
-		$this->shop = Site::current()->handle();
 		$this->isPaid = false;
 		$this->isShipped = false;
 		$this->isRefunded = false;
@@ -87,12 +86,25 @@ class Order implements Contract
 	}
 
 
-	public function shop($shop = NULL)
+	public function locale($locale = null)
 	{
 		return $this
-			->fluentlyGetOrSet('shop')
+			->fluentlyGetOrSet('locale')
+			->setter(function ($locale) {
+				return $locale instanceof \Statamic\Sites\Site ? $locale->handle() : $locale;
+			})
+			->getter(function ($locale) {
+
+				return $locale ?? Site::default()->handle();
+			})
 			->args(func_get_args());
 	}
+
+	public function site()
+	{
+		return Site::get($this->locale());
+	}
+	
 
 	public function orderNumber($orderNumber = NULL)
 	{
@@ -391,22 +403,6 @@ class Order implements Contract
 	}
 
 
-	public function markAsApproved(): self
-	{
-		$this->isApproved(true);
-
-		$this->merge([
-			//'paid_date' => now()->format('Y-m-d H:i'), //appoved_at
-			'is_approved' => true,
-			//'published' => true,
-		]);
-		$this->save();
-
-		event(new OrderApprovedEvent($this));
-
-		return $this;
-	}
-
 
 	public function markAsPaid(): self
 	{
@@ -423,20 +419,6 @@ class Order implements Contract
 		return $this;
 	}
 
-	public function markAsShipped(): self
-	{
-		$this->isShipped(true);
-
-		$this->data([
-			'shipped_date' => now()->format('Y-m-d H:i'),
-		]);
-
-		$this->save();
-
-		event(new OrderShippedEvent($this));
-
-		return $this;
-	}
 
 	public function refund($refundData): self
 	{
@@ -481,6 +463,7 @@ class Order implements Contract
 			$this->recalculate();
 		}
 	}
+
 
 	public function collection(): string
 	{
@@ -559,7 +542,7 @@ class Order implements Contract
 		$freshOrder = OrderFacade::find($this->id());
 
 		$this->id = $freshOrder->id;
-		$this->shop = $freshOrder->shop;
+		$this->site = $freshOrder->site;
 		$this->isPaid = $freshOrder->isPaid;
 		$this->isShipped = $freshOrder->isShipped;
 		$this->lineItems = $freshOrder->lineItems;

@@ -119,6 +119,12 @@ class Manager implements Contract
         return $this->resolve()->paymentDisplay($value);
     }
 
+
+    public function orderDisplay($value)
+    {
+        return $this->resolve()->orderDisplay($value);
+    }
+
     public function withRedirectUrl(string $redirectUrl): self
     {
         $this->redirectUrl = $redirectUrl;

@@ -2,6 +2,7 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Customers;
 
+use App\Models\Address;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Customer as Contract;
 use DoubleThreeDigital\SimpleCommerce\Data\HasData;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\OrderNotFound;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Statamic\Contracts\Entries\Entry;
+use Statamic\Facades\Site;
 use Statamic\Http\Resources\API\EntryResource;
 
 class Customer implements Contract
@@ -21,6 +23,7 @@ class Customer implements Contract
 
 	public $id;
 	public $email;
+	public $locale;
 	public $data;
 
 	public $resource;
@@ -60,6 +63,21 @@ class Customer implements Contract
 			->args(func_get_args());
 	}
 
+	public function locale($locale = null)
+	{
+		return $this
+			->fluentlyGetOrSet('locale')
+			->setter(function ($locale) {
+				return $locale instanceof \Statamic\Sites\Site ? $locale->handle() : $locale;
+			})
+			->getter(function ($locale) {
+
+				return $locale ?? Site::default()->handle();
+			})
+			->args(func_get_args());
+	}
+
+
 	public function orders(): Collection
 	{
 		if ($this->resource instanceof Model) {
@@ -77,6 +95,16 @@ class Customer implements Contract
 				return null;
 			}
 		})->filter()->values();
+	}
+
+	public function site()
+	{
+		return Site::get($this->locale());
+	}
+
+	public function primaryAddress(): Address
+	{
+		return $this->resource->addresses()->IsPrimary()->first();
 	}
 
 	public function routeNotificationForMail($notification = null)

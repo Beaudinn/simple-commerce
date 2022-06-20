@@ -7,13 +7,18 @@ use DoubleThreeDigital\SimpleCommerce\Http\Controllers\CP\TaxRateController;
 use DoubleThreeDigital\SimpleCommerce\Http\Controllers\CP\TaxZoneController;
 use DoubleThreeDigital\SimpleCommerce\Http\Controllers\CP\VariantFieldtypeController;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
+use \DoubleThreeDigital\SimpleCommerce\Http\Controllers\CP\StateController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('simple-commerce')->name('simple-commerce.')->group(function () {
     Route::get('/overview', [OverviewController::class, 'index'])->name('overview');
 
+	Route::post('/state/edit', [StateController::class, 'edit'])->name('state.edit');
+	Route::post('/state/update', [StateController::class, 'update'])->name('state.update');
+
     if (SimpleCommerce::isUsingStandardTaxEngine()) {
         Route::redirect('tax', 'tax/rates')->name('tax');
+
 
         Route::prefix('tax/categories')->name('tax-categories.')->group(function () {
             Route::get('/', [TaxCategoryController::class, 'index'])->name('index');

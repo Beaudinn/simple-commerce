@@ -12,9 +12,11 @@ class OrderApproved
     use InteractsWithSockets;
 
     public Order $order;
+    public array $values;
 
-    public function __construct(Order $order)
+    public function __construct(Order $order, $values = [])
     {
         $this->order = $order;
+        $this->values = $values;
     }
 }

@@ -21,6 +21,7 @@ trait HasLineItems
 					$value = collect($value);
 				}
 
+
 				return $value->map(function ($item) {
 					if ($item instanceof LineItem) {
 						return $item;
@@ -145,6 +146,10 @@ trait HasLineItems
 
 			if (isset($lineItemData['total'])) {
 				$lineItem->total($lineItemData['total']);
+			}
+
+			if (isset($lineItemData['purchase_price'])) {
+				$lineItem->purchasePrice($lineItemData['purchase_price']);
 			}
 
 			if (isset($lineItemData['variant'])) {

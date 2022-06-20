@@ -15,6 +15,7 @@ class EloquentCustomerRepository implements RepositoryContract
 
     protected $knownColumns = [
         'name',
+	    'locale',
     ];
 
     public function __construct()
@@ -39,6 +40,7 @@ class EloquentCustomerRepository implements RepositoryContract
 			->resource($model)
 			->id($model->id)
 			->email($model->email)
+			->locale($model->locale)
 			->data(
 				collect($model->data)
 					->merge([

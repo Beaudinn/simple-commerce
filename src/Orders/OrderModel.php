@@ -2,23 +2,29 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Orders;
 
+use App\Models\Customer;
+use App\Models\Orderable;
 use DoubleThreeDigital\SimpleCommerce\Customers\CustomerModel;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\OrderState;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Spatie\ModelStates\HasStates;
 use Statamic\Facades\Site;
+use Webhoek\P4sSupplier\SupplierOrder\SupplierOrderModel;
 
 class OrderModel extends Model
 {
     use HasFactory;
+	use HasStates;
 
     protected $table = 'orders';
 
     protected $guarded = [];
 
-
     protected $casts = [
+	    'state' => OrderState::class,
         'is_paid' => 'boolean',
         'is_shipped' => 'boolean',
         'is_refunded' => 'boolean',
@@ -33,6 +39,7 @@ class OrderModel extends Model
         'coupon_total' => 'integer',
         'use_shipping_address_for_billing' => 'boolean',
         'gateway' => 'json',
+	    'invoice' => 'json',
         'data' => 'json',
         'paid_date' => 'datetime',
 	    'delivery_at' => 'datetime',
@@ -74,8 +81,8 @@ class OrderModel extends Model
 
 	public function getTitleAttribute()
 	{
-		if (array_key_exists('order_number', $this->data)) {
-			return $this->data['order_number'];
+		if (array_key_exists('order_number', $this->attributes)) {
+			return $this->attributes['order_number'];
 		}
 
 		return "#{$this->id}";
@@ -83,8 +90,8 @@ class OrderModel extends Model
 
 	public function getOrderNumberAttribute()
 	{
-		if (array_key_exists('title', $this->data)) {
-			return $this->data['title'];
+		if (array_key_exists('order_number', $this->attributes)) {
+			return $this->attributes['order_number'];
 		}
 
 		return "#{$this->id}";
@@ -99,15 +106,41 @@ class OrderModel extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(CustomerModel::class);
+        return $this->belongsTo(Customer::class);
     }
+
+	/**
+	 * Get the parent order model.
+	 */
+	//public function order()
+	//{
+	//	return $this->morphMany(SupplierOrderModel::class, 'orderable');
+	//}
+	//
+	//public function orderables()
+	//{
+	//	return $this->morphMany(Orderable::class, 'orderable');
+	//}
+
+	public function orders(){
+
+		return $this->hasMany(Orderable::class);
+	}
+
+
+	//public function orders()
+	//{
+	//	return $this->morphTo();
+	//}
 
 	/**
 	 * Get the parent orderable model (Supplier1 or Supplier2).
 	 */
-	public function orderable()
-	{
-		return $this->morphTo();
-	}
+	//public function orderables()
+	//{
+	//	return $this->morphedByMany(Orderable::class, 'orderable');
+	//	return $this->morphMany(Orderable::class, 'orderable');
+	//
+	//}
 
 }
