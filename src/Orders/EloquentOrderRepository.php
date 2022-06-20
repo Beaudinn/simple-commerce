@@ -55,7 +55,7 @@ class EloquentOrderRepository implements RepositoryContract
 			->resource($model)
 			->id($model->id)
 			->locale($model->locale)
-			->orderNumber($model->id)
+			->orderNumber($model->order_number)
 			->isPaid($model->is_paid)
 			->isShipped($model->is_shipped)
 			->isRefunded($model->is_refunded)
@@ -139,6 +139,7 @@ class EloquentOrderRepository implements RepositoryContract
 
 		$model->locale = $order->locale();
 		$model->is_paid = $order->isPaid();
+		$model->order_number = $order->orderNumber();
 		$model->is_shipped = $order->isShipped();
 		$model->is_refunded = $order->isRefunded();
 		$model->items = $order->lineItems()->map->toArray();
@@ -201,7 +202,7 @@ class EloquentOrderRepository implements RepositoryContract
 		$model->save();
 
 		$order->id = $model->id;
-		$order->orderNumber = $model->id;
+		$order->orderNumber = $model->order_number;
 		$order->shop = $model->shop;
 		$order->isPaid = $model->is_paid;
 		$order->isShipped = $model->is_shipped;
@@ -264,25 +265,4 @@ class EloquentOrderRepository implements RepositoryContract
 		$order->resource()->delete();
 	}
 
-	/**
-	 * Create an order number.
-	 */
-	protected function createOrderNumber(): string
-	{
-
-		$prefix = config('shop.order_number_prefix');
-		$number = config('shop.order_number_range');
-
-
-		if (!empty($number)) {
-			do {
-				$number++;
-
-				$count = (new $this->model)->where('order_number', $prefix . $number)->count();
-
-			} while ($count);
-		}
-
-		return $prefix . $number;
-	}
 }

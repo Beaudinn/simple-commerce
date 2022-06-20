@@ -47,7 +47,7 @@ class OrderModel extends Model
 
     protected $appends = [
     	'title',
-       'order_number',
+        'order_number',
 	    'published'
     ];
 
