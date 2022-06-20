@@ -22,6 +22,7 @@ abstract class OrderState extends State
 	public static function config(): StateConfig
 	{
 		return parent::config()
+			->default(Concept::class)
 			->allowTransition(Approved::class, Concept::class) // for testing
 			->allowTransition(Concept::class, Canceled::class)
 			->allowTransition([Concept::class, Canceled::class], Approved::class, ToApprovedTransition::class)
