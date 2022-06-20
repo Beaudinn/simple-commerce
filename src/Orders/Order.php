@@ -95,7 +95,7 @@ class Order implements Contract
 			})
 			->getter(function ($locale) {
 
-				return $locale ?? Site::default()->handle();
+				return $locale ?? Site::current()->handle();
 			})
 			->args(func_get_args());
 	}

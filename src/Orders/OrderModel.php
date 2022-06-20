@@ -124,7 +124,7 @@ class OrderModel extends Model
 
 	public function orders(){
 
-		return $this->hasMany(Orderable::class);
+		return $this->hasMany(SupplierOrderModel::class, 'order_id');
 	}
 
 
