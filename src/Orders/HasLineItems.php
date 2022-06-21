@@ -250,7 +250,7 @@ trait HasLineItems
 	public function removeLineItem($lineItemId): Collection
 	{
 		$this->lineItems = $this->lineItems->reject(function ($item) use ($lineItemId) {
-			return $item->id() === $lineItemId;
+			return $item->id() == $lineItemId;
 		});
 
 		$this->save();

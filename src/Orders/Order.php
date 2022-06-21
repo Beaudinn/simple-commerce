@@ -310,24 +310,20 @@ class Order implements Contract
 
     public function billingAddress(): ?Address
     {
-        if ($this->get('use_shipping_address_for_billing', false)) {
-            return $this->shippingAddress();
-        }
+	    if (! $this->has('billing_address_id')) {
+		    return null;
+	    }
 
-        if (! $this->has('billing_address') && ! $this->has('billing_address_line1')) {
-            return null;
-        }
-
-        return Address::from('billing', $this);
+	    return  Address::find($this->get('billing_address_id'));
     }
 
     public function shippingAddress(): ?Address
     {
-        if (! $this->has('shipping_address') && ! $this->has('shipping_address_line1')) {
+        if (! $this->has('shipping_address_id')) {
             return null;
         }
 
-        return Address::from('shipping', $this);
+	    return  Address::find($this->get('shipping_address_id'));
     }
 
 	public function redeemCoupon(string $code): bool
