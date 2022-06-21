@@ -210,7 +210,7 @@ class CartItemController extends BaseActionController
 
 		return $this->withSuccess($request, [
 			'message' => __('simple-commerce.messages.cart_item_added'),
-			'cart' => $cart->toResource(),
+			//'cart' => $cart->toResource(), //Maximum stack depth exceeded
 		]);
 	}
 
@@ -237,7 +237,7 @@ class CartItemController extends BaseActionController
 
 		return $this->withSuccess($request, [
 			'message' => __('simple-commerce.messages.cart_item_updated'),
-			'cart' => $cart->toResource(),
+			//'cart' => $cart->toResource(), //Maximum stack depth exceeded
 		]);
 	}
 
@@ -249,7 +249,7 @@ class CartItemController extends BaseActionController
 
 		return $this->withSuccess($request, [
 			'message' => __('simple-commerce.messages.cart_item_deleted'),
-			'cart' => $cart->toResource(),
+			//'cart' => $cart->toResource(), //Maximum stack depth exceeded
 		]);
 	}
 
