@@ -5,6 +5,7 @@ namespace DoubleThreeDigital\SimpleCommerce\Orders;
 use App\Models\Customer;
 use App\Models\Orderable;
 use DoubleThreeDigital\SimpleCommerce\Customers\CustomerModel;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Approved;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\OrderState;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -50,6 +51,15 @@ class OrderModel extends Model
         'order_number',
 	    'published'
     ];
+
+    function readOnly(){
+
+    	if(!$this->state->canTransitionTo(Approved::class)){
+    		return true;
+	    }
+
+    	return false;
+    }
 
 	//public function scopeRunwayListing($query)
 	//{

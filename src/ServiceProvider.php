@@ -19,6 +19,8 @@ class ServiceProvider extends AddonServiceProvider
     protected $actions = [
         Actions\MarkAsPaid::class,
         Actions\RefundAction::class,
+	    Actions\RecalculateAction::class,
+	    Actions\RecalculateCustomAction::class,
     ];
 
     protected $commands = [

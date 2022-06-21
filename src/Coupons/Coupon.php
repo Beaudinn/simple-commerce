@@ -53,6 +53,8 @@ class Coupon implements Contract
             ->setter(function ($value) {
                 if (is_string($value) && str_contains($value, '.')) {
                     $value = (int) str_replace('.', '', $value);
+                }elseif (is_string($value)){
+	                $value = (int) $value;
                 }
 
                 if ($this->type === 'percentage' && $value > 100) {
@@ -75,14 +77,14 @@ class Coupon implements Contract
     {
         $order = OrderFacade::find($order->id());
 
-        if ($this->has('minimum_cart_value') && $order->itemsTotal()) {
+        if ($this->value('minimum_cart_value') && $order->itemsTotal()) {
             if ($order->itemsTotal() < $this->get('minimum_cart_value')) {
                 return false;
             }
         }
 
-        if ($this->has('redeemed') && $this->has('maximum_uses') && $this->get('maximum_uses') !== null) {
-            if ($this->get('redeemed') >= $this->get('maximum_uses')) {
+        if ($this->value('redeemed') && $this->get('maximum_uses') && $this->get('maximum_uses') !== null) {
+            if ($this->value('redeemed') >= $this->get('maximum_uses')) {
                 return false;
             }
         }
@@ -111,9 +113,9 @@ class Coupon implements Contract
 
     public function redeem(): self
     {
-        $redeemed = $this->has('redeemed') ? $this->get('redeemed') : 0;
+        $redeemed = $this->get('redeemed') ? $this->get('redeemed') : 0;
 
-        $this->set('redeemed', $redeemed + 1);
+        $this->get('redeemed', $redeemed + 1);
         $this->save();
 
         return $this;
@@ -121,13 +123,13 @@ class Coupon implements Contract
 
     protected function isProductSpecific()
     {
-        return $this->has('products')
+        return $this->get('products')
             && collect($this->get('products'))->count() >= 1;
     }
 
     protected function isCustomerSpecific()
     {
-        return $this->has('customers')
+        return $this->get('customers')
             && collect($this->get('customers'))->count() >= 1;
     }
 

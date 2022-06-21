@@ -33,6 +33,7 @@ class Calculator implements Contract
 		$data = [
 			'grand_total'    => 0,
 			'items_total'    => 0,
+			'items_tax_total'    => 0,
 			'shipping_total' => 0,
 			'tax_total'      => 0,
 			'coupon_total'   => 0,
@@ -68,8 +69,8 @@ class Calculator implements Contract
 
 		$data = $this->calculateOrderShipping($data)['data'];
 
-		$data['grand_total'] = (($data['items_total'] + $data['tax_total']) - $data['coupon_total']) + $data['shipping_total'];
-
+		$data['grand_total'] = (($data['items_total'] + $data['items_tax_total']) - $data['coupon_total']) + $data['shipping_total'] +  $data['tax_total'];
+		$data['tax_total'] =  $data['tax_total'] + $data['items_tax_total'];
 		return $data;
 	}
 
@@ -125,9 +126,9 @@ class Calculator implements Contract
 
 		if ($taxCalculation->priceIncludesTax()) {
 			$lineItem['total'] -= $taxCalculation->amount();
-			$data['tax_total'] += $taxCalculation->amount();
+			$data['items_tax_total'] += $taxCalculation->amount();
 		} else {
-			$data['tax_total'] += $taxCalculation->amount();
+			$data['items_tax_total'] += $taxCalculation->amount();
 		}
 
 		return [
@@ -169,7 +170,7 @@ class Calculator implements Contract
 				];
 			}
 
-			$baseAmount = $data['items_total'] + $data['tax_total'];
+			$baseAmount = $data['items_total'] + $data['items_tax_total'];
 
 			// Otherwise do all the other stuff...
 			if ($coupon->type() === 'percentage') {

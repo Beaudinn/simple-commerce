@@ -14,6 +14,7 @@ class LineItem
     public $product;
     public $variant;
     public $quantity;
+    public $price;
     public $total;
     public $tax;
     public $purchase_price;
@@ -65,7 +66,15 @@ class LineItem
             ->args(func_get_args());
     }
 
-    public function total($total = null)
+	public function price($price = null)
+	{
+		return $this
+			->fluentlyGetOrSet('price')
+			->args(func_get_args());
+	}
+
+
+	public function total($total = null)
     {
         return $this
             ->fluentlyGetOrSet('total')
@@ -142,7 +151,8 @@ class LineItem
 	        'type' => $this->product->purchasableType(),
             'variant' => $this->variant,
             'quantity' => $this->quantity,
-            'total' => $this->total,
+            'price' => $this->price,
+	        'total' => $this->total,
             'tax' => $this->tax,
 	        'initial' => $this->initial,
 	        'options' => $this->options,

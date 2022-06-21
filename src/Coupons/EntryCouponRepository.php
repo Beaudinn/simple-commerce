@@ -8,6 +8,7 @@ use DoubleThreeDigital\SimpleCommerce\Exceptions\CouponNotFound;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Support\Arr;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Site;
 use Statamic\Facades\Stache;
 
 class EntryCouponRepository implements RepositoryContract
@@ -26,7 +27,7 @@ class EntryCouponRepository implements RepositoryContract
 
     public function find($id): ?Coupon
     {
-        $entry = Entry::find($id);
+        $entry = Entry::query()->where('id', $id)->first();
 
         if (! $entry) {
             throw new CouponNotFound("Coupon [{$id}] could not be found.");
@@ -36,10 +37,10 @@ class EntryCouponRepository implements RepositoryContract
             ->resource($entry)
             ->id($entry->id())
             ->code($entry->slug())
-            ->type($entry->get('type'))
-            ->value($entry->get('coupon_value') ?? $entry->get('value')) // TODO 4.0: Only coupon_value should be supported
+            ->type($entry->value('type'))
+            ->value($entry->value('coupon_value') ?? $entry->value('value')) // TODO 4.0: Only coupon_value should be supported
             ->data(array_merge(
-                $entry->data()->except(['coupon_value', 'value', 'type'])->toArray(),
+                $entry->values()->except(['coupon_value', 'value', 'type'])->toArray(),
                 [
                     'site' => optional($entry->site())->handle(),
                     'slug' => $entry->slug(),
@@ -51,6 +52,7 @@ class EntryCouponRepository implements RepositoryContract
     public function findByCode(string $code): ?Coupon
     {
         $entry = Entry::query()
+	        ->where('site', Site::current()->handle())
             ->where('collection', $this->collection)
             ->where('slug', $code)
             ->first();
@@ -101,8 +103,8 @@ class EntryCouponRepository implements RepositoryContract
 
         $coupon->id = $entry->id();
         $coupon->code = $entry->slug();
-        $coupon->type = $entry->get('type');
-        $coupon->value = $entry->get('coupon_value');
+        $coupon->type = $entry->value('type');
+        $coupon->value = $entry->value('coupon_value');
         $coupon->resource = $entry;
 
         $coupon->merge([

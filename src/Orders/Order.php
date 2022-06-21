@@ -33,6 +33,7 @@ class Order implements Contract
 
 	public $id;
 	public $orderNumber;
+	public $locale;
 	public $isPaid;
 	public $isShipped;
 	public $isRefunded;
@@ -59,6 +60,7 @@ class Order implements Contract
 	public function __construct()
 	{
 		$this->isPaid = false;
+		$this->locale = Site::current()->handle();
 		$this->isShipped = false;
 		$this->isRefunded = false;
 		$this->lineItems = collect();
@@ -491,6 +493,31 @@ class Order implements Contract
 		return $this;
 	}
 
+	public function recalculateBase(): self
+	{
+		$calculate = resolve(\DoubleThreeDigital\SimpleCommerce\Orders\OrderCalculator::class)->calculate($this);
+
+
+		$this->lineItems($calculate['items']);
+		$this->upsells($calculate['upsells']);
+
+		$this->grandTotal($calculate['grand_total']);
+		$this->rushTotal($calculate['rush_total']);
+		$this->itemsTotal($calculate['items_total']);
+		$this->upsellTotal($calculate['upsell_total']);
+		$this->taxTotal($calculate['tax_total']);
+		$this->shippingTotal($calculate['shipping_total']);
+		$this->couponTotal($calculate['coupon_total']);
+
+
+		$this->merge(Arr::except($calculate, 'items'));
+
+		$this->save();
+
+		return $this;
+	}
+
+
 
 	public function withoutRecalculating(callable $callback)
 	{
@@ -538,7 +565,7 @@ class Order implements Contract
 		$freshOrder = OrderFacade::find($this->id());
 
 		$this->id = $freshOrder->id;
-		$this->site = $freshOrder->site;
+		$this->locale = $freshOrder->locale;
 		$this->isPaid = $freshOrder->isPaid;
 		$this->isShipped = $freshOrder->isShipped;
 		$this->lineItems = $freshOrder->lineItems;

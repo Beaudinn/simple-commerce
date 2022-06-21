@@ -22,13 +22,12 @@ trait HasLineItems
 				}
 
 
-				return $value->map(function ($item) {
+				return $value->filter(function ($item){ return !empty($item);})->map(function ($item) {
 					if ($item instanceof LineItem) {
 						return $item;
 					}
 
 					if (! isset($item['id'])) {
-						var_dump($item); die();
 						$item['id'] = mt_rand(1000000000,9999999999);// app('stache')->generateId();
 					}
 
@@ -42,6 +41,9 @@ trait HasLineItems
 						->quantity($item['quantity'])
 						->total($item['total']);
 
+					if (isset($item['price'])) {
+						$lineItem->price($item['price']);
+					}
 
 					if (isset($item['variant'])) {
 						$lineItem->variant($item['variant']);
