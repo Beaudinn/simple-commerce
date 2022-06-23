@@ -387,7 +387,7 @@ class MollieGateway extends BaseGateway implements Gateway
 
 		switch ($payment->status)  {
 			case 'paid':
-				$this->setPendingState($order);
+				$this->markOrderAsPaid($order);
 				//$this->isPaid($order, Carbon::parse($payment->paidAt), $payment->method);
 				return true;
 				break;

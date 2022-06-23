@@ -2,6 +2,7 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Orders\States;
 
+use DoubleThreeDigital\SimpleCommerce\Orders\Transitions\ToPendingTransition;
 use DoubleThreeDigital\SimpleCommerce\Orders\Transitions\ToQuoteTransition;
 use DoubleThreeDigital\SimpleCommerce\Orders\Transitions\ToApprovedTransition;
 use Spatie\ModelStates\State;
@@ -32,7 +33,7 @@ abstract class OrderState extends State
 			->allowTransition([Concept::class, Quote::class ], Draft::class)// draft
 			->allowTransition(Concept::class, Draft::class)// draft
 			->allowTransition(Draft::class, Concept::class)// draft
-			->allowTransition(Concept::class, Pending::class) //pending
+			->allowTransition(Draft::class, Pending::class,ToPendingTransition::class)
 			->allowTransition(Approved::class, Pending::class)
 			->allowTransition(Approved::class, Pending::class) // for testing
 			->allowTransition(Pending::class, Canceled::class)

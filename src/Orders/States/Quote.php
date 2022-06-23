@@ -53,6 +53,7 @@ class Quote extends OrderState
 							'handle' => 'expiration_date',
 							'field' => [
 								'type' => 'date',
+								'inline' => true,
 								'width' => 50,
 								'display' => __('Expiration date'),
 							],
