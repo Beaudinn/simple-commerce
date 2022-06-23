@@ -48,6 +48,7 @@ class MollieGateway extends BaseGateway implements Gateway
 			'redirectUrl' => $this->callbackUrl([
 				'_order_id' => $data->order()->id(),
 			]),
+			'method' => $data->request()['method'] ?? null,
 			'webhookUrl'  => $this->webhookUrl(),
 			'metadata'    => [
 				'order_id' => $order->id,
@@ -379,26 +380,33 @@ class MollieGateway extends BaseGateway implements Gateway
 		$moloieOrderId = $order->get('mollie')['id'];
 
 		if (! $moloieOrderId) {
-			throw new PayPalDetailsMissingOnOrderException("Order [{$order->id()}] does not have a PayPal Order ID.");
+			throw new PayPalDetailsMissingOnOrderException("Order [{$order->id()}] does not have a Mollie Order ID.");
 		}
 
 		$payment = $this->mollie->payments->get($moloieOrderId);
 
 		switch ($payment->status)  {
 			case 'paid':
-				return true;
+				$this->setPendingState($order);
 				//$this->isPaid($order, Carbon::parse($payment->paidAt), $payment->method);
+				return true;
 				break;
 			case 'authorized':
+				$order->setPendingState();
+				return true;
 				//$this->isAuthorized($order, Carbon::parse($payment->authorizedAt), $payment->method);
 				break;
 			case 'completed':
+				$order->setPendingState();
+				return true;
 				//$this->isCompleted($order, Carbon::parse($payment->completedAt), $payment->method);
 				break;
 			case 'expired':
+				return false;
 				//$this->isExpired($order, Carbon::parse($payment->expiredAt));
 				break;
 			case 'canceled':
+				return false;
 				//$this->isCanceled($order, Carbon::parse($payment->canceledAt));
 				break;
 		}

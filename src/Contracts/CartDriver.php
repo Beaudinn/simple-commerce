@@ -12,6 +12,8 @@ interface CartDriver
 
     public function makeCart(): Order;
 
+    public function setCart($cart): Order;
+
     public function getOrMakeCart(): Order;
 
     public function forgetCart();

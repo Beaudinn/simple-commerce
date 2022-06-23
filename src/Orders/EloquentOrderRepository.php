@@ -19,7 +19,7 @@ class EloquentOrderRepository implements RepositoryContract
 	protected $model;
 
 	protected $knownColumns = [
-		'id', 'is_paid', 'is_shipped', 'is_refunded', 'items', 'grand_total', 'items_total', 'tax_total',
+		'id', 'state', 'is_paid', 'is_shipped', 'reference', 'is_refunded', 'items', 'grand_total', 'items_total', 'tax_total',
 		'shipping_total', 'coupon_total', 'shipping_name', 'shipping_address', 'shipping_address_line2',
 		'shipping_city', 'shipping_postal_code', 'shipping_region', 'shipping_country', 'billing_name',
 		'billing_address', 'billing_address_line2', 'billing_city', 'billing_postal_code', 'billing_region',
@@ -54,11 +54,12 @@ class EloquentOrderRepository implements RepositoryContract
 		return app(Order::class)
 			->resource($model)
 			->id($model->id)
+			->state($model->state)
 			->locale($model->locale)
 			->orderNumber($model->order_number)
+			->reference($model->reference)
 			->isPaid($model->is_paid)
-			->isShipped($model->is_shipped)
-			->isRefunded($model->is_refunded)
+			->postPayment($model->post_payment)
 			->lineItems($model->items)
 			->upsells($model->upsells)
 			->grandTotal($model->grand_total)
@@ -137,11 +138,18 @@ class EloquentOrderRepository implements RepositoryContract
 			$model = new $this->model();
 		}
 
+
+		if($order->state() && !$model->state->equals($order->state())){
+
+			$model->state->transitionTo($order->state);
+		}
+
+
 		$model->locale = $order->locale();
 		$model->is_paid = $order->isPaid();
 		$model->order_number = $order->orderNumber();
-		$model->is_shipped = $order->isShipped();
-		$model->is_refunded = $order->isRefunded();
+		$model->reference = $order->reference();
+		$model->post_payment = $order->postPayment();
 		$model->items = $order->lineItems()->map->toArray();
 		$model->upsells = $order->upsells()->map->toArray();
 		$model->grand_total = $order->grandTotal();
@@ -202,16 +210,17 @@ class EloquentOrderRepository implements RepositoryContract
 		$model->save();
 
 		$order->id = $model->id;
+		$order->state = $model->state;
 		$order->orderNumber = $model->order_number;
+		$order->reference = $model->reference;
 		$order->shop = $model->shop;
 		$order->isPaid = $model->is_paid;
-		$order->isShipped = $model->is_shipped;
-		$order->isRefunded = $model->is_refunded;
 
 		//$order->lineItems = collect($model->items);
 		//$order->upsells = collect($model->upsells);
 
 		$order->grandTotal = $model->grand_total;
+		$order->postPayment = $model->post_payment;
 		$order->rushTotal = $model->rush_total;
 		$order->itemsTotal = $model->items_total;
 		$order->upsellTotal = $model->upsell_total;

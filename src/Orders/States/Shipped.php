@@ -19,6 +19,12 @@ class Shipped extends OrderState
 		return 'green';
 	}
 
+	public function progress(): int
+	{
+		return 3;
+	}
+
+
 	public function description(): string
 	{
 		return 'Je bestelling is overgedragen aan de bezorgdienst'; //Je bestelling is onderweg naar de afhaallocatie

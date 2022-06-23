@@ -33,6 +33,11 @@ trait CartDriver
         }
     }
 
+	public function setCart($cart): Order
+	{
+		return $this->resolve()->setCart($cart);
+	}
+
     protected function makeCart(): Order
     {
         return $this->resolve()->makeCart();

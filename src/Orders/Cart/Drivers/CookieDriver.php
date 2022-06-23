@@ -6,6 +6,7 @@ use DoubleThreeDigital\SimpleCommerce\Contracts\CartDriver;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\OrderNotFound;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderAPI;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
@@ -61,6 +62,14 @@ class CookieDriver implements CartDriver
 
         return $cart;
     }
+
+	public function setCart($cart): Order
+	{
+
+		Cookie::queue($this->getKey(), $cart->id);
+
+		return $cart;
+	}
 
     public function getOrMakeCart(): Order
     {

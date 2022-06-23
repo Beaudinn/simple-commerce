@@ -20,6 +20,12 @@ class Delivered extends OrderState
 		return 'green';
 	}
 
+	public function progress(): int
+	{
+		return 4;
+	}
+
+
 	public function description(): string
 	{
 		return 'Je bestelling is bezorgd';

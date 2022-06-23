@@ -26,6 +26,12 @@ class Canceled extends OrderState
 		return 'Je bestelling is geannuleerd';
 	}
 
+	public function progress(): int
+	{
+		return 0;
+	}
+
+
 	public function blueprint()
 	{
 		return StatamicBlueprint::make()->setContents([

@@ -4,17 +4,19 @@ namespace DoubleThreeDigital\SimpleCommerce\Gateways\Builtin;
 
 use DoubleThreeDigital\SimpleCommerce\Contracts\Gateway;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
+use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderFacade;
 use DoubleThreeDigital\SimpleCommerce\Gateways\BaseGateway;
 use DoubleThreeDigital\SimpleCommerce\Gateways\Prepare;
 use DoubleThreeDigital\SimpleCommerce\Gateways\Purchase;
 use DoubleThreeDigital\SimpleCommerce\Gateways\Response;
 use Illuminate\Http\Request;
+use Statamic\Facades\Site;
 
-class DummyGateway extends BaseGateway implements Gateway
+class PostPaymentGateway extends BaseGateway implements Gateway
 {
     public function name(): string
     {
-        return 'Dummy';
+        return 'Post payment';
     }
 
     public function prepare(Prepare $data): Response
@@ -24,33 +26,24 @@ class DummyGateway extends BaseGateway implements Gateway
 
     public function purchase(Purchase $data): Response
     {
-        $this->markOrderAsPaid($data->order());
+       // $this->markOrderAsPaid($data->order());
 
         return new Response(true, [
-            'id'        => '123456789abcdefg',
-            'last_four' => '4242',
-            'date'      => (string) now()->subDays(14),
-            'refunded'  => false,
+
         ]);
     }
 
     public function purchaseRules(): array
     {
         return [
-            'card_number'   => 'required|string',
-            'expiry_month'  => 'required',
-            'expiry_year'   => 'required',
-            'cvc'           => 'required',
+
         ];
     }
 
     public function getCharge(Order $entry): Response
     {
         return new Response(true, [
-            'id'        => '123456789abcdefg',
-            'last_four' => '4242',
-            'date'      => (string) now()->subDays(14),
-            'refunded'  => false,
+
         ]);
     }
 
@@ -64,10 +57,21 @@ class DummyGateway extends BaseGateway implements Gateway
         return null;
     }
 
+	public function callback(Request $request): bool
+    {
+
+	    $order = OrderFacade::find($request->get('_order_id'));
+
+	    $order->setPendingState();
+	    return true;
+    }
+
+
+
     public function paymentDisplay($value): array
     {
         return [
-            'text' => $value['data']['id'],
+            'text' => $this->name(),
             'url' => null,
         ];
     }

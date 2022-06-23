@@ -5,33 +5,33 @@ namespace DoubleThreeDigital\SimpleCommerce\Orders\States;
 use DoubleThreeDigital\SimpleCommerce\Orders\OrderModel;
 use Statamic\Facades\Blueprint as StatamicBlueprint;
 
-class Concept extends OrderState
+class Pending extends OrderState
 {
 	public function label(): string
 	{
-		return 'Concept';
+		return 'Pending';
 	}
 
 
 	public function title(): string
 	{
-		return 'Concept';
+		return 'Pending';
 	}
 
 	public function color(): string
 	{
-		return 'gray';
+		return 'blue';
 	}
 
 	public function progress(): int
 	{
-		return 0;
+		return 1;
 	}
 
 
 	public function description(): string
 	{
-		return 'Deze besteling is opgeslagen';
+		return 'Je bestelling is geplaatst en wordt voorbereid';
 	}
 
 	public function blueprint(OrderModel $order = NULL)

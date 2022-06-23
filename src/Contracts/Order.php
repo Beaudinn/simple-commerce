@@ -14,9 +14,6 @@ interface Order
 
     public function isPaid($isPaid = null);
 
-    public function isShipped($isShipped = null);
-
-    public function isRefunded($isRefunded = null);
 
     public function grandTotal($grandTotal = null);
 
@@ -43,6 +40,8 @@ interface Order
     public function shippingAddress();
 
     public function redeemCoupon(string $code): bool;
+
+    public function state($state = NULL);
 
     public function markAsPaid(): self;
 

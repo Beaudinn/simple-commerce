@@ -19,6 +19,7 @@ use DoubleThreeDigital\SimpleCommerce\Facades\Coupon;
 use DoubleThreeDigital\SimpleCommerce\Facades\Customer;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderFacade;
 use DoubleThreeDigital\SimpleCommerce\Http\Resources\BaseResource;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Pending;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
@@ -33,9 +34,11 @@ class Order implements Contract
 
 	public $id;
 	public $orderNumber;
+	public $state;
+	public $reference;
 	public $locale;
 	public $isPaid;
-	public $isShipped;
+	public $postPayment;
 	public $isRefunded;
 	public $lineItems;
 	public $upsells;
@@ -61,8 +64,8 @@ class Order implements Contract
 	{
 		$this->isPaid = false;
 		$this->locale = Site::current()->handle();
-		$this->isShipped = false;
 		$this->isRefunded = false;
+		$this->postPayment = false;
 		$this->lineItems = collect();
 		$this->upsells = collect();
 
@@ -115,6 +118,29 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
+	public function reference($reference = NULL)
+	{
+		return $this
+			->fluentlyGetOrSet('reference')
+			->args(func_get_args());
+	}
+
+
+	public function state($state = NULL)
+	{
+		return $this
+			->fluentlyGetOrSet('state')
+			->args(func_get_args());
+	}
+
+	public function setPendingState(): self
+	{
+		$this->state(Pending::class);
+		$this->save();
+
+		return $this;
+	}
+
 	public function isApproved($isApproved = NULL)
 	{
 		return $this
@@ -129,17 +155,11 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
-	public function isShipped($isShipped = NULL)
-	{
-		return $this
-			->fluentlyGetOrSet('isShipped')
-			->args(func_get_args());
-	}
 
-	public function isRefunded($isRefunded = NULL)
+	public function postPayment($postPayment = NULL)
 	{
 		return $this
-			->fluentlyGetOrSet('isRefunded')
+			->fluentlyGetOrSet('postPayment')
 			->args(func_get_args());
 	}
 
@@ -194,6 +214,7 @@ class Order implements Contract
 
 	public function customer($customer = null)
 	{
+
 		return $this
 			->fluentlyGetOrSet('customer')
 			->setter(function ($value) {
@@ -418,6 +439,9 @@ class Order implements Contract
 	}
 
 
+
+
+
 	public function refund($refundData): self
 	{
 		$this->isRefunded(true);
@@ -566,8 +590,10 @@ class Order implements Contract
 
 		$this->id = $freshOrder->id;
 		$this->locale = $freshOrder->locale;
+		$this->state = $freshOrder->state;
+		$this->reference = $freshOrder->reference;
+		$this->postPayment = $freshOrder->postPayment;
 		$this->isPaid = $freshOrder->isPaid;
-		$this->isShipped = $freshOrder->isShipped;
 		$this->lineItems = $freshOrder->lineItems;
 		$this->upsells = $freshOrder->upsells;
 		$this->rushTotal = $freshOrder->rushTotal;

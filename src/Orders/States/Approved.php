@@ -25,6 +25,12 @@ class Approved extends OrderState
 		return 'green';
 	}
 
+	public function progress(): int
+	{
+		return 2;
+	}
+
+
 	public function description(): string
 	{
 		return 'Je bestelling wordt geproduceerd en verpakt';

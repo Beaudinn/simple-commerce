@@ -4,15 +4,14 @@ namespace DoubleThreeDigital\SimpleCommerce\Orders;
 
 use App\Models\Customer;
 use App\Models\Orderable;
-use DoubleThreeDigital\SimpleCommerce\Customers\CustomerModel;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Pending;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Approved;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\OrderState;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Spatie\ModelStates\HasStates;
-use Statamic\Facades\Site;
 use Webhoek\P4sSupplier\SupplierOrder\SupplierOrderModel;
 
 class OrderModel extends Model
@@ -54,11 +53,11 @@ class OrderModel extends Model
 
     function readOnly(){
 
-    	if(!$this->state->canTransitionTo(Approved::class)){
-    		return true;
+    	if($this->state->equals(Draft::class)){
+    		return false;
 	    }
 
-    	return false;
+    	return true;
     }
 
 	//public function scopeRunwayListing($query)
@@ -118,6 +117,8 @@ class OrderModel extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+
+
 
 	/**
 	 * Get the parent order model.

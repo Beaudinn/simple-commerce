@@ -5,6 +5,7 @@ namespace DoubleThreeDigital\SimpleCommerce\Orders\Cart\Drivers;
 use DoubleThreeDigital\SimpleCommerce\Contracts\CartDriver;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderAPI;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -45,6 +46,13 @@ class SessionDriver implements CartDriver
 
         return $cart;
     }
+
+	public function setCart($cart): Order
+	{
+		Session::put($this->getKey(), $cart->id);
+
+		return $cart;
+	}
 
     public function getOrMakeCart(): Order
     {
