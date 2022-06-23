@@ -53,7 +53,7 @@ class OrderModel extends Model
 
     function readOnly(){
 
-    	if($this->state->equals(Draft::class)){
+    	if($this->state->equals(Draft::class) || $this->state->equals(Pending::class)){
     		return false;
 	    }
 
