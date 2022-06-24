@@ -40,7 +40,7 @@ $site = \Statamic\Facades\Site::current();
 <br>
 
 If you have any questions about your order, please get in touch.
-
+Log::info(print_r($response, true));
 Thanks,<br>
 {{ config('app.name') }}
 @endcomponent
