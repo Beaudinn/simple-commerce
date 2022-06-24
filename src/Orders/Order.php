@@ -11,10 +11,8 @@ use DoubleThreeDigital\SimpleCommerce\Contracts\Customer as CustomerContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order as Contract;
 use DoubleThreeDigital\SimpleCommerce\Data\HasData;
 use DoubleThreeDigital\SimpleCommerce\Events\CouponRedeemed;
-use DoubleThreeDigital\SimpleCommerce\Events\OrderApproved as OrderApprovedEvent;
 use DoubleThreeDigital\SimpleCommerce\Events\OrderPaid as OrderPaidEvent;
 use DoubleThreeDigital\SimpleCommerce\Events\OrderSaved;
-use DoubleThreeDigital\SimpleCommerce\Events\OrderShipped as OrderShippedEvent;
 use DoubleThreeDigital\SimpleCommerce\Facades\Coupon;
 use DoubleThreeDigital\SimpleCommerce\Facades\Customer;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderFacade;
@@ -83,15 +81,12 @@ class Order implements Contract
 		$this->data = collect();
 	}
 
-	public function id($id = NULL)
+	public function site()
 	{
-		return $this
-			->fluentlyGetOrSet('id')
-			->args(func_get_args());
+		return Site::get($this->locale());
 	}
 
-
-	public function locale($locale = null)
+	public function locale($locale = NULL)
 	{
 		return $this
 			->fluentlyGetOrSet('locale')
@@ -104,12 +99,6 @@ class Order implements Contract
 			})
 			->args(func_get_args());
 	}
-
-	public function site()
-	{
-		return Site::get($this->locale());
-	}
-	
 
 	public function orderNumber($orderNumber = NULL)
 	{
@@ -125,6 +114,13 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
+	public function setPendingState(): self
+	{
+		$this->state(Pending::class);
+		$this->save();
+
+		return $this;
+	}
 
 	public function state($state = NULL)
 	{
@@ -133,12 +129,29 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
-	public function setPendingState(): self
+	public function save(): self
 	{
-		$this->state(Pending::class);
-		$this->save();
+		if (method_exists($this, 'beforeSaved')) {
+			$this->beforeSaved();
+		}
+
+		OrderFacade::save($this);
+
+		if (method_exists($this, 'afterSaved')) {
+			$this->afterSaved();
+		}
 
 		return $this;
+	}
+
+	public function beforeSaved()
+	{
+		//
+	}
+
+	public function afterSaved()
+	{
+		event(new OrderSaved($this));
 	}
 
 	public function isApproved($isApproved = NULL)
@@ -148,6 +161,231 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
+	public function postPayment($postPayment = NULL)
+	{
+		return $this
+			->fluentlyGetOrSet('postPayment')
+			->args(func_get_args());
+	}
+
+	public function customer($customer = NULL)
+	{
+
+		return $this
+			->fluentlyGetOrSet('customer')
+			->setter(function ($value) {
+				if (!$value) {
+					return NULL;
+				}
+
+				if ($value instanceof CustomerContract) {
+					return $value->id();
+				}
+
+				return Customer::find($value);
+			})
+			->args(func_get_args());
+	}
+
+	public function currentGateway(): ?array
+	{
+		if (is_string($this->gateway())) {
+			return collect(SimpleCommerce::gateways())->firstWhere('class', $this->gateway());
+		}
+
+		if (is_array($this->gateway())) {
+			return collect(SimpleCommerce::gateways())->firstWhere('class', $this->gateway()['use']);
+		}
+
+		return NULL;
+	}
+
+	public function gateway($gateway = NULL)
+	{
+		return $this
+			->fluentlyGetOrSet('gateway')
+			->args(func_get_args());
+	}
+
+	public function rushprices()
+	{
+		$rush_prices = $this->lineItems()->map(function ($item) {
+
+			return $item->rush_prices ?? [];
+		})->flatten(1)->groupBy(function ($rush) {
+			return Carbon::parse($rush['delivery_date'])->format('Y-m-d');
+		})->sortBy(function ($rush, $key) {
+			return $key;
+		});
+
+		$rush_prices = $rush_prices->map(function ($prices) {
+
+			$total = $prices->sum(function ($price) {
+
+				return $price['prices_per_product']['purchase_rush_surcharge'] ?? 0;
+			});
+			$deliver_date = Carbon::parse($prices->first()['delivery_date']);
+			if ($deliver_date->isTomorrow()) {
+				$delivery_date_formatted = ucfirst($deliver_date->translatedFormat('\M\o\r\g\e\n d  F'));;// . ' - ' . Date::now()->hour . ' --- ' . $hours;
+			} else {
+				$delivery_date_formatted = ucfirst($deliver_date->translatedFormat('l d  F'));// . ' - ' . Date::now()->hour . ' --- ' . $hours;
+			}
+
+			return (object)[
+				'delivery_date_formatted' => $delivery_date_formatted,
+				'delivery_date' => Carbon::parse($prices->first()['delivery_date']),
+				'shipping_date' => Carbon::parse($prices->first()['shipping_date']),
+				'production_hours' => $prices->first()['production_hours'],
+				'price' => floatval($total),
+				'product_count' => count($prices),
+			];
+		});
+
+		return $rush_prices;
+	}
+
+	public function billingAddress(): ?Address
+	{
+		return Address::make()->fill([
+			'company_name' => $this->get('billing_company_name'),
+			'first_name' => $this->get('billing_first_name'),
+			'last_name' => $this->get('billing_last_name'),
+			'street' => $this->get('billing_street'),
+			'house_number' => $this->get('billing_house_number'),
+			'addition' => $this->get('billing_addition'),
+			'postal_code' => $this->get('billing_postal_code'),
+			'city' => $this->get('billing_city'),
+			'phone' => $this->get('billing_phone'),
+			'country' => $this->get('billing_country'),
+		]);
+	}
+
+	public function shippingAddress(): ?Address
+	{
+		return Address::make()->fill([
+			'company_name' => $this->get('shipping_company_name'),
+			'first_name' => $this->get('shipping_first_name'),
+			'last_name' => $this->get('shipping_last_name'),
+			'street' => $this->get('shipping_street'),
+			'house_number' => $this->get('shipping_house_number'),
+			'addition' => $this->get('shipping_addition'),
+			'postal_code' => $this->get('shipping_postal_code'),
+			'city' => $this->get('shipping_city'),
+			'phone' => $this->get('shipping_phone'),
+			'country' => $this->get('shipping_country'),
+		]);
+	}
+
+	public function redeemCoupon(string $code): bool
+	{
+		$coupon = Coupon::findByCode($code);
+
+		if ($coupon->isValid($this)) {
+			$this->coupon($coupon);
+			$this->save();
+
+			event(new CouponRedeemed($coupon));
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public function coupon($coupon = NULL)
+	{
+		return $this
+			->fluentlyGetOrSet('coupon')
+			->setter(function ($value) {
+				if (!$value) {
+					return NULL;
+				}
+
+				if ($value instanceof CouponContract) {
+					return $value->id();
+				}
+
+				return Coupon::find($value);
+			})
+			->args(func_get_args());
+	}
+
+	//public function deliveryAt($delivery_at = NULL)
+	//{
+	//	return $this
+	//		->fluentlyGetOrSet('delivery_at')
+	//		->getter(function ($value) {
+	//
+	//			if ($value instanceof Carbon) {
+	//				return $value->format('Y-m-d');
+	//			}
+	//
+	//			return Carbon::parse($value)->format('Y-m-d');
+	//		})
+	//		->args(func_get_args());
+	//}
+
+	public function getShipping($shippingMethod = NULL)
+	{
+
+		if (!$shippingMethod)
+			$shippingMethod = $this->get('shipping_method');
+
+		return collect($this->getDeliveries($this->get('delivery_at')))->first(function ($delivery) use ($shippingMethod) {
+			return $delivery->shipping_method_api_code == $shippingMethod;
+		});
+	}
+
+	public function getDeliveries($date)
+	{
+
+		if ($date instanceof Carbon) {
+			$date = $date->format('Y-m-d');
+		}
+
+		if (!isset($this->get('deliveries', [])[$date])) {
+
+			//get custom shipping prijse from probo
+			return [];
+		}
+
+		$deliveries = [];
+		foreach ($this->get('deliveries', [])[$date] as $array) {
+			$array['prices'] = (object)$array['prices'];
+			$array = (object)$array;
+
+			$overwrite = [];
+			$array->prices->sales_price = $array->prices->purchase_price;
+
+			if ($method = ShippingMethods::where('code', $array->shipping_method_api_code)->first()) {
+				$overwrite = $method->overwritableArray();
+				$array->prices->sales_price = (float)$array->prices->purchase_price + (float)$overwrite['margin'];
+			}
+
+
+			$deliveries[] = (object)array_merge((array)$array, (array)$overwrite);
+
+
+		}
+		return $deliveries;
+	}
+
+
+	public function markAsPaid(): self
+	{
+		$this->isPaid(true);
+
+		$this->merge([
+			'paid_date' => now()->format('Y-m-d H:i'),
+		]);
+
+		$this->save();
+
+		event(new OrderPaidEvent($this));
+
+		return $this;
+	}
+
 	public function isPaid($isPaid = NULL)
 	{
 		return $this
@@ -155,12 +393,60 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
-
-	public function postPayment($postPayment = NULL)
+	public function refund($refundData): self
 	{
-		return $this
-			->fluentlyGetOrSet('postPayment')
-			->args(func_get_args());
+		$this->isRefunded(true);
+
+		if (is_string($this->gateway())) {
+			$data = [
+				'use' => $this->gateway(),
+				'refund' => $refundData,
+			];
+		} elseif (is_array($this->gateway())) {
+			$data = array_merge($this->gateway(), [
+				'refund' => $refundData,
+			]);
+		}
+
+		$this->gateway($data);
+
+		return $this;
+	}
+
+	public function setDeliveryAt(string $date)
+	{
+		$this->set('delivery_at', $date);
+
+		$this->save();
+
+		if (!$this->withoutRecalculating) {
+			$this->recalculate();
+		}
+	}
+
+	public function recalculate(): self
+	{
+		$calculate = resolve(CalculatorContract::class)->calculate($this);
+
+
+		$this->lineItems($calculate['items']);
+		$this->upsells($calculate['upsells']);
+
+		$this->grandTotal($calculate['grand_total']);
+		$this->rushTotal($calculate['rush_total']);
+		$this->itemsTotal($calculate['items_total']);
+		$this->upsellTotal($calculate['upsell_total']);
+		$this->taxTotal($calculate['tax_total']);
+		$this->shippingTotal($calculate['shipping_total']);
+		$this->couponTotal($calculate['coupon_total']);
+		$this->deliveries($calculate['deliveries']);
+
+
+		$this->merge(Arr::except($calculate, 'items'));
+
+		$this->save();
+
+		return $this;
 	}
 
 	public function grandTotal($grandTotal = NULL)
@@ -212,160 +498,6 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
-	public function customer($customer = null)
-	{
-
-		return $this
-			->fluentlyGetOrSet('customer')
-			->setter(function ($value) {
-				if (! $value) {
-					return null;
-				}
-
-				if ($value instanceof CustomerContract) {
-					return $value->id();
-				}
-
-				return Customer::find($value);
-			})
-			->args(func_get_args());
-	}
-
-	public function coupon($coupon = null)
-	{
-		return $this
-			->fluentlyGetOrSet('coupon')
-			->setter(function ($value) {
-				if (! $value) {
-					return null;
-				}
-
-				if ($value instanceof CouponContract) {
-					return $value->id();
-				}
-
-				return Coupon::find($value);
-			})
-			->args(func_get_args());
-	}
-
-	//public function deliveryAt($delivery_at = NULL)
-	//{
-	//	return $this
-	//		->fluentlyGetOrSet('delivery_at')
-	//		->getter(function ($value) {
-	//
-	//			if ($value instanceof Carbon) {
-	//				return $value->format('Y-m-d');
-	//			}
-	//
-	//			return Carbon::parse($value)->format('Y-m-d');
-	//		})
-	//		->args(func_get_args());
-	//}
-
-
-	public function gateway($gateway = NULL)
-	{
-		return $this
-			->fluentlyGetOrSet('gateway')
-			->args(func_get_args());
-	}
-
-	public function currentGateway(): ?array
-	{
-		if (is_string($this->gateway())) {
-			return collect(SimpleCommerce::gateways())->firstWhere('class', $this->gateway());
-		}
-
-		if (is_array($this->gateway())) {
-			return collect(SimpleCommerce::gateways())->firstWhere('class', $this->gateway()['use']);
-		}
-
-		return null;
-	}
-
-
-	public function rushprices()
-	{
-		$rush_prices = $this->lineItems()->map(function ($item) {
-
-			return $item->rush_prices ?? [];
-		})->flatten(1)->groupBy(function ($rush) {
-			return Carbon::parse($rush['delivery_date'])->format('Y-m-d');
-		})->sortBy(function ($rush, $key) {
-			return $key;
-		});
-
-		$rush_prices = $rush_prices->map(function ($prices) {
-
-			$total = $prices->sum(function ($price) {
-
-				return $price['prices_per_product']['purchase_rush_surcharge'] ?? 0;
-			});
-			$deliver_date = Carbon::parse($prices->first()['delivery_date']);
-			if ($deliver_date->isTomorrow()) {
-				$delivery_date_formatted = ucfirst($deliver_date->translatedFormat('\M\o\r\g\e\n d  F'));;// . ' - ' . Date::now()->hour . ' --- ' . $hours;
-			} else {
-				$delivery_date_formatted = ucfirst($deliver_date->translatedFormat('l d  F'));// . ' - ' . Date::now()->hour . ' --- ' . $hours;
-			}
-
-			return (object)[
-				'delivery_date_formatted' => $delivery_date_formatted,
-				'delivery_date' => Carbon::parse($prices->first()['delivery_date']),
-				'shipping_date' => Carbon::parse($prices->first()['shipping_date']),
-				'production_hours' => $prices->first()['production_hours'],
-				'price' => floatval($total),
-				'product_count' => count($prices),
-			];
-		});
-
-		return $rush_prices;
-	}
-
-
-    public function resource($resource = null)
-    {
-        return $this
-            ->fluentlyGetOrSet('resource')
-            ->args(func_get_args());
-    }
-
-    public function billingAddress(): ?Address
-    {
-	    if (! $this->has('billing_address_id')) {
-		    return null;
-	    }
-
-	    return  Address::find($this->get('billing_address_id'));
-    }
-
-    public function shippingAddress(): ?Address
-    {
-        if (! $this->has('shipping_address_id')) {
-            return null;
-        }
-
-	    return  Address::find($this->get('shipping_address_id'));
-    }
-
-	public function redeemCoupon(string $code): bool
-	{
-		$coupon = Coupon::findByCode($code);
-
-		if ($coupon->isValid($this)) {
-			$this->coupon($coupon);
-			$this->save();
-
-			event(new CouponRedeemed($coupon));
-
-			return true;
-		}
-
-		return false;
-	}
-
-
 	public function deliveries($deliveries = NULL)
 	{
 
@@ -373,104 +505,6 @@ class Order implements Contract
 		return $this
 			->fluentlyGetOrSet('deliveries')
 			->args(func_get_args());
-	}
-
-
-	public function getDeliveries($date)
-	{
-
-		if($date instanceof Carbon){
-			$date = $date->format('Y-m-d');
-		}
-
-		if (!isset($this->get('deliveries', [])[$date])) {
-
-			//get custom shipping prijse from probo
-			return [];
-		}
-
-		$deliveries = [];
-		foreach ($this->get('deliveries', [])[$date] as $array) {
-			$array['prices'] = (object)$array['prices'];
-			$array = (object)$array;
-
-			$overwrite = [];
-			$array->prices->sales_price = $array->prices->purchase_price;
-
-			if ($method = ShippingMethods::where('code', $array->shipping_method_api_code)->first()) {
-				$overwrite = $method->overwritableArray();
-				$array->prices->sales_price = (float)$array->prices->purchase_price + (float)$overwrite['margin'];
-			}
-
-
-			$deliveries[] = (object)array_merge((array)$array, (array)$overwrite);
-
-
-		}
-		return $deliveries;
-	}
-
-	public function getShipping($shippingMethod = NULL)
-	{
-
-		if (!$shippingMethod)
-			$shippingMethod = $this->get('shipping_method');
-
-		return collect($this->getDeliveries($this->get('delivery_at')))->first(function ($delivery) use ($shippingMethod) {
-			return $delivery->shipping_method_api_code == $shippingMethod;
-		});
-	}
-
-
-
-	public function markAsPaid(): self
-	{
-		$this->isPaid(true);
-
-		$this->merge([
-			'paid_date' => now()->format('Y-m-d H:i'),
-		]);
-
-		$this->save();
-
-		event(new OrderPaidEvent($this));
-
-		return $this;
-	}
-
-
-
-
-
-	public function refund($refundData): self
-	{
-		$this->isRefunded(true);
-
-		if (is_string($this->gateway())) {
-			$data = [
-				'use' => $this->gateway(),
-				'refund' => $refundData,
-			];
-		} elseif (is_array($this->gateway())) {
-			$data = array_merge($this->gateway(), [
-				'refund' => $refundData,
-			]);
-		}
-
-		$this->gateway($data);
-
-		return $this;
-	}
-
-	public function setDeliveryAt(string $date)
-	{
-		$this->set('delivery_at',$date);
-
-		$this->save();
-
-		if (!$this->withoutRecalculating) {
-			$this->recalculate();
-		}
 	}
 
 	public function setShippingMethod(string|null $shipping_method)
@@ -486,35 +520,9 @@ class Order implements Contract
 		}
 	}
 
-
 	public function collection(): string
 	{
 		return SimpleCommerce::orderDriver()['collection'];
-	}
-
-	public function recalculate(): self
-	{
-		$calculate = resolve(CalculatorContract::class)->calculate($this);
-
-
-		$this->lineItems($calculate['items']);
-		$this->upsells($calculate['upsells']);
-
-		$this->grandTotal($calculate['grand_total']);
-		$this->rushTotal($calculate['rush_total']);
-		$this->itemsTotal($calculate['items_total']);
-		$this->upsellTotal($calculate['upsell_total']);
-		$this->taxTotal($calculate['tax_total']);
-		$this->shippingTotal($calculate['shipping_total']);
-		$this->couponTotal($calculate['coupon_total']);
-		$this->deliveries($calculate['deliveries']);
-
-
-		$this->merge(Arr::except($calculate, 'items'));
-
-		$this->save();
-
-		return $this;
 	}
 
 	public function recalculateBase(): self
@@ -541,8 +549,6 @@ class Order implements Contract
 		return $this;
 	}
 
-
-
 	public function withoutRecalculating(callable $callback)
 	{
 		$this->withoutRecalculating = true;
@@ -552,31 +558,6 @@ class Order implements Contract
 		$this->withoutRecalculating = false;
 
 		return $return;
-	}
-
-	public function beforeSaved()
-	{
-		//
-	}
-
-	public function afterSaved()
-	{
-		event(new OrderSaved($this));
-	}
-
-	public function save(): self
-	{
-		if (method_exists($this, 'beforeSaved')) {
-			$this->beforeSaved();
-		}
-
-		OrderFacade::save($this);
-
-		if (method_exists($this, 'afterSaved')) {
-			$this->afterSaved();
-		}
-
-		return $this;
 	}
 
 	public function delete(): void
@@ -615,16 +596,12 @@ class Order implements Contract
 		return $this;
 	}
 
-	public function toArray(): array
+	public function id($id = NULL)
 	{
-		$toArray = $this->data->toArray();
-
-		$toArray['id'] = $this->id();
-
-		return $toArray;
+		return $this
+			->fluentlyGetOrSet('id')
+			->args(func_get_args());
 	}
-
-
 
 	public function toResource()
 	{
@@ -635,7 +612,14 @@ class Order implements Contract
 		return new BaseResource($this);
 	}
 
-	public function toAugmentedArray($keys = null): array
+	public function resource($resource = NULL)
+	{
+		return $this
+			->fluentlyGetOrSet('resource')
+			->args(func_get_args());
+	}
+
+	public function toAugmentedArray($keys = NULL): array
 	{
 		if ($this->resource() instanceof Entry) {
 			$blueprintFields = $this->resource()->blueprint()->fields()->items()->reject(function ($field) {
@@ -657,6 +641,15 @@ class Order implements Contract
 		}
 
 		return [];
+	}
+
+	public function toArray(): array
+	{
+		$toArray = $this->data->toArray();
+
+		$toArray['id'] = $this->id();
+
+		return $toArray;
 	}
 
 }

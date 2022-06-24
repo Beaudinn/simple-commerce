@@ -3,6 +3,7 @@
 namespace DoubleThreeDigital\SimpleCommerce;
 
 use Barryvdh\Debugbar\Facade as Debugbar;
+use DoubleThreeDigital\SimpleCommerce\Events\OrderApproved as OrderApprovedEvent;
 use Statamic\Events\EntryBlueprintFound;
 use Statamic\Facades\Collection;
 use Statamic\Facades\CP\Nav;
@@ -53,7 +54,10 @@ class ServiceProvider extends AddonServiceProvider
         Events\PostCheckout::class => [
             Listeners\TidyTemporaryGatewayData::class,
         ],
-        Events\OrderPaid::class => [
+	    OrderApprovedEvent::class => [
+            Listeners\SendConfiguredNotifications::class,
+        ],
+	    Events\OrderPaid::class => [
             Listeners\SendConfiguredNotifications::class,
         ],
         Events\OrderPaymentFailed::class => [

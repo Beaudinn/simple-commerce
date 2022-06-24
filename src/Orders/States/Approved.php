@@ -53,6 +53,17 @@ class Approved extends OrderState
 								],
 							],
 							[
+								'handle' => 'send_confirmation_mail',
+								'field' => [
+									'type' => 'toggle',
+									'width' => 100,
+									'default' => true,
+									'display' => __('Send mail'),
+									'instructions' => 'Send order confirmation email',
+									'validate' => 'required',
+								],
+							],
+							[
 								'handle' => 'create_supplier_order',
 								'field' => [
 									'type' => 'toggle',

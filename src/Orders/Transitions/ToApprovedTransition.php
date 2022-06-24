@@ -31,18 +31,21 @@ class ToApprovedTransition extends Transition
 	public function handle(): OrderModel
 	{
 
-		if($this->values['create_supplier_order']){
-			//$this->createProboOrder();
-		}
 
-		//$this->order->state = new Purchased($this->supplier_order);
+
 		$this->order->set('order_number', $this->values['new_order_number']);
 		$this->order->save();
 
 		event(new OrderApprovedEvent($this->order, $this->values));
 
+
 		$this->order->resource()->state = Approved::class;
 		$this->order->resource()->save();
+
+		if($this->values['send_confirmation_mail']){
+
+		}
+
 
 		return $this->order->resource();
 	}

@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionParameter;
 
-class CreateInvoiceOrderApprovedEvent implements ShouldQueue
+class SendConfiguredNotifications implements ShouldQueue
 {
     public function handle($event)
     {
@@ -17,6 +17,8 @@ class CreateInvoiceOrderApprovedEvent implements ShouldQueue
             ->afterLast('\\')
             ->snake()
             ->__toString();
+
+
 
         $notifications = collect(Config::get('simple-commerce.notifications'))->get($eventName);
 
@@ -30,6 +32,7 @@ class CreateInvoiceOrderApprovedEvent implements ShouldQueue
 
             $notifiables = $this->getNotifiables($config, $notification, $event);
             $notification = new $notification(...$this->getNotificationParameters($config, $notification, $event));
+
 
             if (! $notifiables) {
                 break;
