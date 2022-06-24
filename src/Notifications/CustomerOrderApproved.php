@@ -13,14 +13,17 @@ class CustomerOrderApproved extends Notification
 
     protected $order;
 
+	protected $values;
+
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct(Order $order)
+    public function __construct(Order $order, $values = [])
     {
         $this->order = $order;
+        $this->values = $values;
     }
 
     /**

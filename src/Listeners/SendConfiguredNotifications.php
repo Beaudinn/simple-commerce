@@ -30,7 +30,13 @@ class SendConfiguredNotifications implements ShouldQueue
         foreach ($notifications as $notification => $config) {
             $freshNotification = null;
 
+            //Skip sending notification if send_notifications is turnd off
+            if(isset($config['skippable']) && $config['skippable'] && isset($event->values, $event->values['send_notifications']) && !$event->values['send_notifications']){
+	            break;
+            }
+
             $notifiables = $this->getNotifiables($config, $notification, $event);
+
             $notification = new $notification(...$this->getNotificationParameters($config, $notification, $event));
 
 

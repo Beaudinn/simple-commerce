@@ -53,13 +53,13 @@ class Approved extends OrderState
 								],
 							],
 							[
-								'handle' => 'send_confirmation_mail',
+								'handle' => 'send_notifications',
 								'field' => [
 									'type' => 'toggle',
 									'width' => 100,
 									'default' => true,
-									'display' => __('Send mail'),
-									'instructions' => 'Send order confirmation email',
+									'display' => __('Send notifications'),
+									//'instructions' => 'Send order confirmation email',
 									'validate' => 'required',
 								],
 							],

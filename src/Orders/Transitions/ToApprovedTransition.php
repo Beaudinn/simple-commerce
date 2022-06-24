@@ -42,7 +42,7 @@ class ToApprovedTransition extends Transition
 		$this->order->resource()->state = Approved::class;
 		$this->order->resource()->save();
 
-		if($this->values['send_confirmation_mail']){
+		if($this->values['send_notifications']){
 
 		}
 
