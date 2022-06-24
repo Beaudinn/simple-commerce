@@ -36,15 +36,14 @@ class ToApprovedTransition extends Transition
 		$this->order->set('order_number', $this->values['new_order_number']);
 		$this->order->save();
 
-		event(new OrderApprovedEvent($this->order, $this->values));
 
-
-		$this->order->resource()->state = Approved::class;
+		$this->order->resource()->state = Approved::class; //Dont transition again
 		$this->order->resource()->save();
 
-		if($this->values['send_notifications']){
+		$this->order = $this->order->fresh();
 
-		}
+		event(new OrderApprovedEvent($this->order, $this->values));
+
 
 
 		return $this->order->resource();
