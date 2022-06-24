@@ -75,4 +75,18 @@ class PostPaymentGateway extends BaseGateway implements Gateway
             'url' => null,
         ];
     }
+
+	public function orderDisplay($value): array
+	{
+
+		if (! isset($value['data']['id'])) {
+			return [];
+		}
+
+		$molliePayment = $value['data']['id'];
+
+		return [
+			'PaymentMethod' => 'wire', //TODO get payment method from data
+		];
+	}
 }
