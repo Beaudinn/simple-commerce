@@ -40,7 +40,7 @@ class OrderModel extends Model
         'use_shipping_address_for_billing' => 'boolean',
         'gateway' => 'json',
 	    'invoice' => 'json',
-        'data' => 'json',
+        'data' => 'array',
         'paid_date' => 'datetime',
 	    'delivery_at' => 'datetime',
     ];
