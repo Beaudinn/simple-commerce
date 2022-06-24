@@ -22,7 +22,7 @@
         <table style="width: 100%" cellpadding="0" cellspacing="0" role="presentation">
             <tr>
                 <td style="vertical-align: top; width: 72px" valign="top">
-                    <img src="{{ Statamic::tag('glide')->src(asset($lineItem->product()->get('image')))->square(48)->fit("contain")->format('png') }}" alt="{{  $lineItem->product()->get('title') }}" width="48"
+                    <img src="{{ Statamic::tag('glide')->path(asset($lineItem->product()->get('image')))->square(48)->fit("contain")->format('png') }}" alt="{{  $lineItem->product()->get('title') }}" width="48"
                          style="border: 0; max-width: 100%; line-height: 100%; vertical-align: middle">
                 </td>
                 <td class="sm-w-auto" style="text-align: left; vertical-align: top; width: 488px" align="left"
