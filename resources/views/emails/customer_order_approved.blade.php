@@ -23,7 +23,7 @@
             <tr>
                 <td style="vertical-align: top; width: 72px" valign="top">
                     @if($lineItem->product()->get('image'))
-                        <img src="{{ Statamic::tag('glide')->path(asset($lineItem->product()->get('image')))->square(48)->fit("contain")->format('png') }}" alt="{{  $lineItem->product()->get('title') }}" width="48"
+                        <img src="{{ Statamic::tag('glide')->path($lineItem->product()->resource()->augmented()->get('image'))->square(48)->fit("contain")->absolute(true)->format('png') }}" alt="{{  $lineItem->product()->get('title') }}" width="48"
                              style="border: 0; max-width: 100%; line-height: 100%; vertical-align: middle">
                     @endif
                 </td>
