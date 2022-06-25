@@ -2,6 +2,7 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Console\Commands;
 
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Console\Command;
 use Statamic\Console\RunsInPlease;
@@ -38,6 +39,7 @@ class CartCleanupCommand extends Command
 
             (new $orderModelClass)
                 ->query()
+	            ->whereState('state', Draft::class)
                 ->where('is_paid', false)
                 ->where('created_at', '<', now()->subDays(14))
                 ->each(function ($model) {

@@ -187,9 +187,9 @@
                                 <p style="font-size: 16px; line-height: 22px; margin: 0; color: #8492a6">
                                     {{ $order->get('billing_first_name') }} {{ $order->get('billing_last_name') }}<br>
                                     @if($order->get('billing_company_name'))
-                                        {{ $order->get('billingcompany_name') }}<br>
+                                        {{ $order->get('billing_company_name') }}<br>
                                     @endif
-
+                                    {{ $order->billingAddress()->getLine() }}
                                 </p>
                             </div>
                             {{--                            @if($order_data['payment_details'])--}}
