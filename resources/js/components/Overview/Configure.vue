@@ -62,7 +62,7 @@
 </template>
 
 <script>
-import HasPreferences from "../../../../vendor/statamic/cms/resources/js/components/data-list/HasPreferences";
+import HasPreferences from "../../../../../../../vendor/statamic/cms/resources/js/components/data-list/HasPreferences";
 
 export default {
   props: {

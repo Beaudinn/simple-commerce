@@ -22,8 +22,10 @@
         <table style="width: 100%" cellpadding="0" cellspacing="0" role="presentation">
             <tr>
                 <td style="vertical-align: top; width: 72px" valign="top">
-                    <img src="{{ Statamic::tag('glide')->path(asset($lineItem->product()->get('image')))->square(48)->fit("contain")->format('png') }}" alt="{{  $lineItem->product()->get('title') }}" width="48"
-                         style="border: 0; max-width: 100%; line-height: 100%; vertical-align: middle">
+                    @if($lineItem->product()->get('image'))
+                        <img src="{{ Statamic::tag('glide')->path(asset($lineItem->product()->get('image')))->square(48)->fit("contain")->format('png') }}" alt="{{  $lineItem->product()->get('title') }}" width="48"
+                             style="border: 0; max-width: 100%; line-height: 100%; vertical-align: middle">
+                    @endif
                 </td>
                 <td class="sm-w-auto" style="text-align: left; vertical-align: top; width: 488px" align="left"
                     valign="top">
@@ -44,6 +46,30 @@
         </table>
     @endforeach
     <div style="line-height: 24px">&nbsp;</div>
+    @foreach ($order->upsells() as $lineItem)
+        @if(!$loop->first)
+            <div style="line-height: 24px">&nbsp;</div>
+        @endif
+        <table style="width: 100%" cellpadding="0" cellspacing="0" role="presentation">
+            <tr>
+                <td style="vertical-align: top; width: 72px" valign="top">
+                    @if($lineItem->product()->get('image'))
+                    <img src="{{ Statamic::tag('glide')->path(asset($lineItem->product()->get('image')))->square(48)->fit("contain")->format('png') }}" alt="{{  $lineItem->product()->get('title') }}" width="48"
+                         style="border: 0; max-width: 100%; line-height: 100%; vertical-align: middle">
+                    @endif
+                </td>
+                <td class="sm-w-auto" style="text-align: left; vertical-align: top; width: 488px" align="left"
+                    valign="top">
+                    <p style="font-weight: 700; font-size: 16px; margin-top: 0; margin-bottom: 8px; color: #4a5566">
+                        {{  $lineItem->product()->get('title') }}
+                    </p>
+                </td>
+                <td style="text-align: right; vertical-align: top; width: 88px" align="right" valign="top">
+                    <p style="font-weight: 700; font-size: 16px; line-height: 22px; margin: 0; color: #4a5566">{{ \DoubleThreeDigital\SimpleCommerce\Currency::parse($lineItem->total(), $site) }}</p>
+                </td>
+            </tr>
+        </table>
+    @endforeach
     <table style="width: 100%" cellpadding="0" cellspacing="0" role="presentation">
         <tr>
             <td style="padding-top: 12px; padding-bottom: 12px">

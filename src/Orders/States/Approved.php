@@ -36,6 +36,16 @@ class Approved extends OrderState
 		return 'Je bestelling wordt geproduceerd en verpakt';
 	}
 
+	public function redirect($order, $values)
+	{
+		return false;
+	}
+
+	public function download($order, $values)
+	{
+		return false;
+	}
+
 	public function blueprint(OrderModel $order = null)
 	{
 		return StatamicBlueprint::make()->setContents([

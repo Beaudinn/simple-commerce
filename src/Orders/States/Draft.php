@@ -33,6 +33,16 @@ class Draft extends OrderState
 		return 'Deze besteling is nog niet definitief';
 	}
 
+	public function redirect($order, $values)
+	{
+		return false;
+	}
+
+	public function download($order, $values)
+	{
+		return false;
+	}
+
 	public function blueprint(OrderModel $order = NULL)
 	{
 		return StatamicBlueprint::make()->setContents([

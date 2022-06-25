@@ -34,6 +34,16 @@ class Quote extends OrderState
 		return 'Quotation';
 	}
 
+	public function redirect($order, $values)
+	{
+		return false;
+	}
+
+	public function download($order, $values)
+	{
+		return false;
+	}
+
 	public function blueprint(OrderModel $order = NULL)
 	{
 		return StatamicBlueprint::make()->setContents([

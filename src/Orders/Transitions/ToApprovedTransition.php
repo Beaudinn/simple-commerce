@@ -28,7 +28,7 @@ class ToApprovedTransition extends Transition
 
 	}
 
-	public function handle(): OrderModel
+	public function handle()
 	{
 
 
@@ -36,25 +36,19 @@ class ToApprovedTransition extends Transition
 		$this->order->set('order_number', $this->values['new_order_number']);
 		$this->order->save();
 
+		event(new OrderApprovedEvent($this->order, $this->values));
+
 
 		$this->order->resource()->state = Approved::class; //Dont transition again
 		$this->order->resource()->save();
 
 		$this->order = $this->order->fresh();
 
-		event(new OrderApprovedEvent($this->order, $this->values));
-
-
 
 		return $this->order->resource();
+		return 'Order is approved';
 	}
 
-
-	protected function createProboOrder(){
-
-
-
-	}
 }
 
 

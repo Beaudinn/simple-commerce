@@ -48,10 +48,11 @@ class CustomerOrderApproved extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-	        ->from($address = 'noreply@domain.com', $name = $this->order->site->attributes()['name'])
+	        ->from('info@drukhoek.nl', $this->order->site()->attributes()['name'])
 	        ->subject(trans('strings.notification.order.confirmation.subject', ['order_number' => $this->order->orderNumber()]))
 	        ->view('simple-commerce::emails.customer_order_approved', [
                 'order' => $this->order,
+		        'values' => $this->values,
             ]);
     }
 }

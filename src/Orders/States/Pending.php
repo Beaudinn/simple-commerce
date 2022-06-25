@@ -28,6 +28,15 @@ class Pending extends OrderState
 		return 1;
 	}
 
+	public function redirect($order, $values)
+	{
+		return false;
+	}
+
+	public function download($order, $values)
+	{
+		return false;
+	}
 
 	public function description(): string
 	{

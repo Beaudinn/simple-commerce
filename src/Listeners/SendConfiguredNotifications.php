@@ -30,7 +30,7 @@ class SendConfiguredNotifications implements ShouldQueue
         foreach ($notifications as $notification => $config) {
             $freshNotification = null;
 
-            //Skip sending notification if send_notifications is turnd off
+           // Skip sending notification if send_notifications is turnd off
             if(isset($config['skippable']) && $config['skippable'] && isset($event->values, $event->values['send_notifications']) && !$event->values['send_notifications']){
 	            break;
             }
@@ -40,10 +40,11 @@ class SendConfiguredNotifications implements ShouldQueue
             $notification = new $notification(...$this->getNotificationParameters($config, $notification, $event));
 
 
+
+
             if (! $notifiables) {
                 break;
             }
-
             foreach ($notifiables as $notifiable) {
                 if (! $freshNotification) {
                     $freshNotification = Notification::route($notifiable['channel'], $notifiable['route']);

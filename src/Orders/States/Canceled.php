@@ -31,6 +31,15 @@ class Canceled extends OrderState
 		return 0;
 	}
 
+	public function redirect($order, $values)
+	{
+		return false;
+	}
+
+	public function download($order, $values)
+	{
+		return false;
+	}
 
 	public function blueprint()
 	{

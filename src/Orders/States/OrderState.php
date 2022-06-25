@@ -25,6 +25,10 @@ abstract class OrderState extends State
 	abstract public function progress(): int;
 
 
+	abstract public function redirect($order, $values);
+
+	abstract public function download($order, $values);
+
 	public static function config(): StateConfig
 	{
 		return parent::config()

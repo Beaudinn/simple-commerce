@@ -6,6 +6,7 @@ namespace DoubleThreeDigital\SimpleCommerce\Http\Controllers\CP;
 use DoubleThreeDigital\Runway\Runway;
 use Illuminate\Http\Request;
 use Statamic\Facades\Action;
+use Symfony\Component\HttpFoundation\Response;
 
 class StateController
 {
@@ -53,15 +54,15 @@ class StateController
 
 		$stateClass = new ($request->state)($record);
 
-		$blueprint = $stateClass->blueprint($record);
-
 
 		$fields = $stateClass->blueprint($record)->fields()->addValues($request->values); //$request->values?
 
 		$fields->validate();
 
 		$values = $fields->process();
+
 		//try {
+		$response = 'not used yet';
 		$record[$request->handle]->transitionTo($request->state, $values->values()->all());
 		//$payment->state->transition(new CreatedToFailed($payment, 'error message'));
 
@@ -73,6 +74,17 @@ class StateController
 		//	->log('Status changed to '.$stateClass->name());
 		//$order->enableLogging();
 
+		if ($redirect = $stateClass->redirect($record, $values)) {
+			return ['redirect' => $redirect];
+		} elseif ($download = $stateClass->download($record, $values)) {
+			return $download instanceof Response ? $download : response()->download($download);
+		}
+
+		if (is_string($response)) {
+			return ['message' => $response];
+		}
+
+		return $response ?: [];
 		session()->flash('success', 'Status aangepast');
 		return;
 		//} catch (ApiException $e) {
