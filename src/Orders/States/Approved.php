@@ -12,12 +12,12 @@ class Approved extends OrderState
 
 	public function label(): string
 	{
-		return 'Productie';
+		return 'Approved';
 	}
 
 	public function title(): string
 	{
-		return 'Productie';
+		return 'Approved';
 	}
 
 	public function color(): string
@@ -53,23 +53,13 @@ class Approved extends OrderState
 					'main' => [
 						'fields' => [
 							[
-								'handle' => 'new_order_number',
-								'field' => [
-									'type' => 'text',
-									'width' => 100,
-									'display' => __('Order number'),
-									'validate' => 'required',
-									'default' => $this->createOrderNumber($order),
-								],
-							],
-							[
 								'handle' => 'send_notifications',
 								'field' => [
 									'type' => 'toggle',
 									'width' => 100,
 									'default' => true,
 									'display' => __('Send notifications'),
-									//'instructions' => 'Send order confirmation email',
+									'instructions' => 'order confermation to customer ',
 									'validate' => 'required',
 								],
 							],
@@ -90,26 +80,4 @@ class Approved extends OrderState
 		);
 	}
 
-	/**
-	 * Create an order number.
-	 */
-	protected function createOrderNumber($orderModal): string
-	{
-		$order = \DoubleThreeDigital\SimpleCommerce\Facades\Order::find($orderModal->id);
-		$site = $order->site();
-		$prefix = $site->attributes()['order_number_prefix'];
-		$number = $site->attributes()['order_number_range'];
-
-
-		if (!empty($number)) {
-			do {
-				$number++;
-
-				$count = OrderModel::where('order_number', $prefix . $number)->count();
-
-			} while ($count);
-		}
-
-		return $prefix . $number;
-	}
 }

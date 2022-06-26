@@ -49,6 +49,16 @@ class Pending extends OrderState
 			'sections' => [
 				'main' => [
 					'fields' => [
+						[
+							'handle' => 'new_order_number',
+							'field' => [
+								'type' => 'text',
+								'width' => 100,
+								'display' => __('Order number'),
+								'validate' => 'required',
+								'default' => $this->createOrderNumber($order),
+							],
+						],
 					],
 				],
 			],
@@ -56,4 +66,26 @@ class Pending extends OrderState
 		]);
 	}
 
+	/**
+	 * Create an order number.
+	 */
+	protected function createOrderNumber($orderModal): string
+	{
+		$order = \DoubleThreeDigital\SimpleCommerce\Facades\Order::find($orderModal->id);
+		$site = $order->site();
+		$prefix = $site->attributes()['order_number_prefix'];
+		$number = $site->attributes()['order_number_range'];
+
+
+		if (!empty($number)) {
+			do {
+				$number++;
+
+				$count = OrderModel::where('order_number', $prefix . $number)->count();
+
+			} while ($count);
+		}
+
+		return $prefix . $number;
+	}
 }
