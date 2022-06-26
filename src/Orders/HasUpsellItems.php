@@ -97,6 +97,7 @@ trait HasUpsellItems
 
 		$this->upsells = $this->upsells->push($lineItem);
 
+		var_dump('$this->upsells,$this->upsells',$this->upsells);
 		$this->save();
 
 		if (! $this->withoutRecalculating) {
