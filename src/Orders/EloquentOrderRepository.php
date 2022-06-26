@@ -209,7 +209,6 @@ class EloquentOrderRepository implements RepositoryContract
 
 		$model->save();
 		var_dump($order->upsells(), $model->upsells);
-		die();
 
 		$order->id = $model->id;
 		$order->state = $model->state;
