@@ -39,7 +39,7 @@ trait HasUpsellItems
 						->id($item['id'])
 						->item(isset($item['item']) ? $item['item'] : null)
 						->product($item['product'])
-						->price($item['price'])
+						->price(isset($item['price']) ? $item['price'] : null)
 						->quantity($item['quantity'])
 						->total($item['total']);
 
