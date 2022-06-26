@@ -145,6 +145,7 @@ class EloquentOrderRepository implements RepositoryContract
 		}
 
 
+		var_dump($order->upsells()->map->toArray()); die();
 		$model->locale = $order->locale();
 		$model->is_paid = $order->isPaid();
 		$model->order_number = $order->orderNumber();

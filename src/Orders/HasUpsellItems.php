@@ -103,7 +103,6 @@ trait HasUpsellItems
 			$this->recalculate();
 		}
 
-		var_dump($this->upsellItem($lineItem->id())); die();
 		return $this->upsellItem($lineItem->id());
 	}
 
