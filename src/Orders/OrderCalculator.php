@@ -85,7 +85,6 @@ class OrderCalculator implements Contract
 			})
 			->map(function ($lineItem) use (&$data) {
 
-
 				$calculate = $this->calculateLineItem($data, $lineItem);
 
 				$data = $calculate['data'];

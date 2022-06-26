@@ -184,6 +184,7 @@ class CartItemController extends BaseActionController
 				});
 				$productProbo = $product->probo($request->all());
 
+
 				$selectedOption = $productProbo->getSelectedOptionsFromLastResponseWithoutInitial();
 				$item['options'] = $selectedOption->mapWithKeys(function ($item, $key) use ($productProbo) {
 					return [$productProbo::getName((object)$item) => $productProbo::getValue((object)$item)];

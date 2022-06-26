@@ -42,6 +42,7 @@ class OrderModel extends Model
 	    'invoice' => 'json',
         'data' => 'array',
         'paid_date' => 'datetime',
+	    'ordered_at' => 'datetime',
 	    'delivery_at' => 'datetime',
     ];
 

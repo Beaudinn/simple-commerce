@@ -49,7 +49,7 @@ class EntryProductRepository implements RepositoryContract
         }
 
         if ($entry->value('margin')) {
-            $product->margin($entry->gevaluet('margin'));
+            $product->margin($entry->value('margin'));
         }
 
         if ($entry->value('stock')) {
@@ -61,9 +61,6 @@ class EntryProductRepository implements RepositoryContract
         }
 
 
-	    //if ($hasOrigin = $entry->hasOrigin()) {
-		//    [$originValues, $originMeta] = $this->extractFromFields($entry->origin(), $blueprint);
-	    //}
 
 
         return $product->data(array_merge(

@@ -6,29 +6,24 @@ use DoubleThreeDigital\SimpleCommerce\Contracts\Product;
 use DoubleThreeDigital\SimpleCommerce\Facades\Product as ProductFacade;
 use Statamic\Support\Traits\FluentlyGetsAndSets;
 
-class LineItem
+class UpsellItem
 {
     use FluentlyGetsAndSets;
 
     public $id;
     public $product;
-    public $variant;
+    public $item;
     public $quantity;
     public $price;
     public $total;
     public $tax;
-    public $uploader;
     public $purchase_price;
 	public $purchase_price_incl_vat;
-    public $initial;
-	public $options;
-	public $rush_prices;
     public $metadata;
 
     public function __construct()
     {
         $this->metadata = collect();
-        $this->rush_prices = collect();
     }
 
     public function id($id = null)
@@ -52,14 +47,23 @@ class LineItem
             ->args(func_get_args());
     }
 
-    public function variant($variant = null)
-    {
-        return $this
-            ->fluentlyGetOrSet('variant')
-            ->args(func_get_args());
-    }
+	public function item($item = null)
+	{
+		return $this
+			->fluentlyGetOrSet('item')
+			->setter(function ($item) {
+				if (! $item instanceof LineItem) {
+					return $item;
+				}
 
-    public function quantity($quantity = null)
+				return $item;
+			})
+			->args(func_get_args());
+	}
+
+
+
+	public function quantity($quantity = null)
     {
         return $this
             ->fluentlyGetOrSet('quantity')
@@ -88,47 +92,6 @@ class LineItem
             ->args(func_get_args());
     }
 
-    public function initial($initial = null)
-    {
-        return $this
-            ->fluentlyGetOrSet('initial')
-            ->args(func_get_args());
-    }
-
-    public function options($options = [])
-    {
-        return $this
-            ->fluentlyGetOrSet('options')
-            ->args(func_get_args());
-    }
-
-    public function uploader($uploader = [])
-    {
-        return $this
-            ->fluentlyGetOrSet('uploader')
-            ->args(func_get_args());
-    }
-
-    public function rush_prices($rush_prices = [])
-    {
-        return $this
-            ->fluentlyGetOrSet('rush_prices')
-            ->setter(function ($value) {
-
-	            if (!$value) {
-		           return  collect([]);
-	            }
-
-                if (is_array($value)) {
-                    $value = collect($value);
-                }
-
-
-                return $value;
-            })
-            ->args(func_get_args());
-    }
-
     public function metadata($metadata = null)
     {
         return $this
@@ -148,16 +111,11 @@ class LineItem
         return [
             'id' => $this->id,
             'product' => $this->product->id(),
-	        'type' => $this->product->purchasableType(),
-            'variant' => $this->variant,
+	        'item' => $this->item,
             'quantity' => $this->quantity,
             'price' => $this->price,
 	        'total' => $this->total,
             'tax' => $this->tax,
-	        'initial' => $this->initial,
-	        'options' => $this->options,
-	        'uploader' => $this->uploader,
-	        'rush_prices' => $this->rush_prices->toArray(),
             'metadata' => $this->metadata->toArray(),
         ];
     }

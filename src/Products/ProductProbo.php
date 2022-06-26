@@ -5,6 +5,7 @@ namespace DoubleThreeDigital\SimpleCommerce\Products;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Product;
 use DoubleThreeDigital\SimpleCommerce\Data\HasData;
 use DoubleThreeDigital\SimpleCommerce\Facades\Product as ProductFacade;
+use Illuminate\Support\Str;
 use Statamic\Support\Traits\FluentlyGetsAndSets;
 
 class ProductProbo
@@ -51,6 +52,16 @@ class ProductProbo
 		        return collect($options);
 	        })
             ->args(func_get_args());
+    }
+
+    public function getCrosssells(){
+
+	    return $this->selectedOptions()->filter(function ($selectedOption) {
+
+		    return Str::contains($selectedOption['type_code'], 'cross_sell') &&
+			    $selectedOption['type_code'] !== 'cross_sell_next';
+	    });
+
     }
 
 
