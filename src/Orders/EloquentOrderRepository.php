@@ -216,8 +216,11 @@ class EloquentOrderRepository implements RepositoryContract
 		$order->shop = $model->shop;
 		$order->isPaid = $model->is_paid;
 
-		$order->lineItems = collect($model->items);
-		$order->upsells = collect($model->upsells);
+		//$order->lineItems = collect($model->items);
+		//$order->upsells = collect($model->upsells);
+
+		$order->lineItems($model->items);
+		$order->upsells($model->upsells);
 
 		$order->grandTotal = $model->grand_total;
 		$order->postPayment = $model->post_payment;
