@@ -162,7 +162,7 @@ trait HasUpsellItems
 	{
 		$this->upsells = $this->upsells->reject(function ($item) use ($uppsellItemId, $lineItemId) {
 
-			return $item->id() === $uppsellItemId && ($lineItemId ? $uppsellItemId == $item->item() : true);
+			return $item->id() === $uppsellItemId && ($lineItemId ? $lineItemId == $item->item() : true);
 		});
 
 		$this->save();
