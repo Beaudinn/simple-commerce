@@ -208,12 +208,6 @@ class EloquentOrderRepository implements RepositoryContract
 		$model->paid_date = $order->get('paid_date');
 
 		$model->save();
-		//var_dump('--------',$order->upsells()->map->toArray(), $model->upsells);
-		//
-		//if( $model->upsells){
-		//	var_dump('--------',$model->id);
-		//	die();
-		//}
 
 		$order->id = $model->id;
 		$order->state = $model->state;
@@ -225,8 +219,8 @@ class EloquentOrderRepository implements RepositoryContract
 		//$order->lineItems = collect($model->items);
 		//$order->upsells = collect($model->upsells);
 
-		$order->lineItems($model->items);
-		$order->upsells($model->upsells);
+		//$order->lineItems($model->items);
+		//$order->upsells($model->upsells);
 
 		$order->grandTotal = $model->grand_total;
 		$order->postPayment = $model->post_payment;
