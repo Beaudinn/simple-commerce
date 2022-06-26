@@ -69,7 +69,7 @@ trait HasUpsellItems
 
 	public function addUpsellItem(array $lineItemData): UpsellItem
 	{
-		$product = ProductAPI::find($lineItemData['product']);
+		//$product = ProductAPI::find($lineItemData['product']);
 
 		if (! isset($lineItemData['id'])) {
 			$lineItemData['id'] = mt_rand(1000000000,9999999999);// app('stache')->generateId();
@@ -103,6 +103,7 @@ trait HasUpsellItems
 			$this->recalculate();
 		}
 
+		var_dump($this->upsellItem($lineItem->id())); die();
 		return $this->upsellItem($lineItem->id());
 	}
 
