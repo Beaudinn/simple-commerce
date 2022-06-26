@@ -145,7 +145,6 @@ class EloquentOrderRepository implements RepositoryContract
 		}
 
 
-		var_dump($order->upsells()); die();
 		$model->locale = $order->locale();
 		$model->is_paid = $order->isPaid();
 		$model->order_number = $order->orderNumber();
@@ -217,8 +216,8 @@ class EloquentOrderRepository implements RepositoryContract
 		$order->shop = $model->shop;
 		$order->isPaid = $model->is_paid;
 
-		//$order->lineItems = collect($model->items);
-		//$order->upsells = collect($model->upsells);
+		$order->lineItems = collect($model->items);
+		$order->upsells = collect($model->upsells);
 
 		$order->grandTotal = $model->grand_total;
 		$order->postPayment = $model->post_payment;
