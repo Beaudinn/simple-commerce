@@ -208,6 +208,7 @@ class EloquentOrderRepository implements RepositoryContract
 		$model->paid_date = $order->get('paid_date');
 
 		$model->save();
+		var_dump($order->upsells(), $model->upsells);
 		die();
 
 		$order->id = $model->id;
