@@ -40,14 +40,17 @@ class CartBotCleanupCommand extends Command
             (new $orderModelClass)
                 ->query()
 	            ->whereState('state', Draft::class)
-                ->where('is_bot', true)
+	            ->where(function($query)
+	            {
+		            $query->where('is_bot', true)
+			            ->orWhere('agent_ip', '165.22.195.209');
+	            })
                 ->each(function ($model) {
                     $this->line("Deleting order: {$model->id}");
 
                     $model->delete();
                 });
-
-            return;
+            
         }
 
         return $this->error('Unable to cleanup carts with provided cart driver.');
