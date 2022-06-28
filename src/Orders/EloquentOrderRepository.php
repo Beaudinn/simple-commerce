@@ -8,10 +8,13 @@ use DoubleThreeDigital\SimpleCommerce\Contracts\Coupon as CouponContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Customer as CustomerContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use DoubleThreeDigital\SimpleCommerce\Contracts\OrderRepository as RepositoryContract;
+use DoubleThreeDigital\SimpleCommerce\Events\CartAfterCreate;
+use DoubleThreeDigital\SimpleCommerce\Events\CartBeforeCreate;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\OrderNotFound;
 use DoubleThreeDigital\SimpleCommerce\Facades\Coupon;
 use DoubleThreeDigital\SimpleCommerce\Facades\Customer;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class EloquentOrderRepository implements RepositoryContract
@@ -132,10 +135,18 @@ class EloquentOrderRepository implements RepositoryContract
 
 	public function save($order): void
 	{
+
 		$model = $order->resource();
 
-		if (!$model) {
+		$creating = !$model;
+		if ($creating) {
+			Log::info('creating');
 			$model = new $this->model();
+			event(new CartBeforeCreate($model));
+
+			if (method_exists($this, 'beforeCreate')) {
+				$this->beforeCreate();
+			}
 		}
 
 
@@ -208,6 +219,16 @@ class EloquentOrderRepository implements RepositoryContract
 		$model->paid_date = $order->get('paid_date');
 
 		$model->save();
+
+		if ($creating) {
+			Log::info('creating!!!');
+
+			event(new CartAfterCreate($model));
+
+			if (method_exists($this, 'afterCreate')) {
+				$this->afterCreate();
+			}
+		}
 
 		$order->id = $model->id;
 		$order->state = $model->state;

@@ -75,6 +75,7 @@ class Order implements Contract
 		$this->shippingTotal = 0;
 		$this->couponTotal = 0;
 
+		$this->customer_ip = NULL;
 		$this->delivery_at = NULL;
 		$this->shipping_method = NULL;
 

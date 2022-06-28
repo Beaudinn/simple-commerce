@@ -44,6 +44,8 @@ class OrderModel extends Model
         'paid_date' => 'datetime',
 	    'ordered_at' => 'datetime',
 	    'delivery_at' => 'datetime',
+	    'agent_client' => 'json',
+	    'agent_os' => 'json',
     ];
 
     protected $appends = [

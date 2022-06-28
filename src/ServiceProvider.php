@@ -4,6 +4,7 @@ namespace DoubleThreeDigital\SimpleCommerce;
 
 use Barryvdh\Debugbar\Facade as Debugbar;
 use DoubleThreeDigital\SimpleCommerce\Events\OrderApproved as OrderApprovedEvent;
+use DoubleThreeDigital\SimpleCommerce\Tags\CustomerTags;
 use Statamic\Events\EntryBlueprintFound;
 use Statamic\Facades\Collection;
 use Statamic\Facades\CP\Nav;
@@ -95,6 +96,7 @@ class ServiceProvider extends AddonServiceProvider
     protected $tags = [
         Tags\SimpleCommerceTag::class,
         Tags\TotalIncludingTax::class,
+	    CustomerTags::class,
     ];
 
     protected $updateScripts = [
