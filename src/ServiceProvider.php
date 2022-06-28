@@ -27,6 +27,7 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $commands = [
         Console\Commands\CartCleanupCommand::class,
+	    Console\Commands\CartBotCleanupCommand::class,
 	    Console\Commands\CartDeliveryResetCommand::class,
         Console\Commands\MakeGateway::class,
         Console\Commands\MakeShippingMethod::class,

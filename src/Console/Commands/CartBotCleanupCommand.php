@@ -8,12 +8,12 @@ use Illuminate\Console\Command;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Entry;
 
-class CartCleanupCommand extends Command
+class CartBotCleanupCommand extends Command
 {
     use RunsInPlease;
 
-    protected $name = 'sc:cart-cleanup {days}';
-    protected $description = 'Cleanup carts older than 14 days.';
+    protected $name = 'sc:cart-bot-cleanup';
+    protected $description = 'Cleanup carts created by bots';
 
     public function handle()
     {
@@ -40,8 +40,7 @@ class CartCleanupCommand extends Command
             (new $orderModelClass)
                 ->query()
 	            ->whereState('state', Draft::class)
-                ->where('is_paid', false)
-                ->where('created_at', '<', $this->argument('days') === 0 ? now() : now()->subDays($this->argument('days') ?? 2))
+                ->where('is_bot', true)
                 ->each(function ($model) {
                     $this->line("Deleting order: {$model->id}");
 
