@@ -50,7 +50,7 @@ class CartBotCleanupCommand extends Command
 
                     $model->delete();
                 });
-            
+
         }
 
         return $this->error('Unable to cleanup carts with provided cart driver.');

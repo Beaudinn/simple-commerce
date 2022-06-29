@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Statamic\Facades\Blink;
 use Statamic\Facades\Site;
 use Statamic\Sites\Site as ASite;
+use DeviceDetector\Parser\Bot AS BotParser;
 
 class CookieDriver implements CartDriver
 {
@@ -52,8 +53,17 @@ class CookieDriver implements CartDriver
     {
         $cart = OrderAPI::make();
 
+	    $botParser = new BotParser();
+	    $botParser->setUserAgent(request()->server('HTTP_USER_AGENT'));
 
-        $cart->save();
+	    // OPTIONAL: discard bot information. parse() will then return true instead of information
+	    $botParser->discardDetails();
+
+	    $result = $botParser->parse();
+
+	    if (is_null($result)) {
+		    $cart->save();
+	    }
 
         Cookie::queue($this->getKey(), $cart->id);
 
