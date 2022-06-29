@@ -63,14 +63,15 @@ class CookieDriver implements CartDriver
 
 	    if (is_null($result)) {
 		    $cart->save();
+
+
+		    Cookie::queue($this->getKey(), $cart->id);
+
+		    // Because the cookie won't be set until the end of the request,
+		    // we need to set it somewhere for the remainder of the request.
+		    // And that somewhere is Blink.
+		    Blink::put($this->getKey(), $cart->id);
 	    }
-
-        Cookie::queue($this->getKey(), $cart->id);
-
-        // Because the cookie won't be set until the end of the request,
-        // we need to set it somewhere for the remainder of the request.
-        // And that somewhere is Blink.
-        Blink::put($this->getKey(), $cart->id);
 
         return $cart;
     }
