@@ -35,7 +35,9 @@ class ToPendingTransition extends Transition
 
 		$orderModel = $this->order->resource();
 		$orderModel->ordered_at = Carbon::now();
-		$orderModel->order_number = isset($this->values['new_order_number']) ? $this->values['new_order_number'] : $this->values['new_order_number'];
+		if(isset($this->values['new_order_number'])){
+			$orderModel->order_number = $this->values['new_order_number'];
+		}
 
 		event(new OrderPendingEvent($this->order, $this->values));
 
