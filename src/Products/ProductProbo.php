@@ -70,6 +70,11 @@ class ProductProbo
 
 		return $this->selectedOptions()->filter(function ($selectedOption) {
 
+			return$selectedOption['type_code'] !== 'width' &&
+				$selectedOption['type_code'] !== 'height' &&
+				$selectedOption['type_code'] !== 'length' &&
+				$selectedOption['type_code'] !== 'amount';
+
 			return $selectedOption['type_code'] !== 'cross_sell_pc' &&
 				$selectedOption['type_code'] !== 'cross_sell_lm' &&
 				$selectedOption['type_code'] !== 'width' &&

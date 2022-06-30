@@ -197,6 +197,8 @@ class CartItemController extends BaseActionController
 					$item['initial'] = join(' x ', $productProbo->getInitial()) . ' cm';
 				}
 
+				//var_dump($productProbo->getCrosssells()); die();
+
 			}
 
 			$item = array_merge(
