@@ -82,9 +82,9 @@ class EloquentCustomerRepository implements RepositoryContract
 
         $model->email = $customer->email();
 
-        if ($name = $customer->get('name')) {
-            $model->name = $name;
-        }
+        //if ($name = $customer->get('name')) {
+        //    $model->name = $name;
+        //}
 
         // If anything in the order data has it's own column, save it
         // there, rather than in the data column.
