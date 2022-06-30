@@ -32,8 +32,9 @@ class ToApprovedTransition extends Transition
 	{
 
 
-
-		$this->order->set('order_number', $this->values['new_order_number']);
+		if(isset($this->values['new_order_number'])){
+			$this->order->set('order_number', $this->values['new_order_number']);
+		}
 		$this->order->save();
 
 		event(new OrderApprovedEvent($this->order, $this->values));
