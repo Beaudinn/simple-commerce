@@ -377,7 +377,7 @@ class MollieGateway extends BaseGateway implements Gateway
 			return false;
 		}
 
-		$moloieOrderId = $order->get('mollie')['id'];
+		$moloieOrderId = $order->gateway()['data']['id'];
 
 		if (! $moloieOrderId) {
 			throw new PayPalDetailsMissingOnOrderException("Order [{$order->id()}] does not have a Mollie Order ID.");

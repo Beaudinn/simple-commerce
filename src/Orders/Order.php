@@ -223,7 +223,7 @@ class Order implements Contract
 
 			$total = $prices->sum(function ($price) {
 
-				return $price['prices_per_product']['purchase_rush_surcharge'] ?? 0;
+				return $price['prices_total']['purchase_rush_surcharge'] ?? 0;
 			});
 			$deliver_date = Carbon::parse($prices->first()['delivery_date']);
 			if ($deliver_date->isTomorrow()) {

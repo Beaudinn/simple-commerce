@@ -38,13 +38,39 @@ class GatewayCallbackController extends BaseActionController
 			return $this->withErrors($request, "Order [{$order->get('title')}] has not been marked as paid yet.");
 		}
 
+
 		$this->forgetCart();
+
+		$ecommerceDataLayer = [
+			"transaction_id" => $order->id(),
+			"value" =>  $order->grandTotal(),
+			"tax" => $order->taxTotal(),
+			"shipping" => $order->shippingTotal(),
+			"currency" => "EUR",
+			//"coupon" => "SUMMER_SALE",
+		];
+		$ecommerceDataLayer['items'] = $order->lineItems()->map(function ($lineItem, $index){
+			return [
+				"item_id" => $lineItem->product()->id(),
+				"item_name" => $lineItem->product()->resource()->get('title') ,
+				"currency" => "EUR",
+				"index" => $index,
+				"price" => $lineItem->price(),
+				"quantity" => $lineItem->quantity()
+			];
+		})->toArray();
+
+
 
 		return $this->withSuccess($request, [
 			'success' => __('simple-commerce.messages.checkout_complete'),
 			'cart' => $request->wantsJson()
 				? $order->toResource()
 				: $order->toAugmentedArray(),
+			'datalayer' => [
+				"event" => "purchase",
+				"ecommerce" => $ecommerceDataLayer
+			],
 			'is_checkout_request' => true,
 		]);
 	}
