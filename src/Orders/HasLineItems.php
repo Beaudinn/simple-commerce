@@ -118,7 +118,7 @@ trait HasLineItems
 			$lineItem->metadata($lineItemData['metadata']);
 		}
 
-		$this->lineItems = $this->lineItems->push($lineItem);
+		$this->lineItems = $this->lineItems->push($lineItem)->values();
 
 		$this->save();
 
@@ -253,7 +253,7 @@ trait HasLineItems
 	{
 		$this->lineItems = $this->lineItems->reject(function ($item) use ($lineItemId) {
 			return $item->id() == $lineItemId;
-		});
+		})->values();
 
 		$this->save();
 

@@ -16,10 +16,11 @@ class GatewayCallbackController extends BaseActionController
 
 	public function index(Request $request, $gateway)
 	{
-		if(!$order = Order::find($request->get('_order_id'))){
+		if ($request->has('_order_id')) {
+			$order = Order::find($request->get('_order_id'));
+		} else {
 			$order = $this->getCart();
 		}
-
 		$gatewayName = $gateway;
 
 		$gateway = collect(SimpleCommerce::gateways())
