@@ -17,6 +17,7 @@ class GatewayCallbackController extends BaseActionController
 	public function index(Request $request, $gateway)
 	{
 		if ($request->has('_order_id')) {
+			var_dump('haaaaaaay');
 			$order = Order::find($request->get('_order_id'));
 		} else {
 			$order = $this->getCart();
