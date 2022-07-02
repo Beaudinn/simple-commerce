@@ -17,7 +17,7 @@ class GatewayCallbackController extends BaseActionController
 	public function index(Request $request, $gateway)
 	{
 		if ($request->has('_order_id')) {
-			var_dump('haaaaaaay'); die();
+
 			$order = Order::find($request->get('_order_id'));
 		} else {
 			$order = $this->getCart();
@@ -63,7 +63,7 @@ class GatewayCallbackController extends BaseActionController
 				"quantity" => $lineItem->quantity()
 			];
 		})->toArray();
-
+		var_dump('haaaaaaay',$ecommerceDataLayer); die();
 
 
 		return $this->withSuccess($request, [
