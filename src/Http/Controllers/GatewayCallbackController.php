@@ -63,7 +63,6 @@ class GatewayCallbackController extends BaseActionController
 				"quantity" => $lineItem->quantity()
 			];
 		})->toArray();
-		var_dump('haaaaaaay',$ecommerceDataLayer); die();
 
 
 		return $this->withSuccess($request, [
