@@ -5,6 +5,7 @@ namespace DoubleThreeDigital\SimpleCommerce\Http\Controllers;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\GatewayCallbackMethodDoesNotExist;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\GatewayDoesNotExist;
 use DoubleThreeDigital\SimpleCommerce\Facades\Gateway;
+use DoubleThreeDigital\SimpleCommerce\Facades\Order;
 use DoubleThreeDigital\SimpleCommerce\Orders\Cart\Drivers\CartDriver;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Http\Request;
@@ -15,8 +16,9 @@ class GatewayCallbackController extends BaseActionController
 
 	public function index(Request $request, $gateway)
 	{
-		// $order = Order::find($request->get('_order_id'));
-		$order = $this->getCart();
+		if(!$order = Order::find($request->get('_order_id'))){
+			$order = $this->getCart();
+		}
 
 		$gatewayName = $gateway;
 
