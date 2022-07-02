@@ -55,7 +55,7 @@ class GatewayCallbackController extends BaseActionController
 		$ecommerceDataLayer['items'] = $order->lineItems()->map(function ($lineItem, $index){
 			return [
 				"item_id" => $lineItem->product()->id(),
-				"item_name" => $lineItem->product()->resource()->get('title') ,
+				"item_name" => $lineItem->product()->get('title'),
 				"currency" => "EUR",
 				"index" => $index,
 				"price" => $lineItem->price(),
