@@ -172,6 +172,7 @@ class CartItemController extends BaseActionController
 			}
 
 			if ($request->has('calculation_input')) {
+
 				$metadata['code'] = $request->product_id;
 				$options = json_decode($request->calculation_input, true);
 				$metadata['calculation_input'] = collect($options)->map(function ($option) {

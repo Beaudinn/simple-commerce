@@ -18,6 +18,7 @@ class LineItem
     public $total;
     public $tax;
     public $uploader;
+	public $uploaders;
     public $purchase_price;
 	public $purchase_price_incl_vat;
     public $initial;
@@ -109,6 +110,13 @@ class LineItem
             ->args(func_get_args());
     }
 
+    public function uploaders($uploaders = [])
+    {
+        return $this
+            ->fluentlyGetOrSet('uploaders')
+            ->args(func_get_args());
+    }
+
     public function rush_prices($rush_prices = [])
     {
         return $this
@@ -157,6 +165,7 @@ class LineItem
 	        'initial' => $this->initial,
 	        'options' => $this->options,
 	        'uploader' => $this->uploader,
+	        'uploaders' => $this->uploaders,
 	        'rush_prices' => $this->rush_prices->toArray(),
             'metadata' => $this->metadata->toArray(),
         ];

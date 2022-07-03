@@ -65,6 +65,10 @@ trait HasLineItems
 						$lineItem->uploader($item['uploader']);
 					}
 
+					if (isset($item['uploaders'])) {
+						$lineItem->uploaders($item['uploaders']);
+					}
+
 					if (isset($item['rush_prices'])) {
 						$lineItem->rush_prices($item['rush_prices']);
 					}
@@ -112,6 +116,10 @@ trait HasLineItems
 
 		if (isset($lineItemData['uploader'])) {
 			$lineItem->uploader($lineItemData['uploader']);
+		}
+
+		if (isset($lineItemData['uploaders'])) {
+			$lineItem->uploaders($lineItemData['uploaders']);
 		}
 
 		if (isset($lineItemData['metadata'])) {
@@ -175,6 +183,10 @@ trait HasLineItems
 				$lineItem->uploader($lineItemData['uploader']);
 			}
 
+			if (isset($lineItemData['uploaders'])) {
+				$lineItem->uploaders($lineItemData['uploaders']);
+			}
+
 			if (isset($lineItemData['rush_prices'])) {
 				$lineItem->rush_prices($lineItemData['rush_prices']);
 			}
@@ -208,6 +220,7 @@ trait HasLineItems
 				return $item;
 			}
 
+
 			$item->quantity($item->quantity() + $quantity);
 			return $item;
 		});
@@ -233,6 +246,10 @@ trait HasLineItems
 	{
 		$this->lineItems = $this->lineItems->map(function ($item) use ($lineItemId, $quantity) {
 			if ($item->id() !== (int) $lineItemId) {
+				return $item;
+			}
+
+			if(!($item->quantity() - $quantity)){
 				return $item;
 			}
 

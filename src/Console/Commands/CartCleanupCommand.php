@@ -41,7 +41,7 @@ class CartCleanupCommand extends Command
                 ->query()
 	            ->whereState('state', Draft::class)
                 ->where('is_paid', false)
-                ->where('created_at', '<', $this->argument('days') === 0 ? now() : now()->subDays($this->argument('days') ?? 1))
+                ->where('created_at', '<', $this->hasArgument('days') ? now()->subDays($this->argument('days') ?? 1) : now())
                 ->each(function ($model) {
                     $this->line("Deleting order: {$model->id}");
 
