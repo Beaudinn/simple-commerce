@@ -11,6 +11,7 @@ use DoubleThreeDigital\SimpleCommerce\Http\Requests\CartItem\UpdateRequest;
 use DoubleThreeDigital\SimpleCommerce\Orders\Cart\Drivers\CartDriver;
 use DoubleThreeDigital\SimpleCommerce\Products\ProductType;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Statamic\Facades\Site;
 use Statamic\Sites\Site as SitesSite;
@@ -197,9 +198,8 @@ class CartItemController extends BaseActionController
 				if ($initial && !empty($initial)) {
 					$item['initial'] = join(' x ', $productProbo->getInitial()) . ' cm';
 				}
-
-				//var_dump($productProbo->getCrosssells()); die();
-
+				$metadata['uploaders'] = Cache::get('response-'.$request->calculation_id)['uploaders'];
+				$metadata['crosssells'] = $productProbo->getCrosssells();
 			}
 
 			$item = array_merge(

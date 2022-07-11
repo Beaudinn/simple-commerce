@@ -34,14 +34,15 @@ class CartCleanupCommand extends Command
         //    return;
         //}
 
-        if (isset(SimpleCommerce::orderDriver()['model'])) {``
+        if (isset(SimpleCommerce::orderDriver()['model'])) {
             $orderModelClass = SimpleCommerce::orderDriver()['model'];
 
+            // $this->hasArgument('days') ? now()->subDays($this->argument('days') ?? 2) : now()->subDays(2)
             (new $orderModelClass)
                 ->query()
 	            ->whereState('state', Draft::class)
                 ->where('is_paid', false)
-                ->where('created_at', '<', $this->hasArgument('days') ? now()->subDays($this->argument('days') ?? 1) : now()->subDays(1))
+	            ->where('created_at', '<', now()->subDays(3))
                 ->each(function ($model) {
                     $this->line("Deleting order: {$model->id}");
 

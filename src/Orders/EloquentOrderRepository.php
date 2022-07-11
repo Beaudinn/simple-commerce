@@ -13,6 +13,7 @@ use DoubleThreeDigital\SimpleCommerce\Events\CartBeforeCreate;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\OrderNotFound;
 use DoubleThreeDigital\SimpleCommerce\Facades\Coupon;
 use DoubleThreeDigital\SimpleCommerce\Facades\Customer;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -47,7 +48,7 @@ class EloquentOrderRepository implements RepositoryContract
 
 	public function find($id): ?Order
 	{
-		$model = (new $this->model)->find($id);
+		$model = (new $this->model)->where('id', $id)->whereState('state', Draft::class)->first();
 
 
 		if (!$model) {
