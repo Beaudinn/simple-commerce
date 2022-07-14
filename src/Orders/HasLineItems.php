@@ -35,7 +35,7 @@ trait HasLineItems
 						$item['total'] = 0;
 					}
 
-					$lineItemType = SimpleCommerce::findProductType($item['type']);
+					$lineItemType = SimpleCommerce::findProductType(strtolower($item['type']));
 
 
 					$lineItem = (new $lineItemType($item))
