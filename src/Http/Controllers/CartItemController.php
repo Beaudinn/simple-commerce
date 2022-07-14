@@ -10,6 +10,7 @@ use DoubleThreeDigital\SimpleCommerce\Http\Requests\CartItem\StoreRequest;
 use DoubleThreeDigital\SimpleCommerce\Http\Requests\CartItem\UpdateRequest;
 use DoubleThreeDigital\SimpleCommerce\Orders\Cart\Drivers\CartDriver;
 use DoubleThreeDigital\SimpleCommerce\Products\ProductType;
+use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -96,19 +97,19 @@ class CartItemController extends BaseActionController
 		}
 
 		// Ensure there's enough stock to fulfill the customer's quantity
-		if ($product->purchasableType() === ProductType::PRODUCT()) {
-			if ($product->stock() && $product->stock() !== NULL && $product->stock() < $request->quantity) {
-				return $this->withErrors($request, __("There's not enough stock to fulfil the quantity you selected. Please try again later."));
-			}
-		} elseif ($product->purchasableType() === ProductType::VARIANT()) {
-			$variant = $product->variant($request->get('variant'));
-
-			if ($variant !== NULL && $variant->stock() !== NULL && $variant->stock() < $request->quantity) {
-				return $this->withErrors($request, __("There's not enough stock to fulfil the quantity you selected. Please try again later."));
-			}
-		} elseif ($product->purchasableType() === ProductType::PROBO()) {
-			// For probo no stock check
-		}
+		//if ($product->purchasableType() === ProductType::PRODUCT()) {
+		//	if ($product->stock() && $product->stock() !== NULL && $product->stock() < $request->quantity) {
+		//		return $this->withErrors($request, __("There's not enough stock to fulfil the quantity you selected. Please try again later."));
+		//	}
+		//} elseif ($product->purchasableType() === ProductType::VARIANT()) {
+		//	$variant = $product->variant($request->get('variant'));
+		//
+		//	if ($variant !== NULL && $variant->stock() !== NULL && $variant->stock() < $request->quantity) {
+		//		return $this->withErrors($request, __("There's not enough stock to fulfil the quantity you selected. Please try again later."));
+		//	}
+		//} elseif ($product->purchasableType() === ProductType::PROBO()) {
+		//	// For probo no stock check
+		//}
 
 		// If this product requires another one, ensure the customer has already purchased it...
 		if ($product->has('prerequisite_product')) {
@@ -158,7 +159,8 @@ class CartItemController extends BaseActionController
 			$cart->updateLineItem($alreadyExistsQuery->first()['id'], [
 				'quantity' => (int)$alreadyExistsQuery->first()['quantity'] + $request->quantity,
 			]);
-		} else {
+		} elseif(!$request->has('calculation_input')) {
+
 			$item = [
 				'product' => $request->product,
 				'quantity' => (int)$request->quantity,
@@ -172,36 +174,6 @@ class CartItemController extends BaseActionController
 				];
 			}
 
-			if ($request->has('calculation_input')) {
-
-				$metadata['code'] = $request->product_id;
-				$options = json_decode($request->calculation_input, true);
-				$metadata['calculation_input'] = collect($options)->map(function ($option) {
-					$value = [];
-					$value['code'] = $option['code'];
-					if (isset($option['value'])) {
-						$value['value'] = $option['value'];
-					}
-					return $value;
-				});
-				$productProbo = $product->probo($request->all());
-
-
-				$selectedOption = $productProbo->getSelectedOptionsFromLastResponseWithoutInitial();
-				$item['options'] = $selectedOption->mapWithKeys(function ($item, $key) use ($productProbo) {
-					return [$productProbo::getName((object)$item) => $productProbo::getValue((object)$item)];
-				})->toArray();
-
-				$initial = $productProbo->getInitial();
-
-
-				if ($initial && !empty($initial)) {
-					$item['initial'] = join(' x ', $productProbo->getInitial()) . ' cm';
-				}
-				$metadata['uploaders'] = Cache::get('response-'.$request->calculation_id)['uploaders'];
-				$metadata['crosssells'] = $productProbo->getCrosssells();
-			}
-
 			$item = array_merge(
 				$item,
 				[
@@ -210,6 +182,27 @@ class CartItemController extends BaseActionController
 			);
 			$item['type'] = $product->purchasableType();
 			$cart->addLineItem($item);
+
+		}else{
+
+
+			$lineItemType = SimpleCommerce::findProductType('probo');
+
+			$lineItem = (new $lineItemType())
+				->id(mt_rand(1000000000,9999999999)) //->id(app('stache')->generateId())
+				->product($request->product)
+				->quantity((int)$request->quantity);
+
+			//Confert probo response to probo product
+			$lineItem->fromRequest($request);
+
+
+			$cart->lineItems = $cart->lineItems->push($lineItem)->values();
+
+			$cart->save();
+
+			$cart->recalculate();
+
 		}
 
 		return $this->withSuccess($request, [

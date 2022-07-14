@@ -2,8 +2,8 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Orders;
 
-use DoubleThreeDigital\SimpleCommerce\Facades\Product as ProductAPI;
-use DoubleThreeDigital\SimpleCommerce\Products\ProductType;
+use \DoubleThreeDigital\SimpleCommerce\Contracts\ProductType;
+use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Support\Collection;
 
 trait HasLineItems
@@ -23,7 +23,7 @@ trait HasLineItems
 
 
 				return $value->filter(function ($item){ return !empty($item);})->map(function ($item) {
-					if ($item instanceof LineItem) {
+					if ($item instanceof ProductType) {
 						return $item;
 					}
 
@@ -35,7 +35,10 @@ trait HasLineItems
 						$item['total'] = 0;
 					}
 
-					$lineItem = (new LineItem($item))
+					$lineItemType = SimpleCommerce::findProductType($item['type']);
+
+
+					$lineItem = (new $lineItemType($item))
 						->id($item['id'])
 						->product($item['product'])
 						->quantity($item['quantity'])
@@ -53,26 +56,6 @@ trait HasLineItems
 						$lineItem->tax($item['tax']);
 					}
 
-					if (isset($item['initial'])) {
-						$lineItem->initial($item['initial']);
-					}
-
-					if (isset($item['options'])) {
-						$lineItem->options($item['options']);
-					}
-
-					if (isset($item['uploader'])) {
-						$lineItem->uploader($item['uploader']);
-					}
-
-					if (isset($item['uploaders'])) {
-						$lineItem->uploaders($item['uploaders']);
-					}
-
-					if (isset($item['rush_prices'])) {
-						$lineItem->rush_prices($item['rush_prices']);
-					}
-
 					if (isset($item['metadata'])) {
 						$lineItem->metadata($item['metadata']);
 					}
@@ -83,16 +66,17 @@ trait HasLineItems
 			->args(func_get_args());
 	}
 
-	public function lineItem($lineItemId): LineItem
+	public function lineItem($lineItemId): ProductType
 	{
 		return $this->lineItems()->firstWhere('id', $lineItemId);
 	}
 
-	public function addLineItem(array $lineItemData): LineItem
+	public function addLineItem(array $lineItemData): ProductType
 	{
-		$product = ProductAPI::find($lineItemData['product']);
 
-		$lineItem = (new LineItem)
+		$lineItemType = SimpleCommerce::findProductType($lineItemData['type']);
+
+		$lineItem = (new $lineItemType($lineItemData))
 			->id(mt_rand(1000000000,9999999999)) //->id(app('stache')->generateId())
 			->product($lineItemData['product'])
 			->quantity($lineItemData['quantity'])
@@ -104,22 +88,6 @@ trait HasLineItems
 
 		if (isset($lineItemData['tax'])) {
 			$lineItem->tax($lineItemData['tax']);
-		}
-
-		if (isset($lineItemData['initial'])) {
-			$lineItem->initial($lineItemData['initial']);
-		}
-
-		if (isset($lineItemData['options'])) {
-			$lineItem->options($lineItemData['options']);
-		}
-
-		if (isset($lineItemData['uploader'])) {
-			$lineItem->uploader($lineItemData['uploader']);
-		}
-
-		if (isset($lineItemData['uploaders'])) {
-			$lineItem->uploaders($lineItemData['uploaders']);
 		}
 
 		if (isset($lineItemData['metadata'])) {
@@ -137,7 +105,7 @@ trait HasLineItems
 		return $this->lineItem($lineItem->id());
 	}
 
-	public function updateLineItem($lineItemId, array $lineItemData): LineItem
+	public function updateLineItem($lineItemId, array $lineItemData): ProductType
 	{
 		$this->lineItems = $this->lineItems->map(function ($item) use ($lineItemId, $lineItemData) {
 			if ($item->id() !== $lineItemId) {
@@ -145,6 +113,8 @@ trait HasLineItems
 			}
 
 			$lineItem = $item;
+
+			$lineItem->update($lineItemData);
 
 			if (isset($lineItemData['product'])) {
 				$lineItem->product($lineItemData['product']);
@@ -169,26 +139,6 @@ trait HasLineItems
 
 			if (isset($lineItemData['tax'])) {
 				$lineItem->tax($lineItemData['tax']);
-			}
-
-			if (isset($lineItemData['initial'])) {
-				$lineItem->initial($lineItemData['initial']);
-			}
-
-			if (isset($lineItemData['options'])) {
-				$lineItem->options($lineItemData['options']);
-			}
-
-			if (isset($lineItemData['uploader'])) {
-				$lineItem->uploader($lineItemData['uploader']);
-			}
-
-			if (isset($lineItemData['uploaders'])) {
-				$lineItem->uploaders($lineItemData['uploaders']);
-			}
-
-			if (isset($lineItemData['rush_prices'])) {
-				$lineItem->rush_prices($lineItemData['rush_prices']);
 			}
 
 			if (isset($lineItemData['metadata'])) {
@@ -297,14 +247,14 @@ trait HasLineItems
 	public function proboItems(){
 		return $this->lineItems()
 			->filter(function ($lineItem) {
-				return $lineItem->product->purchasableType() === ProductType::PROBO();
+				return $lineItem->product->purchasableType() === 'probo'; //ProductType::PROBO();
 			});
 	}
 
 	public function productItems(){
 
 		return $this->lineItems()->filter(function ($lineItem){
-			return $lineItem->product->purchasableType() === ProductType::UPSELL();
+			return $lineItem->product->purchasableType() === 'upsell'; //ProductType::UPSELL();
 		});
 	}
 

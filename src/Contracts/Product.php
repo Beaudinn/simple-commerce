@@ -20,7 +20,7 @@ interface Product
 
     public function resource($resource = null);
 
-    public function purchasableType(): ProductType;
+    public function purchasableType();
 
     public function variantOptions(): Collection;
 

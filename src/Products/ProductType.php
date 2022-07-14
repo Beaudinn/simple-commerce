@@ -12,4 +12,14 @@ use Spatie\Enum\Enum;
  */
 class ProductType extends Enum
 {
+
+	protected static function values(): array
+	{
+		return [
+			'PRODUCT' => 'simple',
+			'VARIANT' => 'variant',
+			'PROBO' => 'probo',
+			'UPSELL' => 'upsell',
+		];
+	}
 }

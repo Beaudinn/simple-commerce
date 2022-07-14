@@ -80,11 +80,11 @@ interface Order
 
     public function lineItems($lineItems = null);
 
-    public function lineItem($lineItemId): ?LineItem;
+    public function lineItem($lineItemId): ?ProductType;
 
-    public function addLineItem(array $lineItemData): LineItem;
+    public function addLineItem(array $lineItemData): ProductType;
 
-    public function updateLineItem($lineItemId, array $lineItemData): LineItem;
+    public function updateLineItem($lineItemId, array $lineItemData): ProductType;
 
     public function removeLineItem($lineItemId): Collection;
 

@@ -127,23 +127,23 @@ class Product implements Contract
 			->args(func_get_args());
 	}
 
-	public function purchasableType(): ProductType
+	public function purchasableType()
 	{
 
 
 		if ($this->data()['blueprint'] == 'uppsell') {
-			return ProductType::UPSELL();
+			return 'upsell'; //ProductType::UPSELL();
 		}
 
 		if ($this->data()['blueprint'] == 'product_probo') {
-			return ProductType::PROBO();
+			return 'probo'; // ProductType::PROBO();
 		}
 
 		if ($this->productVariants) {
-			return ProductType::VARIANT();
+			return 'variant'; //ProductType::VARIANT();
 		}
 
-		return ProductType::PRODUCT();
+		return 'simple'; //ProductType::PRODUCT();
 	}
 
 

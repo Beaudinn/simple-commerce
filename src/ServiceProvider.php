@@ -130,6 +130,7 @@ class ServiceProvider extends AddonServiceProvider
         });
 
         SimpleCommerce::bootGateways();
+        SimpleCommerce::bootProductTypes();
         SimpleCommerce::bootTaxEngine();
         SimpleCommerce::bootShippingMethods();
 

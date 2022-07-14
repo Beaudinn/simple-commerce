@@ -21,7 +21,7 @@ class ToPendingTransition extends Transition
 
 	public function __construct(OrderModel $order, array $values = [])
 	{
-		$order = \DoubleThreeDigital\SimpleCommerce\Facades\Order::find($order->id);
+		$order = \DoubleThreeDigital\SimpleCommerce\Facades\Order::find($order->id, true);
 
 		$this->order = $order;
 

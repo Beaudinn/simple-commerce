@@ -3,6 +3,9 @@
 namespace DoubleThreeDigital\SimpleCommerce;
 
 use Closure;
+use DoubleThreeDigital\Runway\Resource;
+use DoubleThreeDigital\SimpleCommerce\Contracts\ProductType;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Statamic\Facades\Addon;
@@ -11,165 +14,206 @@ use Statamic\Statamic;
 
 class SimpleCommerce
 {
-    /** @var array */
-    protected static $gateways = [];
-    protected static $shippingMethods = [];
+	public static $productPriceHook;
+	public static $productVariantPriceHook;
+	/** @var array */
+	protected static $gateways = [];
+	protected static $productTypes = [];
+	protected static $shippingMethods = [];
+	/** @var Contracts\TaxEngine */
+	protected static $taxEngine;
 
-    /** @var Contracts\TaxEngine */
-    protected static $taxEngine;
+	public static function version(): string
+	{
+		if (app()->environment('testing')) {
+			return 'v3.0.0';
+		}
 
-    public static $productPriceHook;
-    public static $productVariantPriceHook;
+		return Addon::get('webhoek/simple-commerce')->version();
+	}
 
-    public static function version(): string
-    {
-        if (app()->environment('testing')) {
-            return 'v3.0.0';
-        }
+	public static function bootGateways()
+	{
+		return Statamic::booted(function () {
+			foreach (config('simple-commerce.gateways') as $class => $config) {
+				if ($class) {
+					$class = str_replace('::class', '', $class);
 
-        return Addon::get('webhoek/simple-commerce')->version();
-    }
+					static::$gateways[] = [
+						$class,
+						$config,
+					];
+				}
+			}
 
-    public static function bootGateways()
-    {
-        return Statamic::booted(function () {
-            foreach (config('simple-commerce.gateways') as $class => $config) {
-                if ($class) {
-                    $class = str_replace('::class', '', $class);
+			return new static();
+		});
+	}
 
-                    static::$gateways[] = [
-                        $class,
-                        $config,
-                    ];
-                }
-            }
+	public static function gateways(): array
+	{
+		return collect(static::$gateways)
+			->map(function ($gateway) {
 
-            return new static();
-        });
-    }
+				/** @var Contracts\Gateway $instance */
+				$instance = new $gateway[0]();
 
-    public static function gateways(): array
-    {
-        return collect(static::$gateways)
-            ->map(function ($gateway) {
-                /** @var Contracts\Gateway $instance */
-                $instance = new $gateway[0]();
+				return [
+					'name' => $instance->name(),
+					'handle' => $handle = Str::of($instance->name())->camel()->lower()->__toString(),
+					'class' => $gateway[0],
+					'formatted_class' => addslashes($gateway[0]),
+					'display' => isset($gateway[1]['display']) ? $gateway[1]['display'] : $instance->name(),
+					'purchaseRules' => $instance->purchaseRules(),
+					'gateway-config' => $gateway[1],
+					'webhook_url' => Str::finish(Site::current()->url(), '/') . config('statamic.routes.action') . '/simple-commerce/gateways/' . $handle . '/webhook',
+				];
+			})
+			->toArray();
+	}
 
-                return [
-                    'name'            => $instance->name(),
-                    'handle'          => $handle = Str::of($instance->name())->camel()->lower()->__toString(),
-                    'class'           => $gateway[0],
-                    'formatted_class' => addslashes($gateway[0]),
-                    'display'         => isset($gateway[1]['display']) ? $gateway[1]['display'] : $instance->name(),
-                    'purchaseRules'   => $instance->purchaseRules(),
-                    'gateway-config'  => $gateway[1],
-                    'webhook_url'     => Str::finish(Site::current()->url(), '/') . config('statamic.routes.action') . '/simple-commerce/gateways/' . $handle . '/webhook',
-                ];
-            })
-            ->toArray();
-    }
+	public static function registerGateway(string $gateway, array $config = [])
+	{
+		static::$gateways[] = [
+			$gateway,
+			$config,
+		];
+	}
 
-    public static function registerGateway(string $gateway, array $config = [])
-    {
-        static::$gateways[] = [
-            $gateway,
-            $config,
-        ];
-    }
 
-    public static function bootTaxEngine()
-    {
-        return Statamic::booted(function () {
-            static::$taxEngine = config('simple-commerce.tax_engine');
-        });
-    }
+	public static function allProductTypes(): Collection
+	{
+		return collect(static::$productTypes);
+	}
 
-    public static function bootShippingMethods()
-    {
-        return Statamic::booted(function () {
-            foreach (config('simple-commerce.sites') as $siteHandle => $value) {
-                if (! isset($value['shipping']['methods'])) {
-                    continue;
-                }
+	public static function findProductType(string $resourceHandle): ?ProductType
+	{
+		$resource = collect(static::$productTypes)->get($resourceHandle);
 
-                static::$shippingMethods[$siteHandle] = collect($value['shipping']['methods'])
-                    ->map(function ($config, $key) {
-                        if (is_string($config)) {
-                            $key = $config;
-                            $config = [];
-                        }
+		if (! $resource) {
+			throw new \Exception($resourceHandle);
+		}
 
-                        $instance = new $key();
+		return $resource;
+	}
 
-                        return [
-                            'name' => $instance->name(),
-                            'description' => $instance->description(),
-                            'class' => $key,
-                            'config' => $config,
-                        ];
-                    })
-                    ->toArray();
-            }
+	public static function bootProductTypes()
+	{
 
-            return new static();
-        });
-    }
+		static::$productTypes = collect(config('simple-commerce.product_types'))
+			->mapWithKeys(function ($config, $model) {
 
-    public static function setTaxEngine($taxEngine)
-    {
-        static::$taxEngine = $taxEngine;
-    }
+				$handle = Str::lower(class_basename($model));
 
-    public static function taxEngine(): Contracts\TaxEngine
-    {
-        return new static::$taxEngine;
-    }
+				if (isset($config['handle'])) {
+					$handle = $config['handle'];
+				}
 
-    public static function isUsingStandardTaxEngine(): bool
-    {
-        // TODO: figure out how we can actually set the engine for a specific test
-        if (app()->environment('testing')) {
-            return true;
-        }
+				/** @var Contracts\ProductType $instance */
+				$instance = new $model();
 
-        return static::taxEngine() instanceof Tax\Standard\TaxEngine;
-    }
+				if (isset($config['blueprint'])) {
+					$instance->blueprint($config['blueprint']);
+				}
 
-    public static function shippingMethods(string $site = null)
-    {
-        if ($site) {
-            return collect(static::$shippingMethods[$site] ?? []);
-        }
+				return [$handle => $instance];
+			})->toArray();
+	}
 
-        return collect(static::$shippingMethods[Site::default()->handle()] ?? []);
-    }
 
-    public static function registerShippingMethod(string $site, string $shippingMethod, array $config = [])
-    {
-        $instance = new $shippingMethod();
+	public static function bootTaxEngine()
+	{
+		return Statamic::booted(function () {
+			static::$taxEngine = config('simple-commerce.tax_engine');
+		});
+	}
 
-        static::$shippingMethods[$site][] = [
-            'name' => $instance->name(),
-            'description' => $instance->description(),
-            'class' => $shippingMethod,
-            'config' => $config,
-        ];
-    }
+	public static function bootShippingMethods()
+	{
+		return Statamic::booted(function () {
+			foreach (config('simple-commerce.sites') as $siteHandle => $value) {
+				if (!isset($value['shipping']['methods'])) {
+					continue;
+				}
 
-    public static function orderDriver(): array
-    {
-        return config('simple-commerce.content.orders');
-    }
+				static::$shippingMethods[$siteHandle] = collect($value['shipping']['methods'])
+					->map(function ($config, $key) {
+						if (is_string($config)) {
+							$key = $config;
+							$config = [];
+						}
 
-    public static function productDriver(): array
-    {
-        return config('simple-commerce.content.products');
-    }
+						$instance = new $key();
 
-    public static function couponDriver(): array
-    {
-        return config('simple-commerce.content.coupons');
-    }
+						return [
+							'name' => $instance->name(),
+							'description' => $instance->description(),
+							'class' => $key,
+							'config' => $config,
+						];
+					})
+					->toArray();
+			}
+
+			return new static();
+		});
+	}
+
+	public static function setTaxEngine($taxEngine)
+	{
+		static::$taxEngine = $taxEngine;
+	}
+
+	public static function isUsingStandardTaxEngine(): bool
+	{
+		// TODO: figure out how we can actually set the engine for a specific test
+		if (app()->environment('testing')) {
+			return true;
+		}
+
+		return static::taxEngine() instanceof Tax\Standard\TaxEngine;
+	}
+
+	public static function taxEngine(): Contracts\TaxEngine
+	{
+		return new static::$taxEngine;
+	}
+
+	public static function shippingMethods(string $site = NULL)
+	{
+		if ($site) {
+			return collect(static::$shippingMethods[$site] ?? []);
+		}
+
+		return collect(static::$shippingMethods[Site::default()->handle()] ?? []);
+	}
+
+	public static function registerShippingMethod(string $site, string $shippingMethod, array $config = [])
+	{
+		$instance = new $shippingMethod();
+
+		static::$shippingMethods[$site][] = [
+			'name' => $instance->name(),
+			'description' => $instance->description(),
+			'class' => $shippingMethod,
+			'config' => $config,
+		];
+	}
+
+	public static function orderDriver(): array
+	{
+		return config('simple-commerce.content.orders');
+	}
+
+	public static function productDriver(): array
+	{
+		return config('simple-commerce.content.products');
+	}
+
+	public static function couponDriver(): array
+	{
+		return config('simple-commerce.content.coupons');
+	}
 
 
 	public static function upsellDriver(): array
@@ -178,34 +222,34 @@ class SimpleCommerce
 	}
 
 	public static function customerDriver(): array
-    {
-        return config('simple-commerce.content.customers');
-    }
+	{
+		return config('simple-commerce.content.customers');
+	}
 
-    /**
-     * This shouldn't be used as a Statamic::svg() replacement. It's only useful for grabbing
-     * icons from Simple Commerce's `resources/svgs` directory.
-     */
-    public static function svg($name)
-    {
-        if (File::exists(__DIR__ . '/../resources/svg/' . $name . '.svg')) {
-            return File::get(__DIR__ . '/../resources/svg/' . $name . '.svg');
-        }
+	/**
+	 * This shouldn't be used as a Statamic::svg() replacement. It's only useful for grabbing
+	 * icons from Simple Commerce's `resources/svgs` directory.
+	 */
+	public static function svg($name)
+	{
+		if (File::exists(__DIR__ . '/../resources/svg/' . $name . '.svg')) {
+			return File::get(__DIR__ . '/../resources/svg/' . $name . '.svg');
+		}
 
-        return Statamic::svg($name);
-    }
+		return Statamic::svg($name);
+	}
 
-    public static function productPriceHook(Closure $callback): self
-    {
-        static::$productPriceHook = $callback;
+	public static function productPriceHook(Closure $callback): self
+	{
+		static::$productPriceHook = $callback;
 
-        return new static;
-    }
+		return new static;
+	}
 
-    public static function productVariantPriceHook(Closure $callback): self
-    {
-        static::$productVariantPriceHook = $callback;
+	public static function productVariantPriceHook(Closure $callback): self
+	{
+		static::$productVariantPriceHook = $callback;
 
-        return new static;
-    }
+		return new static;
+	}
 }

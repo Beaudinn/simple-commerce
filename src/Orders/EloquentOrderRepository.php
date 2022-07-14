@@ -46,9 +46,13 @@ class EloquentOrderRepository implements RepositoryContract
 		return (new $this->model)->all();
 	}
 
-	public function find($id): ?Order
+	public function find($id, $forge = false): ?Order
 	{
-		$model = (new $this->model)->where('id', $id)->whereState('state', Draft::class)->first();
+		if($forge){
+			$model = (new $this->model)->find($id);
+		}else {
+			$model = (new $this->model)->where('id', $id)->whereState('state', Draft::class)->first();
+		}
 
 
 		if (!$model) {

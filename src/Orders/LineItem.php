@@ -25,6 +25,9 @@ class LineItem
 	public $options;
 	public $rush_prices;
     public $metadata;
+    public $blueprint;
+
+
 
     public function __construct()
     {
