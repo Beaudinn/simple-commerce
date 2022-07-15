@@ -61,7 +61,8 @@ class CookieDriver implements CartDriver
 
 	    $result = $botParser->parse();
 
-	    if (is_null($result)) {
+	    //ignore if bot or if forge server makes request
+	    if (is_null($result) || in_array(request()->ip(), ['165.22.195.209'])) {
 		    $cart->save();
 
 
