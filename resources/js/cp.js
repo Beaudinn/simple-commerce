@@ -1,5 +1,4 @@
 // Fieldtypes
-import { Sortable } from '@shopify/draggable';
 
 import GatewayFieldtype from './components/Fieldtypes/GatewayFieldtype.vue';
 import MoneyFieldtype from './components/Fieldtypes/MoneyFieldtype.vue'
