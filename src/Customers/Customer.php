@@ -82,7 +82,7 @@ class Customer implements Contract
 	{
 		if ($this->resource instanceof Model) {
 			return $this->resource->orders->map(function ($order) {
-				return Order::find($order->id);
+				return Order::find($order->id, true);
 			});
 		}
 
