@@ -86,7 +86,7 @@ class Overview
                         ->limit(5)
                         ->get()
                         ->map(function ($entry) {
-                            return Order::find($entry->id());
+	                        return Order::find($order->id, true);
                         })
                         ->values();
 
