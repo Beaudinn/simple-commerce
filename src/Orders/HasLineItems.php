@@ -244,17 +244,10 @@ trait HasLineItems
 		return $this->lineItems();
 	}
 
-	public function proboItems(){
-		return $this->lineItems()
-			->filter(function ($lineItem) {
-				return $lineItem->product->purchasableType() === 'probo'; //ProductType::PROBO();
-			});
-	}
-
 	public function productItems(){
 
 		return $this->lineItems()->filter(function ($lineItem){
-			return $lineItem->product->purchasableType() === 'upsell'; //ProductType::UPSELL();
+			return true;// $lineItem->product->purchasableType() == ProductType::UPSELL();
 		});
 	}
 

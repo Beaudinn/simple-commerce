@@ -10,6 +10,32 @@ use Statamic\Support\Traits\FluentlyGetsAndSets;
 
 class UpsellProduct extends BaseProductType implements ProductType
 {
+
+
+	public function __construct($lineItemData = [])
+	{
+		$this->update($lineItemData);
+
+		parent::__construct($lineItemData);
+
+	}
+
+	public function update(array $lineItemData){
+
+		if (isset($lineItemData['item'])) {
+			$this->item($lineItemData['item']);
+		}
+
+	}
+
+
+	public function item($item = [])
+	{
+		return $this
+			->fluentlyGetOrSet('item')
+			->args(func_get_args());
+	}
+
 	static public function calculateLineItem(array $data, array $lineItem): array
 	{
 		$product = ProductAPI::find($lineItem['product']);

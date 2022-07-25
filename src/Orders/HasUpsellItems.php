@@ -3,7 +3,9 @@
 namespace DoubleThreeDigital\SimpleCommerce\Orders;
 
 use DoubleThreeDigital\SimpleCommerce\Facades\Product as ProductAPI;
-use DoubleThreeDigital\SimpleCommerce\Products\ProductType;
+
+use DoubleThreeDigital\SimpleCommerce\ProductTypes\BaseProductType;
+use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Support\Collection;
 
 trait HasUpsellItems
@@ -23,7 +25,7 @@ trait HasUpsellItems
 				}
 
 				return $value->map(function ($item) {
-					if ($item instanceof UpsellItem) {
+					if ($item instanceof BaseProductType) {
 						return $item;
 					}
 
@@ -34,14 +36,15 @@ trait HasUpsellItems
 					if (! isset($item['total'])) {
 						$item['total'] = 0;
 					}
+					$lineItemType = SimpleCommerce::findProductType(strtolower($item['type']));
 
-					$lineItem = (new UpsellItem($item))
+
+					$lineItem = (new $lineItemType($item))
 						->id($item['id'])
-						->item(isset($item['item']) ? $item['item'] : null)
 						->product($item['product'])
-						->price(isset($item['price']) ? $item['price'] : null)
 						->quantity($item['quantity'])
 						->total($item['total']);
+
 
 					if (isset($item['variant'])) {
 						$lineItem->variant($item['variant']);
@@ -62,26 +65,26 @@ trait HasUpsellItems
 			->args(func_get_args());
 	}
 
-	public function upsellItem($lineItemId): UpsellItem
+	public function upsellItem($lineItemId): BaseProductType
 	{
 		return $this->upsells()->firstWhere('id', $lineItemId);
 	}
 
-	public function addUpsellItem(array $lineItemData): UpsellItem
+	public function addUpsellItem(array $lineItemData): BaseProductType
 	{
 		//$product = ProductAPI::find($lineItemData['product']);
-
 		if (! isset($lineItemData['id'])) {
 			$lineItemData['id'] = mt_rand(1000000000,9999999999);// app('stache')->generateId();
 		}
 
-		$lineItem = (new UpsellItem)
+		$lineItemType = SimpleCommerce::findProductType($lineItemData['type']);
+
+		$lineItem = (new $lineItemType($lineItemData))
 			->id($lineItemData['id'])
 			->product($lineItemData['product'])
-			->item($lineItemData['item'])
-			->price($lineItemData['price'])
 			->quantity($lineItemData['quantity'])
 			->total($lineItemData['total']);
+
 
 		if (isset($lineItemData['variant'])) {
 			$lineItem->variant($lineItemData['variant']);
@@ -106,7 +109,7 @@ trait HasUpsellItems
 		return $this->upsellItem($lineItem->id());
 	}
 
-	public function updateUpsellItem($lineItemId, array $lineItemData): UpsellItem
+	public function updateUpsellItem($lineItemId, array $lineItemData): BaseProductType
 	{
 		$this->upsells = $this->upsells->map(function ($item) use ($lineItemId, $lineItemData) {
 			if ($item->id() !== $lineItemId) {
@@ -115,12 +118,10 @@ trait HasUpsellItems
 
 			$lineItem = $item;
 
+			$lineItem->update($lineItemData);
+
 			if (isset($lineItemData['product'])) {
 				$lineItem->product($lineItemData['product']);
-			}
-
-			if (isset($lineItemData['item'])) {
-				$lineItem->item($lineItemData['item']);
 			}
 
 			if (isset($lineItemData['price'])) {
@@ -156,6 +157,8 @@ trait HasUpsellItems
 
 		return $this->upsellItem($lineItemId);
 	}
+
+
 
 
 	public function removeUpsellItem($uppsellItemId, $lineItemId): Collection

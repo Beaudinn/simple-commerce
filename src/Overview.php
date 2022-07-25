@@ -111,7 +111,7 @@ class Overview
                         ->limit(5)
                         ->get()
                         ->map(function ($order) {
-                            return Order::find($order->id);
+                            return Order::find($order->id, true);
                         })
                         ->values();
 

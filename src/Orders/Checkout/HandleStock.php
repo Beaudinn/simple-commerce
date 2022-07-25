@@ -9,13 +9,14 @@ use DoubleThreeDigital\SimpleCommerce\Events\StockRunOut;
 use DoubleThreeDigital\SimpleCommerce\Exceptions\CheckoutProductHasNoStockException;
 use DoubleThreeDigital\SimpleCommerce\Orders\LineItem;
 use DoubleThreeDigital\SimpleCommerce\Products\ProductType;
+use DoubleThreeDigital\SimpleCommerce\ProductTypes\BaseProductType;
 
 class HandleStock
 {
     public function handle(Order $order, Closure $next)
     {
         $order->lineItems()
-            ->each(function (LineItem $item) {
+            ->each(function (BaseProductType $item) {
                 $product = $item->product();
 
                 if ($product->purchasableType() === ProductType::PRODUCT()) {
