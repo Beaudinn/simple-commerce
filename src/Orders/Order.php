@@ -568,7 +568,7 @@ class Order implements Contract
 
 	public function fresh(): self
 	{
-		$freshOrder = OrderFacade::find($this->id());
+		$freshOrder = OrderFacade::find($this->id(), true);
 
 		$this->id = $freshOrder->id;
 		$this->locale = $freshOrder->locale;
