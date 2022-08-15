@@ -71,7 +71,7 @@ class Pending extends OrderState
 	 */
 	protected function createOrderNumber($orderModal): string
 	{
-		$order = \DoubleThreeDigital\SimpleCommerce\Facades\Order::find($orderModal->id);
+		$order = \DoubleThreeDigital\SimpleCommerce\Facades\Order::find($orderModal->id, true);
 		$site = $order->site();
 		$prefix = $site->attributes()['order_number_prefix'];
 		$number = $site->attributes()['order_number_range'];
