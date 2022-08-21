@@ -51,12 +51,11 @@ export default {
 
     data() {
         return {
-            gatewayData:  this.value ? this.value.data : null,
+            gatewayData:  this.value &&  this.value.data ? this.value.data : null,
             entry: this.value ? this.value.entry : null,
             actions: this.value ? this.value.actions : [],
             actionUrl: this.value ? this.value.action_url : null,
             gatewayClass: this.value ? this.value.gateway_class : null,
-            paymentDisplay: this.value ? this.value.payment_display : null,
         }
     },
 

@@ -22,7 +22,8 @@
 </template>
 
 <script>
-import { Line as LineChartGenerator } from "vue-chartjs/legacy";
+import { Line as LineChartGenerator } from 'vue-chartjs/legacy'
+
 
 import {
   Chart as ChartJS,
@@ -33,7 +34,7 @@ import {
   LinearScale,
   CategoryScale,
   PointElement,
-} from "chart.js";
+} from 'chart.js'
 
 ChartJS.register(
   Title,

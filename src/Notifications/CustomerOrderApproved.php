@@ -49,6 +49,7 @@ class CustomerOrderApproved extends Notification
     {
         return (new MailMessage)
 	        ->from('info@drukhoek.nl', $this->order->site()->attributes()['name'])
+	        ->cc('verkoop@xpressing.nl')
 	        ->subject(trans('strings.notification.order.confirmation.subject', ['order_number' => $this->order->orderNumber()]))
 	        ->view('simple-commerce::emails.customer_order_approved', [
                 'order' => $this->order,

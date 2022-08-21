@@ -1,12 +1,20 @@
 @extends('email.layouts.base')
 
+@php
+    $site = $order->site();
+@endphp
+
 @section('subsubject')
     Bedankt voor je bestelling!
 @endsection
+@section('email-logo')
+    <div style="margin-bottom: 24px">
+        <a href="{{ url('/') }}" style="color: #0047c3; text-decoration: none">
+            <img src="{{ url($site->attributes()['logo_png']) }}" alt="{{ $site->attributes()['name'] }}" width="119" style="border: 0; max-width: 100%; line-height: 100%; vertical-align: middle">
+        </a>
+    </div>
+@show
 @section('email-body')
-    @php
-        $site = $order->site();
-    @endphp
     <p style="font-size: 21px; line-height: 28px; margin: 0; font-weight: 700; color: #4a5566">{{ $order->customer()->name() }}, bedankt voor je bestelling! 💳</p>
     <p style="font-size: 19px; line-height: 28px; margin: 0; color: #4a5566">
         {!! trans('strings.notification.order.confirmation.body', ['link' => '', 'class' => 'text-brand-500 hover:underline', 'order_number' => $order->orderNumber()]) !!}

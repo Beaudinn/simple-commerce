@@ -282,7 +282,7 @@ class MollieGateway extends BaseGateway implements Gateway
 					->where('data->mollie->id', $mollieId)
 					->first();
 
-				$order = OrderFacade::find($order->id);
+				$order = OrderFacade::find($order->id. true);
 			}
 
 			if (! $order) {

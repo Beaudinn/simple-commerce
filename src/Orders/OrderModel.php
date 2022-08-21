@@ -63,6 +63,11 @@ class OrderModel extends Model
     	return true;
     }
 
+	public function scopeRunwayListing($query)
+	{
+		return $query->whereNot('grand_total', 0);
+	}
+
 	//public function scopeRunwayListing($query)
 	//{
 	//	return $query->where('is_paid', true);
