@@ -33,7 +33,14 @@ class ToPendingTransition extends Transition
 	public function handle(): OrderModel
 	{
 
+
+
 		$orderModel = $this->order->resource();
+
+		if($orderModel->state == Pending::class){
+			return $orderModel;
+		}
+
 		$orderModel->ordered_at = Carbon::now();
 		if(isset($this->values['new_order_number'])){
 			$orderModel->order_number = $this->values['new_order_number'];

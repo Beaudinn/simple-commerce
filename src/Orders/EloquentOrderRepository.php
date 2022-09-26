@@ -14,7 +14,9 @@ use DoubleThreeDigital\SimpleCommerce\Exceptions\OrderNotFound;
 use DoubleThreeDigital\SimpleCommerce\Facades\Coupon;
 use DoubleThreeDigital\SimpleCommerce\Facades\Customer;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Quote;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
@@ -46,12 +48,18 @@ class EloquentOrderRepository implements RepositoryContract
 		return (new $this->model)->all();
 	}
 
+	public function itemCount($id): int
+	{
+		$results = DB::select( DB::raw("SELECT JSON_LENGTH(items) as item_count FROM orders WHERE id = '$id'") );
+		return $results[0]->item_count;
+	}
+
 	public function find($id, $forge = false): ?Order
 	{
 		if($forge){
 			$model = (new $this->model)->find($id);
 		}else {
-			$model = (new $this->model)->where('id', $id)->whereState('state', Draft::class)->first();
+			$model = (new $this->model)->where('id', $id)->whereState('state', [Draft::class, Quote::class])->first();
 		}
 
 
@@ -76,7 +84,7 @@ class EloquentOrderRepository implements RepositoryContract
 			->taxTotal($model->tax_total)
 			->shippingTotal($model->shipping_total)
 			->couponTotal($model->coupon_total)
-			->customer($model->customer_id)
+			->customer($model->customer)
 			->coupon($model->coupon)
 			->gateway($model->gateway)
 			->deliveries($model->deliveries)
@@ -175,7 +183,7 @@ class EloquentOrderRepository implements RepositoryContract
 		$model->tax_total = $order->taxTotal();
 		$model->shipping_total = $order->shippingTotal();
 		$model->coupon_total = $order->couponTotal();
-		$model->customer_id = $order->customer() instanceof CustomerContract ? $order->customer()->id() : $order->customer();
+		$model->customer_id = $order->customer() instanceof  \DoubleThreeDigital\SimpleCommerce\Customers\Customer ? $order->customer()->id() : $order->customer();
 		$model->coupon = $order->coupon() instanceof CouponContract ? $order->coupon()->id() : $order->coupon();
 		$model->gateway = $order->gateway();
 		//$model->deliveries = $order->deliveries();
@@ -226,7 +234,6 @@ class EloquentOrderRepository implements RepositoryContract
 		$model->save();
 
 		if ($creating) {
-			Log::info('creating!!!');
 
 			event(new CartAfterCreate($model));
 
@@ -256,7 +263,7 @@ class EloquentOrderRepository implements RepositoryContract
 		$order->taxTotal = $model->tax_total;
 		$order->shippingTotal = $model->shipping_total;
 		$order->couponTotal = $model->coupon_total;
-		$order->customer = $model->customer_id ? Customer::find($model->customer_id) : NULL;
+		$order->customer = $model->customer;
 		$order->coupon = $model->coupon ? Coupon::find($model->coupon) : NULL;
 		$order->delivery_at = $model->delivery_at;
 		$order->shipping_method = $model->shipping_method;
@@ -303,4 +310,25 @@ class EloquentOrderRepository implements RepositoryContract
 		$order->resource()->delete();
 	}
 
+	/**
+	 * Create an order number.
+	 */
+	public static function createOrderNumber($order): string
+	{
+		$site = $order->site();
+		$prefix = $site->attributes()['order_number_prefix'];
+		$number = $site->attributes()['order_number_range'];
+
+
+		if (!empty($number)) {
+			do {
+				$number++;
+
+				$count = OrderModel::where('order_number', $prefix . $number)->count();
+
+			} while ($count);
+		}
+
+		return $prefix . $number;
+	}
 }

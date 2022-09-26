@@ -2,6 +2,7 @@
 namespace DoubleThreeDigital\SimpleCommerce\Orders\Transitions;
 
 use DoubleThreeDigital\SimpleCommerce\Events\OrderApproved as OrderApprovedEvent;
+use DoubleThreeDigital\SimpleCommerce\Events\QuoteCreated;
 use DoubleThreeDigital\SimpleCommerce\Orders\Order;
 use DoubleThreeDigital\SimpleCommerce\Orders\OrderModel;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Approved;
@@ -9,6 +10,7 @@ use DoubleThreeDigital\SimpleCommerce\Orders\States\Quote;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Spatie\ModelStates\Transition;
+use Webhoek\P4sSupplier\Events\ToShippedTransitionEvent;
 
 class ToQuoteTransition extends Transition
 {
@@ -31,6 +33,11 @@ class ToQuoteTransition extends Transition
 
 	public function handle(): OrderModel
 	{
+
+		event(new QuoteCreated($this->order, $this->values));
+
+		//$this->order->resource()->state = Approved::class; //Dont transition again
+		//$this->order->resource()->save();
 
 		$orderModel = $this->order->resource();
 		$orderModel->state = Quote::class;

@@ -2,6 +2,7 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Orders\States;
 
+use DoubleThreeDigital\SimpleCommerce\Facades\Order;
 use DoubleThreeDigital\SimpleCommerce\Orders\OrderModel;
 use Statamic\Facades\Blueprint as StatamicBlueprint;
 
@@ -45,6 +46,8 @@ class Pending extends OrderState
 
 	public function blueprint(OrderModel $order = NULL)
 	{
+		$order = \DoubleThreeDigital\SimpleCommerce\Facades\Order::find($order->id, true);
+
 		return StatamicBlueprint::make()->setContents([
 			'sections' => [
 				'main' => [
@@ -56,7 +59,7 @@ class Pending extends OrderState
 								'width' => 100,
 								'display' => __('Order number'),
 								'validate' => 'required',
-								'default' => $this->createOrderNumber($order),
+								'default' => Order::createOrderNumber($order),
 							],
 						],
 					],
@@ -66,26 +69,5 @@ class Pending extends OrderState
 		]);
 	}
 
-	/**
-	 * Create an order number.
-	 */
-	protected function createOrderNumber($orderModal): string
-	{
-		$order = \DoubleThreeDigital\SimpleCommerce\Facades\Order::find($orderModal->id, true);
-		$site = $order->site();
-		$prefix = $site->attributes()['order_number_prefix'];
-		$number = $site->attributes()['order_number_range'];
 
-
-		if (!empty($number)) {
-			do {
-				$number++;
-
-				$count = OrderModel::where('order_number', $prefix . $number)->count();
-
-			} while ($count);
-		}
-
-		return $prefix . $number;
-	}
 }

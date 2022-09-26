@@ -13,7 +13,7 @@
             <img src="{{ url($site->attributes()['logo_png']) }}" alt="{{ $site->attributes()['name'] }}" width="119" style="border: 0; max-width: 100%; line-height: 100%; vertical-align: middle">
         </a>
     </div>
-@show
+@endsection
 @section('email-body')
     <p style="font-size: 21px; line-height: 28px; margin: 0; font-weight: 700; color: #4a5566">{{ $order->customer()->name() }}, bedankt voor je bestelling! 💳</p>
     <p style="font-size: 19px; line-height: 28px; margin: 0; color: #4a5566">

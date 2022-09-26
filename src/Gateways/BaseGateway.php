@@ -162,6 +162,7 @@ class BaseGateway
             }
 
             $order->markAsPaid();
+	        $order->setPendingState();
 
             if ($order->coupon()) {
                 $order->coupon()->redeem();
@@ -172,7 +173,8 @@ class BaseGateway
             return true;
         }
 
-	    $order->setStateOrderd();
+	    //$order->setStateOrderd();
+	    $order->setPendingState();
 
 	    $order->markAsPaid();
 

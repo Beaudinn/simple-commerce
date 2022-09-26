@@ -45,7 +45,7 @@ class RefundAction extends Action
     {
         collect($items)
             ->each(function ($entry) {
-                $order = Order::find($entry->id);
+                $order = Order::find($entry->id, true);
 
                 return Gateway::use($order->currentGateway()['class'])
                     ->refundCharge($order);

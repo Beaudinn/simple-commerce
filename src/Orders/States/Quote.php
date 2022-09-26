@@ -51,6 +51,17 @@ class Quote extends OrderState
 				'main' => [
 					'fields' => [
 						[
+							'handle' => 'send_notifications',
+							'field' => [
+								'type' => 'toggle',
+								'width' => 100,
+								'default' => true,
+								'display' => __('Send notifications'),
+								'instructions' => 'Send quote email to customer including url to quote',
+								'validate' => 'required',
+							],
+						],
+						[
 							'handle' => 'reference',
 							'field' => [
 								'type' => 'text',
@@ -73,7 +84,7 @@ class Quote extends OrderState
 							'field' => [
 								'type' => 'textarea',
 								'width' => 100,
-								'default' => '* Let op: Levertijd en verzendkosten in overleg * Prijzen alleen geldig voor deze aantallen en formaten, afname in één keer * Bij offertes groter dan €5000,-, vragen wij een aanbetaling van minimaal 30% * Deze offerte is gebaseerd op de aantallen en informatie die jullie aan ons hebben doorgegeven, in geval van wijzigingen zal dit gezien worden als een nieuwe aanvraag..',
+								'default' => '* Let op: Levertijd en verzendkosten in overleg \n * Prijzen alleen geldig voor deze aantallen en formaten, afname in één keer  \n * Bij offertes groter dan €5000,-, vragen wij een aanbetaling van minimaal 30% \n * Deze offerte is gebaseerd op de aantallen en informatie die jullie aan ons hebben doorgegeven, in geval van wijzigingen zal dit gezien worden als een nieuwe aanvraag..',
 								'display' => __('Note'),
 							],
 						],

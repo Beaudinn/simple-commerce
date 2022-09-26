@@ -8,6 +8,7 @@ use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Pending;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Approved;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\OrderState;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Quote;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -51,12 +52,16 @@ class OrderModel extends Model
     protected $appends = [
     	'title',
         'order_number',
-	    'published'
+	    'published',
+    ];
+
+    protected $with = [
+    	'customer'
     ];
 
     function readOnly(){
 
-    	if($this->state->equals(Draft::class) || $this->state->equals(Pending::class) || $this->state->equals(Approved::class)){
+    	if($this->state->equals(Draft::class) || $this->state->equals(Quote::class) || $this->state->equals(Pending::class) || $this->state->equals(Approved::class)){
     		return false;
 	    }
 

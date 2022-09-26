@@ -2,6 +2,10 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Orders\Cart\Drivers;
 
+use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
+use DoubleThreeDigital\SimpleCommerce\Exceptions\OrderNotFound;
+use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderAPI;
+
 class PostCheckoutDriver extends SessionDriver
 {
     protected $orderId;
@@ -20,4 +24,18 @@ class PostCheckoutDriver extends SessionDriver
     {
         return ! empty($this->orderId);
     }
+
+	public function getCart(): Order
+	{
+		if (! $this->hasCart()) {
+			return $this->makeCart();
+		}
+
+		try {
+			return OrderAPI::find($this->getCartKey(), true);
+		} catch (OrderNotFound $e) {
+			return $this->makeCart();
+		}
+	}
+
 }

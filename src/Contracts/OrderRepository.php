@@ -10,9 +10,13 @@ interface OrderRepository
 
     public function make(): Order;
 
+	public function itemCount($id): int;
+
     public function save(Order $order): void;
 
     public function delete(Order $order): void;
 
     public static function bindings(): array;
+
+    public static function createOrderNumber(Order $order): string;
 }

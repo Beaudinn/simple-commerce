@@ -16,9 +16,12 @@ class GatewayCallbackController extends BaseActionController
 
 	public function index(Request $request, $gateway)
 	{
+		var_dump(1);
+
+
 		if ($request->has('_order_id')) {
 
-			$order = Order::find($request->get('_order_id'));
+			$order = Order::find($request->get('_order_id'), true);
 		} else {
 			$order = $this->getCart();
 		}
@@ -31,19 +34,20 @@ class GatewayCallbackController extends BaseActionController
 		if (!$gateway) {
 			throw new GatewayDoesNotExist("Gateway [{$gatewayName}] does not exist.");
 		}
-
+		var_dump(3);
 		try {
 			$callbackSuccess = Gateway::use($gateway['class'])->callback($request);
 		} catch (GatewayCallbackMethodDoesNotExist $e) {
 			$callbackSuccess = $order->isPaid() === true;
 		}
-
+		var_dump(4);
 		if (!$callbackSuccess) {
-			return $this->withErrors($request, "Order [{$order->get('title')}] has not been marked as paid yet.");
+			return $this->withErrors($request, "Order [{$order->orderNumber()}] has not been marked as paid yet.");
 		}
 
 
-		//$this->forgetCart();
+		$this->forgetCart();
+		var_dump(5);
 
 		$ecommerceDataLayer = [
 			"transaction_id" => $order->id(),
@@ -64,7 +68,7 @@ class GatewayCallbackController extends BaseActionController
 			];
 		})->toArray();
 
-
+		var_dump(6);
 		return $this->withSuccess($request, [
 			'success' => __('simple-commerce.messages.checkout_complete'),
 			'cart' => $request->wantsJson()

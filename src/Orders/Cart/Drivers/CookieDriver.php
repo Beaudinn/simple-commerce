@@ -85,6 +85,15 @@ class CookieDriver implements CartDriver
 		return $cart;
 	}
 
+	public function getCartCount(): int
+	{
+		if (! $this->hasCart()) {
+			return 0;
+		}
+
+		return OrderAPI::itemCount($this->getCartKey());
+	}
+
     public function getOrMakeCart(): Order
     {
         if ($this->hasCart()) {

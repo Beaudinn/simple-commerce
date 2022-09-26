@@ -37,7 +37,7 @@ abstract class OrderState extends State
 			->allowTransition([Concept::class, Quote::class ], Draft::class)// draft
 			->allowTransition(Concept::class, Draft::class)// draft
 			->allowTransition(Draft::class, Concept::class)// draft
-			->allowTransition(Draft::class, Pending::class,ToPendingTransition::class)
+			->allowTransition([Draft::class, Quote::class], Pending::class,ToPendingTransition::class)
 			->allowTransition(Approved::class, Pending::class)
 			->allowTransition(Approved::class, Pending::class) // for testing
 			->allowTransition(Pending::class, Canceled::class)

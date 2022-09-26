@@ -17,7 +17,7 @@ class SimpleCommerceTag extends Tags
         'cart'     => CartTags::class,
         'checkout' => CheckoutTags::class,
         'coupon'   => CouponTags::class,
-        'customer' => CustomerTags::class,
+        //'customer' => CustomerTags::class,
         'gateways' => GatewayTags::class,
         'shipping' => ShippingTags::class,
     ];
@@ -41,6 +41,7 @@ class SimpleCommerceTag extends Tags
         $method = isset($tag[1]) ? $tag[1] : 'index';
 
         if (! $class) {
+        	ray()->backtrace();
             throw new TagNotFoundException("Tag [{$tag[0]}] could not be found.");
         }
 

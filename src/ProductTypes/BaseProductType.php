@@ -90,6 +90,27 @@ class BaseProductType
 			->args(func_get_args());
 	}
 
+	public function initial($initial = NULL)
+	{
+		return $this
+			->fluentlyGetOrSet('initial')
+			->args(func_get_args());
+	}
+
+	public function options($options = [])
+	{
+		return $this
+			->fluentlyGetOrSet('options')
+			->args(func_get_args());
+	}
+
+	public function uploader($uploader = [])
+	{
+		return $this
+			->fluentlyGetOrSet('uploader')
+			->args(func_get_args());
+	}
+
 	public function metadata($metadata = null)
 	{
 		return $this
@@ -118,6 +139,57 @@ class BaseProductType
 						->setHandle($this->handle())
 						->setContents($value);
 				}
+
+				return $value;
+			})
+			->args(func_get_args());
+	}
+
+	public function update(array $lineItemData){
+
+		if (isset($lineItemData['initial'])) {
+			$this->initial($lineItemData['initial']);
+		}
+
+		if (isset($lineItemData['options'])) {
+			$this->options($lineItemData['options']);
+		}
+
+		if (isset($lineItemData['uploader'])) {
+			$this->uploader($lineItemData['uploader']);
+		}
+
+		if (isset($lineItemData['design'])) {
+			$this->design($lineItemData['design']);
+		}
+
+		if (isset($lineItemData['selected_options'])) {
+			$this->selectedOptions($lineItemData['selected_options']);
+		}
+
+		if (isset($lineItemData['calculation_input'])) {
+			$this->calculationInput($lineItemData['calculation_input']);
+		}
+
+		if (isset($lineItemData['rush_prices'])) {
+			$this->rush_prices($lineItemData['rush_prices']);
+		}
+	}
+
+	public function rush_prices($rush_prices = [])
+	{
+		return $this
+			->fluentlyGetOrSet('rush_prices')
+			->setter(function ($value) {
+
+				if (!$value) {
+					return collect([]);
+				}
+
+				if (is_array($value)) {
+					$value = collect($value);
+				}
+
 
 				return $value;
 			})

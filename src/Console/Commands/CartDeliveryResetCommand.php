@@ -3,6 +3,7 @@
 namespace DoubleThreeDigital\SimpleCommerce\Console\Commands;
 
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Quote;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Console\Command;
 use Statamic\Console\RunsInPlease;
@@ -25,7 +26,7 @@ class CartDeliveryResetCommand extends Command
 
             (new $orderModelClass)
                 ->query()
-	            ->whereState('state', Draft::class)
+	            ->whereState('state', [Draft::class, Quote::class])
                 ->where('is_paid', false)
                 ->each(function ($model) {
                     $this->line("Reseting delivery at for cart: {$model->id}");

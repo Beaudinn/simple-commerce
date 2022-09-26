@@ -55,4 +55,36 @@ class SimpleProduct extends BaseProductType implements ProductType
 		];
 
 	}
+
+	public function rush_prices($rush_prices = [])
+	{
+		return $this
+			->fluentlyGetOrSet('rush_prices')
+			->setter(function ($value) {
+
+				if (!$value) {
+					return collect([]);
+				}
+
+				if (is_array($value)) {
+					$value = collect($value);
+				}
+
+
+				return $value;
+			})
+			->getter(function ($value) {
+				if (empty($value) || !$value) {
+					return collect([]);
+				}
+
+				if (is_array($value)) {
+					$value = collect($value);
+				}
+
+				return $value;
+			})
+			->args(func_get_args());
+	}
+
 }

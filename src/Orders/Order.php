@@ -18,9 +18,11 @@ use DoubleThreeDigital\SimpleCommerce\Facades\Customer;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderFacade;
 use DoubleThreeDigital\SimpleCommerce\Http\Resources\BaseResource;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Pending;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Quote;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Facades\Site;
 use Statamic\Http\Resources\API\EntryResource;
@@ -79,6 +81,8 @@ class Order implements Contract
 		$this->delivery_at = NULL;
 		$this->shipping_method = NULL;
 
+		//$this->withoutRecalculating = $this->isQuote();
+
 		$this->data = collect();
 	}
 
@@ -130,6 +134,11 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
+	public function isQuote()
+	{
+		return $this->state() == Quote::class;
+	}
+
 	public function save(): self
 	{
 		if (method_exists($this, 'beforeSaved')) {
@@ -174,16 +183,13 @@ class Order implements Contract
 
 		return $this
 			->fluentlyGetOrSet('customer')
-			->setter(function ($value) {
-				if (!$value) {
-					return NULL;
+			->getter(function ($value) {
+
+				if ($value instanceof \App\Models\Customer) {
+					return Customer::fresh($value);
 				}
 
-				if ($value instanceof CustomerContract) {
-					return $value->id();
-				}
-
-				return Customer::find($value);
+				return $value;
 			})
 			->args(func_get_args());
 	}
@@ -210,17 +216,19 @@ class Order implements Contract
 
 	public function rushprices()
 	{
-		$rush_prices = $this->lineItems()->map(function ($item) {
+		$prices  = $this->lineItems()->map(function ($item) {
 
-			return $item->rush_prices ?? [];
-		})->flatten(1)->groupBy(function ($rush) {
+			return array_values($item->rush_prices()->toArray());
+		})->flatten(1);
+
+		$rush_prices = $prices->groupBy(function ($rush, $key) {
 			return Carbon::parse($rush['delivery_date'])->format('Y-m-d');
 		})->sortBy(function ($rush, $key) {
 			return $key;
 		});
 
-		$rush_prices = $rush_prices->map(function ($prices) {
 
+		$rush_prices = $rush_prices->map(function ($prices) {
 			$total = $prices->sum(function ($price) {
 
 				return $price['prices_total']['purchase_rush_surcharge'] ?? 0;
@@ -306,7 +314,7 @@ class Order implements Contract
 					return $value->id();
 				}
 
-				return Coupon::find($value);
+				return Coupon::fresh($value);
 			})
 			->args(func_get_args());
 	}
@@ -339,6 +347,11 @@ class Order implements Contract
 
 	public function getDeliveries($date)
 	{
+		$shipping_methods = Cache::rememberForever('shipdfpinssdg_methodds', function () {
+			return ShippingMethods::all()->mapWithKeys(function ($method){
+				return [$method->code => $method->overwritableArray()];
+			});
+		});
 
 		if ($date instanceof Carbon) {
 			$date = $date->format('Y-m-d');
@@ -358,8 +371,8 @@ class Order implements Contract
 			$overwrite = [];
 			$array->prices->sales_price = $array->prices->purchase_price;
 
-			if ($method = ShippingMethods::where('code', $array->shipping_method_api_code)->first()) {
-				$overwrite = $method->overwritableArray();
+			if (isset($shipping_methods[$array->shipping_method_api_code])){
+				$overwrite = $shipping_methods[$array->shipping_method_api_code];
 				$array->prices->sales_price = (float)$array->prices->purchase_price + (float)$overwrite['margin'];
 			}
 
@@ -370,6 +383,7 @@ class Order implements Contract
 		}
 		return $deliveries;
 	}
+
 
 
 	public function markAsPaid(): self
@@ -418,8 +432,6 @@ class Order implements Contract
 	{
 		$this->set('delivery_at', $date);
 
-		$this->save();
-
 		if (!$this->withoutRecalculating) {
 			$this->recalculate();
 		}
@@ -427,8 +439,8 @@ class Order implements Contract
 
 	public function recalculate(): self
 	{
-		$calculate = resolve(CalculatorContract::class)->calculate($this);
 
+		$calculate = resolve(CalculatorContract::class)->calculate($this);
 
 		$this->lineItems($calculate['items']);
 		$this->upsells($calculate['upsells']);
@@ -513,8 +525,6 @@ class Order implements Contract
 
 
 		$this->set('shipping_method', $shipping_method);
-
-		$this->save();
 
 		if (!$this->withoutRecalculating) {
 			$this->recalculate();
@@ -638,7 +648,12 @@ class Order implements Contract
 		if ($this->resource() instanceof Model) {
 			$resource = \DoubleThreeDigital\Runway\Runway::findResourceByModel($this->resource());
 
-			return $resource->augment($this->resource());
+			$augmentedData = $resource->augment($this->resource());
+
+			return array_merge(
+				$this->toArray(),
+				$augmentedData,
+			);
 		}
 
 		return [];
@@ -649,6 +664,7 @@ class Order implements Contract
 		$toArray = $this->data->toArray();
 
 		$toArray['id'] = $this->id();
+		$toArray['is_quote'] = $this->isQuote();
 
 		return $toArray;
 	}

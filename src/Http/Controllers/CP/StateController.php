@@ -62,8 +62,13 @@ class StateController
 		$values = $fields->process();
 
 		//try {
-		$response = 'not used yet';
-		$record[$request->handle]->transitionTo($request->state, $values->values()->all());
+		$response = 'Status aangepast';
+		try {
+			$record[$request->handle]->transitionTo($request->state, $values->values()->all());
+		}catch (\Exception $e){
+			$response = $e->getMessage();
+		}
+
 		//$payment->state->transition(new CreatedToFailed($payment, 'error message'));
 
 		//$values = array_merge($request->values, $fields->values()->all());
@@ -85,32 +90,5 @@ class StateController
 		}
 
 		return $response ?: [];
-		session()->flash('success', 'Status aangepast');
-		return;
-		//} catch (ApiException $e) {
-		//
-		//	Log::channel('slack')->critical('States API change error', [
-		//		'message' => $e->getMessage()
-		//	]);
-		//	return ;
-		//} catch (\Throwable $e) {
-		//
-		//	session()->flash('error', $e->getMessage());
-		//	Log::channel('slack')->critical('States change error', ['response' => $e]);
-		//	return ;
-		//}
-
-
-		$fieldtype = FieldtypeRepository::find($request->type);
-
-		$blueprint = $this->blueprint($fieldtype->configBlueprint());
-
-		$fields = $blueprint
-			->fields()
-			->addValues($request->values)
-			->process();
-
-		$values = array_merge($request->values, $fields->values()->all());
-
 	}
 }

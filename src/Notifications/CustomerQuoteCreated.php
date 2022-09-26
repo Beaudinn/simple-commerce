@@ -2,12 +2,14 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Notifications;
 
+use MagicLink\Actions\LoginAction;
+use MagicLink\MagicLink;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class CustomerOrderApproved extends Notification
+class CustomerQuoteCreated extends Notification
 {
     use Queueable;
 
@@ -47,13 +49,18 @@ class CustomerOrderApproved extends Notification
      */
     public function toMail($notifiable)
     {
+	    $action = new LoginAction( $this->order->customer()->resource());
+	    $action->guard('web')->response(redirect(route('quotations.show', $this->order->resource()->id)));
+	    $link_show = MagicLink::create($action)->url;
+
         return (new MailMessage)
 	        ->from('info@drukhoek.nl', $this->order->site()->attributes()['name'])
 	        ->bcc('verkoop@xpressing.nl')
-	        ->subject(trans('strings.notification.order.confirmation.subject', ['order_number' => $this->order->orderNumber()]))
-	        ->view('simple-commerce::emails.customer_order_approved', [
+	        ->subject(trans('strings.notification.quote.created.subject', ['order_number' => $this->order->orderNumber()]))
+	        ->view('simple-commerce::emails.customer_quote_created', [
                 'order' => $this->order,
 		        'values' => $this->values,
+		        'link_show' => $link_show
             ]);
     }
 }

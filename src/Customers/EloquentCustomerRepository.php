@@ -36,6 +36,11 @@ class EloquentCustomerRepository implements RepositoryContract
 			throw new CustomerNotFound("Customer [{$id}] could not be found.");
 		}
 
+		return $this->fresh($model);
+	}
+
+	public function fresh($model): ?Customer
+	{
 		return app(Customer::class)
 			->resource($model)
 			->id($model->id)
@@ -55,6 +60,7 @@ class EloquentCustomerRepository implements RepositoryContract
 					)
 			);
 	}
+
 
 	public function findByEmail(string $email): ?Customer
 	{

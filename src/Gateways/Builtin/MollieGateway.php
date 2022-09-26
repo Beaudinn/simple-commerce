@@ -39,12 +39,14 @@ class MollieGateway extends BaseGateway implements Gateway
 
 		$order = $data->order();
 
+		$order->orderNumber(\DoubleThreeDigital\SimpleCommerce\Facades\Order::createOrderNumber($order))->save();
+
 		$payment = $this->mollie->payments->create([
 			'amount' => [
 				'currency' => Currency::get(Site::current())['code'],
 				'value'    => (string) substr_replace($order->grandTotal(), '.', -2, 0),
 			],
-			'description' => "Order {$order->get('title')}",
+			'description' => "Order {$order->orderNumber()}",
 			'redirectUrl' => $this->callbackUrl([
 				'_order_id' => $data->order()->id(),
 			]),
@@ -52,6 +54,7 @@ class MollieGateway extends BaseGateway implements Gateway
 			'webhookUrl'  => $this->webhookUrl(),
 			'metadata'    => [
 				'order_id' => $order->id,
+				'order_number' => $order->orderNumber()
 			],
 		]);
 		//
@@ -282,7 +285,7 @@ class MollieGateway extends BaseGateway implements Gateway
 					->where('data->mollie->id', $mollieId)
 					->first();
 
-				$order = OrderFacade::find($order->id. true);
+				$order = OrderFacade::find($order->id, true);
 			}
 
 			if (! $order) {
@@ -371,7 +374,7 @@ class MollieGateway extends BaseGateway implements Gateway
 	{
 		$this->setupMollie();
 
-		$order = OrderFacade::find($request->get('_order_id'));
+		$order = OrderFacade::find($request->get('_order_id'), true);
 
 		if (! $order) {
 			return false;
@@ -409,7 +412,13 @@ class MollieGateway extends BaseGateway implements Gateway
 				return false;
 				//$this->isCanceled($order, Carbon::parse($payment->canceledAt));
 				break;
+			case 'open':
+				//$this->markOrderAsPaid($order);
+				//$this->isPaid($order, Carbon::parse($payment->paidAt), $payment->method);
+				return true;
+				break;
 		}
 
+		return false;
 	}
 }

@@ -4,6 +4,7 @@ namespace DoubleThreeDigital\SimpleCommerce;
 
 use Barryvdh\Debugbar\Facade as Debugbar;
 use DoubleThreeDigital\SimpleCommerce\Events\OrderApproved as OrderApprovedEvent;
+use DoubleThreeDigital\SimpleCommerce\Events\QuoteCreated;
 use DoubleThreeDigital\SimpleCommerce\Tags\CustomerTags;
 use Statamic\Events\EntryBlueprintFound;
 use Statamic\Facades\Collection;
@@ -75,6 +76,9 @@ class ServiceProvider extends AddonServiceProvider
         Events\StockRunOut::class => [
             Listeners\SendConfiguredNotifications::class,
         ],
+	    QuoteCreated::class => [
+		    Listeners\SendConfiguredNotifications::class,
+	    ],
     ];
 
     protected $modifiers = [
@@ -146,7 +150,7 @@ class ServiceProvider extends AddonServiceProvider
         Filters\OrderStatusFilter::register();
 
         if (class_exists('Barryvdh\Debugbar\ServiceProvider') && config('debugbar.enabled', false) === true) {
-            Debugbar::addCollector(new DebugbarDataCollector('simple-commerce'));
+            //Debugbar::addCollector(new DebugbarDataCollector('simple-commerce'));
         }
     }
 

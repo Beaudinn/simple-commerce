@@ -43,6 +43,17 @@ trait CartDriver
         return $this->resolve()->makeCart();
     }
 
+	public function getCartCount(): int
+	{
+		try {
+
+			return $this->resolve()->getCartCount();
+		} catch (\Exception $e) {
+
+			return 0;
+		}
+	}
+
     protected function getOrMakeCart(): Order
     {
         return $this->resolve()->getOrMakeCart();
@@ -57,16 +68,14 @@ trait CartDriver
     {
         if (request()->hasSession() && $checkoutSuccess = request()->session()->get('simple-commerce.checkout.success')) {
             // Has success expired? Use normal cart driver.
-            if ($checkoutSuccess['expiry']->isPast()) {
-                return resolve(CartDriverContract::class);
-            }
+            //if ($checkoutSuccess['expiry']->isPast()) {
+            //    return resolve(CartDriverContract::class);
+            //}
 
             // Is the user on the redirect URL? If not, use normal cart driver.
             if (request()->path() !== ltrim($checkoutSuccess['url'], '/')) {
                 return resolve(CartDriverContract::class);
             }
-
-
 
 	        return resolve(PostCheckoutDriver::class, [
                 'checkoutSuccess' => $checkoutSuccess,
