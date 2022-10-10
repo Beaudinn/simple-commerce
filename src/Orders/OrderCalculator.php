@@ -41,9 +41,12 @@ class OrderCalculator implements Contract
 			'coupon_total' => 0,
 		];
 
+		//$data['items'] = $order->lineItems()->toArray()
+
 		$data['items'] = $order
 			->lineItems()
 			->map(function ($lineItem) {
+
 				return $lineItem->toArray();
 			})
 			->map(function ($lineItem) use (&$data) {

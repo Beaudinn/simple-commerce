@@ -27,31 +27,7 @@
         @if(!$loop->first)
             <div style="line-height: 24px">&nbsp;</div>
         @endif
-        <table style="width: 100%" cellpadding="0" cellspacing="0" role="presentation">
-            <tr>
-                <td style="vertical-align: top; width: 72px" valign="top">
-                    @if($lineItem->product()->get('image'))
-                        <img src="{{ Statamic::tag('glide')->path($lineItem->product()->resource()->augmented()->get('image'))->square(48)->fit("contain")->absolute(true)->format('png') }}" alt="{{  $lineItem->product()->get('title') }}" width="48"
-                             style="border: 0; max-width: 100%; line-height: 100%; vertical-align: middle">
-                    @endif
-                </td>
-                <td class="sm-w-auto" style="text-align: left; vertical-align: top; width: 488px" align="left"
-                    valign="top">
-                    <p style="font-weight: 700; font-size: 16px; margin-top: 0; margin-bottom: 8px; color: #4a5566">
-                        {{  $lineItem->product()->get('title') }}</p>
-                    @if($lineItem->initial())
-                        <p style="font-size: 13px; line-height: 15px; {{ $loop->first ? ' margin: 0;' : 'margin: 4px 0 0;' }} color: #8492a6"> Formaat :  {{$lineItem->initial() }} </p>
-                    @endif
-                    @forelse($lineItem->options() ?? [] as $name => $value)
-                        <p style="font-size: 13px; line-height: 15px; {{ $loop->first ? ' margin: 0;' : 'margin: 4px 0 0;' }} color: #8492a6">{{$name }}
-                            : {{ $value  }}</p>
-                    @endforeach
-                </td>
-                <td style="text-align: right; vertical-align: top; width: 88px" align="right" valign="top">
-                    <p style="font-weight: 700; font-size: 16px; line-height: 22px; margin: 0; color: #4a5566">{{ \DoubleThreeDigital\SimpleCommerce\Currency::parse($lineItem->total(), $site) }}</p>
-                </td>
-            </tr>
-        </table>
+        @include('email/cart-items/'.$lineItem->product->purchasableType().'-line-item')
     @endforeach
     <div style="line-height: 24px">&nbsp;</div>
     @foreach ($order->upsells() as $lineItem)
@@ -96,6 +72,14 @@
                 </tr>
                 <tr>
                     <td colspan="2" style="height: 12px"></td>
+                </tr>
+            @endif
+            @if($order->get('upsell_total'))
+                <tr>
+                    <td style="font-size: 12px; line-height: 16px; color: #8492a6; width: 102px">  {{ __('Upsell totals') }}</td>
+                    <td style="font-size: 21px; line-height: 28px; text-align: right; color: #4a5566; width: 200px"
+                        align="right"> {{ \DoubleThreeDigital\SimpleCommerce\Currency::parse($order->upsellTotal(), $site) }}
+                    </td>
                 </tr>
             @endif
             <tr>
@@ -156,7 +140,7 @@
                                             <p style="font-size: 16px; line-height: 22px; margin: 0; color: #8492a6">{{ $shipping_method->pickup_address }}</p>
                                             <br>
                                             <h4 style="font-size: 16px; line-height: 22px; margin: 0 0 8px; color: #8492a6">Afhaal Datum</h4>
-                                            <p style="font-size: 16px; line-height: 22px; margin: 0; color: #8492a6">{{ ucfirst(\Carbon\Carbon::parse($order->get('delivery_at'))->format('l j F Y')) }}</p
+                                            <p style="font-size: 16px; line-height: 22px; margin: 0; color: #8492a6">{{ ucfirst(\Carbon\Carbon::parse($order->get('delivery_at'))->isoFormat('LL')) }}</p>
                                         </div>
                                     @else
                                         <div style="padding-bottom: 32px; ">
@@ -181,7 +165,7 @@
 
                                             <h4 style="font-size: 16px; line-height: 22px; margin: 0 0 8px; color: #8492a6">
                                                 Bezorgdatum</h4>
-                                            <p style="font-size: 16px; line-height: 22px; margin: 0; color: #8492a6">{{ ucfirst(\Carbon\Carbon::parse($order->get('delivery_at'))->format('l j F Y')) }}</p>
+                                            <p style="font-size: 16px; line-height: 22px; margin: 0; color: #8492a6">{{ ucfirst(\Carbon\Carbon::parse($order->get('delivery_at'))->isoFormat('LL')) }}</p>
                                         </div>
                                     @endif
                                 @endif

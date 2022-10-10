@@ -25,7 +25,7 @@ class EloquentOrderRepository implements RepositoryContract
 	protected $model;
 
 	protected $knownColumns = [
-		'id', 'state', 'is_paid', 'is_shipped', 'reference', 'is_refunded', 'items', 'upsells', 'grand_total', 'items_total', 'tax_total',
+		'id', 'state', 'is_paid', 'is_shipped', 'reference', 'packing_slip', 'packing_slip_path', 'is_refunded', 'items', 'upsells', 'grand_total', 'items_total', 'tax_total',
 		'shipping_total', 'coupon_total', 'shipping_name', 'shipping_address', 'shipping_address_line2',
 		'shipping_city', 'shipping_postal_code', 'shipping_region', 'shipping_country', 'billing_name',
 		'billing_address', 'billing_address_line2', 'billing_city', 'billing_postal_code', 'billing_region',
@@ -67,6 +67,11 @@ class EloquentOrderRepository implements RepositoryContract
 			throw new OrderNotFound("Order [{$id}] could not be found.");
 		}
 
+		return $this->fresh($model);
+	}
+
+	public function fresh($model): ?Order
+	{
 		return app(Order::class)
 			->resource($model)
 			->id($model->id)
@@ -74,6 +79,8 @@ class EloquentOrderRepository implements RepositoryContract
 			->locale($model->locale)
 			->orderNumber($model->order_number)
 			->reference($model->reference)
+			->packingSlip($model->packing_slip)
+			->packingSlipPath($model->packing_slip_path)
 			->isPaid($model->is_paid)
 			->postPayment($model->post_payment)
 			->lineItems($model->items)
@@ -112,12 +119,12 @@ class EloquentOrderRepository implements RepositoryContract
 				'use_shipping_address_for_billing' => $model->use_shipping_address_for_billing,
 				'paid_date' => $model->paid_date,
 			])->merge(
-					collect($this->getCustomColumns())
-						->mapWithKeys(function ($columnName) use ($model) {
-							return [$columnName => $model->{$columnName}];
-						})
-						->toArray()
-				)
+				collect($this->getCustomColumns())
+					->mapWithKeys(function ($columnName) use ($model) {
+						return [$columnName => $model->{$columnName}];
+					})
+					->toArray()
+			)
 			);
 	}
 
@@ -173,10 +180,13 @@ class EloquentOrderRepository implements RepositoryContract
 		$model->is_paid = $order->isPaid();
 		$model->order_number = $order->orderNumber();
 		$model->reference = $order->reference();
+		$model->packing_slip = $order->packingSlip();
+		$model->packing_slip_path = $order->packingSlipPath();
 		$model->post_payment = $order->postPayment();
 		$model->items = $order->lineItems()->map->toArray();
 		$model->upsells = $order->upsells()->map->toArray();
 		$model->grand_total = $order->grandTotal();
+		$model->delivery_at = $order->getDeliveryAt();
 		$model->rush_total = $order->rushTotal();
 		$model->items_total = $order->itemsTotal();
 		$model->upsell_total = $order->upsellTotal();
@@ -246,6 +256,8 @@ class EloquentOrderRepository implements RepositoryContract
 		$order->state = $model->state;
 		$order->orderNumber = $model->order_number;
 		$order->reference = $model->reference;
+		$order->packing_slip = $model->packing_slip;
+		$order->packing_slip_path = $model->packing_slip_path;
 		$order->shop = $model->shop;
 		$order->isPaid = $model->is_paid;
 

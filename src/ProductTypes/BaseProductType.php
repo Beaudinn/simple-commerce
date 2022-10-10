@@ -26,6 +26,7 @@ class BaseProductType
 
 
 	public $id;
+	public $type;
 	public $product;
 	public $quantity;
 	public $price;
@@ -46,6 +47,15 @@ class BaseProductType
 			->fluentlyGetOrSet('id')
 			->args(func_get_args());
 	}
+
+
+	public function type($type = null)
+	{
+		return $this
+			->fluentlyGetOrSet('type')
+			->args(func_get_args());
+	}
+
 
 	public function product($product = null)
 	{
@@ -201,7 +211,7 @@ class BaseProductType
 		return [
 			'id' => $this->id,
 			'product' => $this->product->id(),
-			'type' => $this->product->purchasableType(),
+			'type' => $this->type ?? $this->product->purchasableType(),
 			'quantity' => $this->quantity,
 			'price' => $this->price,
 			'total' => $this->total,

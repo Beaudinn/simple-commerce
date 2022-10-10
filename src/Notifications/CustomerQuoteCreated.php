@@ -2,12 +2,13 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Notifications;
 
+use App\Models\MagicLink;
 use MagicLink\Actions\LoginAction;
-use MagicLink\MagicLink;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Statamic\Facades\Site;
 
 class CustomerQuoteCreated extends Notification
 {
@@ -49,9 +50,12 @@ class CustomerQuoteCreated extends Notification
      */
     public function toMail($notifiable)
     {
+	    $site = $this->order->site();
+	    Site::setCurrent($site->handle());
+
 	    $action = new LoginAction( $this->order->customer()->resource());
 	    $action->guard('web')->response(redirect(route('quotations.show', $this->order->resource()->id)));
-	    $link_show = MagicLink::create($action)->url;
+	    $link_show = MagicLink::create($action)->siteUrl( $this->order->site());
 
         return (new MailMessage)
 	        ->from('info@drukhoek.nl', $this->order->site()->attributes()['name'])

@@ -19,6 +19,7 @@ use DoubleThreeDigital\SimpleCommerce\Facades\Order as OrderFacade;
 use DoubleThreeDigital\SimpleCommerce\Http\Resources\BaseResource;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Pending;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Quote;
+use DoubleThreeDigital\SimpleCommerce\Products\ProductType;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
@@ -36,6 +37,8 @@ class Order implements Contract
 	public $orderNumber;
 	public $state;
 	public $reference;
+	public $packing_slip;
+	public $packing_slip_path;
 	public $locale;
 	public $isPaid;
 	public $postPayment;
@@ -116,6 +119,20 @@ class Order implements Contract
 	{
 		return $this
 			->fluentlyGetOrSet('reference')
+			->args(func_get_args());
+	}
+
+	public function packingSlip($packing_slip = NULL)
+	{
+		return $this
+			->fluentlyGetOrSet('packing_slip')
+			->args(func_get_args());
+	}
+
+	public function packingSlipPath($packing_slip_path = NULL)
+	{
+		return $this
+			->fluentlyGetOrSet('packing_slip_path')
 			->args(func_get_args());
 	}
 
@@ -218,8 +235,11 @@ class Order implements Contract
 	{
 		$prices  = $this->lineItems()->map(function ($item) {
 
+
 			return array_values($item->rush_prices()->toArray());
 		})->flatten(1);
+
+
 
 		$rush_prices = $prices->groupBy(function ($rush, $key) {
 			return Carbon::parse($rush['delivery_date'])->format('Y-m-d');
@@ -228,11 +248,36 @@ class Order implements Contract
 		});
 
 
+		$rush_prices = $rush_prices->filter(function ($item, $delivery_date){
+			//$proboItemCount = $this->lineItems()->filter(function ($lineItem){
+			//	return $lineItem->product && $lineItem->product->purchasableType() == ProductType::PROBO();
+			//})->count();
+			//return count($item) == (count($this->lineItems()) - ($proboItemCount -1));
+			return count($item) == count($this->lineItems());
+		});
+
+
+		if(count($rush_prices)) {
+			$extra = $rush_prices->last()->last();
+
+			//Add three more optional delivery dates
+			$nextDate = Carbon::parse($extra['delivery_date'])->addWeekday();
+			for ($x = 0; $x <= 1; $x++) {
+				$extra['delivery_date'] = $nextDate->format('Y-m-d');
+				$rush_prices->put($extra['delivery_date'], collect([$extra]));
+				$nextDate->addWeekday();
+			}
+		}
+
+
+
 		$rush_prices = $rush_prices->map(function ($prices) {
+
 			$total = $prices->sum(function ($price) {
 
 				return $price['prices_total']['purchase_rush_surcharge'] ?? 0;
 			});
+
 			$deliver_date = Carbon::parse($prices->first()['delivery_date']);
 			if ($deliver_date->isTomorrow()) {
 				$delivery_date_formatted = ucfirst($deliver_date->translatedFormat('\M\o\r\g\e\n d  F'));;// . ' - ' . Date::now()->hour . ' --- ' . $hours;
@@ -319,20 +364,22 @@ class Order implements Contract
 			->args(func_get_args());
 	}
 
-	//public function deliveryAt($delivery_at = NULL)
-	//{
-	//	return $this
-	//		->fluentlyGetOrSet('delivery_at')
-	//		->getter(function ($value) {
-	//
-	//			if ($value instanceof Carbon) {
-	//				return $value->format('Y-m-d');
-	//			}
-	//
-	//			return Carbon::parse($value)->format('Y-m-d');
-	//		})
-	//		->args(func_get_args());
-	//}
+	public function getDeliveryAt($value = NULL)
+	{
+
+		if (!$value)
+			$value = $this->get('delivery_at');
+
+		if (!$value) {
+			return NULL;
+		}
+
+		if ($value instanceof Carbon) {
+			return $value->format('Y-m-d');
+		}
+
+		return Carbon::parse($value)->format('Y-m-d');
+	}
 
 	public function getShipping($shippingMethod = NULL)
 	{
@@ -347,7 +394,7 @@ class Order implements Contract
 
 	public function getDeliveries($date)
 	{
-		$shipping_methods = Cache::rememberForever('shipdfpinssdg_methodds', function () {
+		$shipping_methods = Cache::rememberForever('swhippcssdindg_methods', function () {
 			return ShippingMethods::all()->mapWithKeys(function ($method){
 				return [$method->code => $method->overwritableArray()];
 			});
@@ -357,16 +404,62 @@ class Order implements Contract
 			$date = $date->format('Y-m-d');
 		}
 
-		if (!isset($this->get('deliveries', [])[$date])) {
+		$deliveriesOriginal = collect($this->get('deliveries', []))->groupBy(function($item, $key){
+			return $item["delivery_date"]."-".$item["shipping_method_api_code"];
+		})->filter(function ($item){
+			$proboItemCount = $this->lineItems()->filter(function ($lineItem){
+				return $lineItem->product && $lineItem->product->purchasableType() == ProductType::PROBO();
+			})->count();
+			return count($item) == (count($this->lineItems()) - ($proboItemCount -1));
+		});
 
-			//get custom shipping prijse from probo
-			return [];
+		if(!count($deliveriesOriginal)){
+			return  [];
 		}
 
-		$deliveries = [];
-		foreach ($this->get('deliveries', [])[$date] as $array) {
+
+
+		$deliveriesOriginal = $deliveriesOriginal->flatten(1)->groupBy(function ($rush, $key) {
+
+			return Carbon::parse($rush['delivery_date'])->format('Y-m-d');
+		})->sortBy(function ($rush, $key) {
+			return $key;
+		});
+
+		//Add three more optional delivery dates
+
+		$extraDeliveries = $deliveriesOriginal->filter(function ($date, $key){
+			return !Carbon::parse($key)->isWeekend();
+		})->last();
+
+		$delivery_date = $extraDeliveries->first()['delivery_date'];
+		for ($x = 0; $x <= 1; $x++) {
+			$nextDate = Carbon::parse($delivery_date)->addWeekday();
+			$delivery_date = $nextDate->format('Y-m-d');
+			$deliveriesOriginal->put($delivery_date, $extraDeliveries);
+			//var_dump($extra['delivery_date'], $deliveriesOriginal); die();
+		}
+
+
+		if (!isset($deliveriesOriginal[$date])) {
+
+			$this->set('delivery_at', null);
+			return [];
+
+			//get custom shipping prijse from probo
+			return collect($shipping_methods)->map(function ($method){
+
+				return (object) $method;
+			});
+		}
+
+
+
+		$deliveries = collect();
+		foreach ($deliveriesOriginal[$date] as $array) {
 			$array['prices'] = (object)$array['prices'];
 			$array = (object)$array;
+
 
 			$overwrite = [];
 			$array->prices->sales_price = $array->prices->purchase_price;
@@ -376,11 +469,25 @@ class Order implements Contract
 				$array->prices->sales_price = (float)$array->prices->purchase_price + (float)$overwrite['margin'];
 			}
 
-
-			$deliveries[] = (object)array_merge((array)$array, (array)$overwrite);
-
-
+			$deliveries->push(array_merge((array)$array, (array)$overwrite));
 		}
+
+
+
+		//Only show delivery options thats is available for all cart items
+		//$deliveries = $deliveries->groupBy('shipping_method_api_code')->filter(function ($item){
+		//	return count($item) == count($this->lineItems());
+		//});
+
+		$deliveries = $deliveries->groupBy('shipping_method_api_code')->map(function ($delivery){
+			return (object) $delivery->sortBy('prices.sales_price')->last();
+		})->values();
+		//echo json_encode($deliveries, true); die();
+		//$deliveries = collect($deliveries)->map(function ($delivery){
+		//	return (object) $delivery;
+		//});
+
+		//echo json_encode($deliveries, true); die();
 		return $deliveries;
 	}
 
@@ -584,6 +691,8 @@ class Order implements Contract
 		$this->locale = $freshOrder->locale;
 		$this->state = $freshOrder->state;
 		$this->reference = $freshOrder->reference;
+		$this->packing_slip = $freshOrder->packing_slip;
+		$this->packing_slip_path = $freshOrder->packing_slip_path;
 		$this->postPayment = $freshOrder->postPayment;
 		$this->isPaid = $freshOrder->isPaid;
 		$this->lineItems = $freshOrder->lineItems;

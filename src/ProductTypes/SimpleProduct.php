@@ -58,6 +58,8 @@ class SimpleProduct extends BaseProductType implements ProductType
 
 	public function rush_prices($rush_prices = [])
 	{
+
+
 		return $this
 			->fluentlyGetOrSet('rush_prices')
 			->setter(function ($value) {

@@ -2,6 +2,7 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Console\Commands;
 
+use Illuminate\Support\Facades\Cache;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Quote;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
@@ -20,8 +21,9 @@ class CartDeliveryResetCommand extends Command
     {
         $this->info('Reseting delivery date..');
 
+	    Cache::tags('optiontree')->flush();
 
-        if (isset(SimpleCommerce::orderDriver()['model'])) {
+	    if (isset(SimpleCommerce::orderDriver()['model'])) {
             $orderModelClass = SimpleCommerce::orderDriver()['model'];
 
             (new $orderModelClass)

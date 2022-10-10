@@ -5,6 +5,7 @@ namespace DoubleThreeDigital\SimpleCommerce\Orders;
 use \DoubleThreeDigital\SimpleCommerce\Contracts\ProductType;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 trait HasLineItems
 {
@@ -35,11 +36,13 @@ trait HasLineItems
 						$item['total'] = 0;
 					}
 
+					//var_dump($item['type']); die();
 					$lineItemType = SimpleCommerce::findProductType(strtolower($item['type']));
 
 
 					$lineItem = (new $lineItemType($item))
 						->id($item['id'])
+						->type($item['type'])
 						->product($item['product'])
 						->quantity($item['quantity'])
 						->total($item['total']);
@@ -158,6 +161,35 @@ trait HasLineItems
 	}
 
 	/**
+	 * Update the quantity of a cart item.
+	 *
+	 * @param int Id of the cart item
+	 * @param int quantity to be increased
+	 * @return array
+	 */
+	public function updateQuantityAt($lineItemId, $quantity = 1){
+		$this->lineItems = $this->lineItems->map(function ($item) use ($lineItemId, $quantity) {
+			if ($item->id() !== (int) $lineItemId) {
+				return $item;
+			}
+			$item->quantity($quantity);
+
+			if (method_exists($item, 'afterQuantityUpdate')) {
+				$item = $item->afterQuantityUpdate();
+			}
+			return $item;
+		});
+
+		$this->save();
+
+		if (! $this->withoutRecalculating) {
+			$this->recalculate();
+		}
+
+		return $this->lineItem($lineItemId);
+	}
+
+	/**
 	 * Increments the quantity of a cart item.
 	 *
 	 * @param int Id of the cart item
@@ -172,6 +204,10 @@ trait HasLineItems
 
 
 			$item->quantity($item->quantity() + $quantity);
+
+			if (method_exists($item, 'afterQuantityUpdate')) {
+				$item = $item->afterQuantityUpdate();
+			}
 			return $item;
 		});
 
@@ -229,6 +265,62 @@ trait HasLineItems
 		}
 
 		return $this->lineItems();
+	}
+
+
+	/**w
+	 * Update th quantity of a cross item from a cart item.
+	 *
+	 * @param int Id of the cart item
+	 * @param int quantity to be increased
+	 * @return array
+	 */
+	public function updateCrossQuantityAt($lineItemId, $crossCode, $quantity = 1){
+		$this->lineItems = $this->lineItems->map(function ($item) use ($lineItemId, $crossCode, $quantity) {
+			if ($item->id() !== (int) $lineItemId) {
+				return $item;
+			}
+
+			if(!$quantity){
+				$item->selectedOptions($item->selectedOptions()->filter(function ($option) use($crossCode, $quantity){
+
+					return $option['code'] != $crossCode;
+				})->toArray());
+
+				$item->calculationInput($item->calculationInput()->filter(function ($option) use($crossCode, $quantity){
+
+					return $option['code'] != $crossCode;
+				})->toArray());
+				return $item;
+
+			}
+
+			$item->selectedOptions($item->selectedOptions()->map(function ($option) use($crossCode, $quantity){
+
+				if($option['code'] == $crossCode){
+					$option['value'] = $quantity;
+				}
+				return $option;
+			})->toArray());
+
+			$item->calculationInput($item->calculationInput()->map(function ($option) use($crossCode, $quantity){
+
+				if($option['code'] == $crossCode){
+					$option['value'] = $quantity;
+				}
+				return $option;
+			})->toArray());
+
+			return $item;
+		});
+
+		$this->save();
+
+		if (! $this->withoutRecalculating) {
+			$this->recalculate();
+		}
+
+		return $this->lineItem($lineItemId);
 	}
 
 	public function clearLineItems(): Collection

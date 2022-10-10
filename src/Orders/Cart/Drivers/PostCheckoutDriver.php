@@ -25,6 +25,16 @@ class PostCheckoutDriver extends SessionDriver
         return ! empty($this->orderId);
     }
 
+	public function getCartCount(): int
+	{
+		if (! $this->hasCart()) {
+			return 0;
+		}
+
+		return OrderAPI::itemCount($this->getCartKey());
+	}
+
+
 	public function getCart(): Order
 	{
 		if (! $this->hasCart()) {

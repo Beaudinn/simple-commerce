@@ -27,8 +27,13 @@ class Currency
             ->first();
     }
 
-    public static function parse($amount, Site $site): string
+    public static function parse($amount, Site $site = null): string
     {
+    	if(!$site){
+		    $site = \Statamic\Facades\Site::current();
+	    }
+
+
         if (is_string($amount)) {
             if (str_contains($amount, '.')) {
                 $amount = str_replace('.', '', $amount);

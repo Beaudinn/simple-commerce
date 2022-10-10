@@ -28,6 +28,7 @@ class Product implements Contract
     public function __construct()
     {
         $this->data = collect();
+
     }
 
     public function id($id = null)
@@ -138,6 +139,11 @@ class Product implements Contract
 		if ($this->data()['blueprint'] == 'product_probo') {
 			return 'probo'; // ProductType::PROBO();
 		}
+
+		if ($this->data()['blueprint'] == 'product_probo_api') {
+			return 'probo_api'; // ProductType::PROBO();
+		}
+
 
 		if ($this->productVariants) {
 			return 'variant'; //ProductType::VARIANT();

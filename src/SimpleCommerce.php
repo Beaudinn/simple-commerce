@@ -88,6 +88,7 @@ class SimpleCommerce
 
 	public static function findProductType(string $resourceHandle): ?ProductType
 	{
+
 		$resource = collect(static::$productTypes)->get($resourceHandle);
 		
 
