@@ -50,6 +50,7 @@ class Overview
                         $query = Collection::find(SimpleCommerce::orderDriver()['collection'])
                             ->queryEntries()
                             ->where('is_paid', true)
+	                        ->where('locale', Site::selected()->handle())
                             ->whereDate('paid_date', $date->format('d-m-Y'))
                             ->get();
                     }
@@ -59,6 +60,7 @@ class Overview
 
                         $query = $orderModel::query()
                             ->where('is_paid', true)
+	                        ->where('locale', Site::selected()->handle())
                             ->whereDate('paid_date', $date)
                             ->get();
                     }
@@ -85,7 +87,7 @@ class Overview
                         ->orderBy('paid_date', 'desc')
                         ->limit(5)
                         ->get()
-                        ->map(function ($entry) {
+                        ->map(function ($order) {
 	                        return Order::find($order->id, true);
                         })
                         ->values();
@@ -95,7 +97,7 @@ class Overview
                             'id' => $order->id(),
                             'order_number' => $order->orderNumber(),
                             'edit_url' => $order->resource()->editUrl(),
-                            'grand_total' => Currency::parse($order->grandTotal(), Site::selected()),
+                            'grand_total' => Currency::parse($order->grandTotal(),  $order->site()),
                             'paid_date' => Carbon::parse($order->get('paid_date'))->format(config('statamic.system.date_format')),
                         ];
                     });
@@ -105,7 +107,8 @@ class Overview
                     $orderModel = new (SimpleCommerce::orderDriver()['model']);
 
                     $query = $orderModel::query()
-                        ->where('is_paid', true)
+                        ->where('locale', Site::selected()->handle())
+	                    ->where('is_paid', true)
                         ->orderBy('paid_date', 'desc')
                         ->orderBy('data->paid_date', 'desc')
                         ->limit(5)
@@ -123,7 +126,7 @@ class Overview
                                 'resourceHandle' => \DoubleThreeDigital\Runway\Runway::findResourceByModel($orderModel)->handle(),
                                 'record' => $order->resource()->{$orderModel->getRouteKeyName()},
                             ]),
-                            'grand_total' => Currency::parse($order->grandTotal(), Site::selected()),
+                            'grand_total' => Currency::parse($order->grandTotal(), $order->site()),
                             'paid_date' => Carbon::parse($order->get('paid_date'))->format(config('statamic.system.date_format')),
                         ];
                     });
@@ -168,6 +171,7 @@ class Overview
 
                     $query = $customerModel::query()
                         ->whereHas('orders', function ($query) {
+	                        $query->where('locale', Site::selected()->handle());
                             $query->where('is_paid', true);
                         })
                         ->withCount('orders')

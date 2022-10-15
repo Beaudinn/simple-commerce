@@ -19,6 +19,7 @@ use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Statamic\Facades\Site;
 
 class EloquentOrderRepository implements RepositoryContract
 {
@@ -160,7 +161,7 @@ class EloquentOrderRepository implements RepositoryContract
 
 		$creating = !$model;
 		if ($creating) {
-			Log::info('creating');
+			Log::info('creating: '. Site::current()->handle());
 			$model = new $this->model();
 			event(new CartBeforeCreate($model));
 
@@ -172,7 +173,14 @@ class EloquentOrderRepository implements RepositoryContract
 
 		if($order->state() && !$model->state->equals($order->state())){
 
-			$model->state->transitionTo($order->state);
+			$stateClass = new ($order->state())($model);
+
+
+			$fields = $stateClass->blueprint($model)->fields()->addValues([]); //$request->values?
+
+			$values = $fields->preProcess();
+
+			$model->state->transitionTo($order->state, $values->values()->all());
 		}
 
 

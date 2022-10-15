@@ -128,7 +128,7 @@ class OrderModel extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withoutGlobalScopes(['current_site']);
     }
 
 

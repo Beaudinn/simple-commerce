@@ -34,7 +34,6 @@ class ToPendingTransition extends Transition
 	{
 
 
-
 		$orderModel = $this->order->resource();
 
 		if($orderModel->state == Pending::class){
