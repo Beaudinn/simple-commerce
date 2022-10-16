@@ -9,6 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Statamic\Facades\Site;
+use Statamic\Facades\URL;
 
 class CustomerQuoteCreated extends Notification
 {
@@ -52,6 +53,8 @@ class CustomerQuoteCreated extends Notification
     {
 	    $site = $this->order->site();
 	    Site::setCurrent($site->handle());
+
+	    URL::forceRootUrl($site->url());
 
 	    $action = new LoginAction( $this->order->customer()->resource());
 	    $action->guard('web')->response(redirect(route('quotations.show', $this->order->resource()->id)));
