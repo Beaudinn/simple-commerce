@@ -3,13 +3,13 @@
 namespace DoubleThreeDigital\SimpleCommerce\Notifications;
 
 use App\Models\MagicLink;
+use Illuminate\Support\Facades\URL;
 use MagicLink\Actions\LoginAction;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Statamic\Facades\Site;
-use Statamic\Facades\URL;
 
 class CustomerQuoteCreated extends Notification
 {
