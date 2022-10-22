@@ -200,6 +200,16 @@ class Order implements Contract
 
 		return $this
 			->fluentlyGetOrSet('customer')
+			->setter(function ($value) {
+				if (!$value) {
+					return NULL;
+				}
+
+				if ($value instanceof CustomerContract) {
+					return $value->id();
+				}
+				return Customer::find($value);
+			})
 			->getter(function ($value) {
 
 				if ($value instanceof \App\Models\Customer) {
