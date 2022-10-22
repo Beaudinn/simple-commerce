@@ -30,7 +30,7 @@ class EloquentCustomerRepository implements RepositoryContract
 
 	public function find($id): ?Customer
 	{
-		$model = (new $this->model)->find($id);
+		$model = (new $this->model)->withoutGlobalScopes(['current_site'])->find($id);
 
 		if (! $model) {
 			throw new CustomerNotFound("Customer [{$id}] could not be found.");

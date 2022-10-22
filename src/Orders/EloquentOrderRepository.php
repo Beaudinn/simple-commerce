@@ -251,7 +251,7 @@ class EloquentOrderRepository implements RepositoryContract
 
 
 		$model->save();
-		
+
 		if ($creating) {
 
 			event(new CartAfterCreate($model));
