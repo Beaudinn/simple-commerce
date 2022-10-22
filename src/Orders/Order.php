@@ -9,6 +9,7 @@ use DoubleThreeDigital\SimpleCommerce\Contracts\Calculator as CalculatorContract
 use DoubleThreeDigital\SimpleCommerce\Contracts\Coupon as CouponContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Customer as CustomerContract;
 use DoubleThreeDigital\SimpleCommerce\Contracts\Order as Contract;
+use DoubleThreeDigital\SimpleCommerce\Customers\CustomerModel;
 use DoubleThreeDigital\SimpleCommerce\Data\HasData;
 use DoubleThreeDigital\SimpleCommerce\Events\CouponRedeemed;
 use DoubleThreeDigital\SimpleCommerce\Events\OrderPaid as OrderPaidEvent;
@@ -209,7 +210,11 @@ class Order implements Contract
 					return $value->id();
 				}
 
-				if ($value instanceof Model) {
+				if ($value instanceof Customer) {
+					return $value->id;
+				}
+
+				if ($value instanceof CustomerModel) {
 					return $value->id;
 				}
 
@@ -219,6 +224,10 @@ class Order implements Contract
 
 				if ($value instanceof \App\Models\Customer) {
 					return Customer::fresh($value);
+				}
+
+				if (is_string($value) || is_numeric($value)) {
+					return Customer::find($value);
 				}
 
 				return $value;
