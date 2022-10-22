@@ -251,7 +251,7 @@ class EloquentOrderRepository implements RepositoryContract
 
 
 		$model->save();
-		var_dump($model->customer_id, $order->customer() ); die();
+		
 		if ($creating) {
 
 			event(new CartAfterCreate($model));
