@@ -208,6 +208,11 @@ class Order implements Contract
 				if ($value instanceof CustomerContract) {
 					return $value->id();
 				}
+
+				if ($value instanceof Model) {
+					return $value->id;
+				}
+
 				return Customer::find($value);
 			})
 			->getter(function ($value) {
