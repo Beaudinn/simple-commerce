@@ -220,6 +220,7 @@ class EloquentOrderRepository implements RepositoryContract
 
 		$model->billing_company_name = $order->get('billing_company_name');
 		$model->billing_first_name = $order->get('billing_first_name');
+
 		$model->billing_last_name = $order->get('billing_last_name');
 		$model->billing_phone = $order->get('billing_phone');
 		$model->billing_postal_code = $order->get('billing_postal_code');
@@ -284,7 +285,7 @@ class EloquentOrderRepository implements RepositoryContract
 		$order->taxTotal = $model->tax_total;
 		$order->shippingTotal = $model->shipping_total;
 		$order->couponTotal = $model->coupon_total;
-		$order->customer = $model->customer;
+		$order->customer = $model->customer_id ? Customer::find($model->customer_id) : NULL;
 		$order->coupon = $model->coupon ? Coupon::find($model->coupon) : NULL;
 		$order->delivery_at = $model->delivery_at;
 		$order->shipping_method = $model->shipping_method;
