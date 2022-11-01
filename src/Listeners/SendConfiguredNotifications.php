@@ -4,6 +4,7 @@ namespace DoubleThreeDigital\SimpleCommerce\Listeners;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use ReflectionClass;
@@ -60,7 +61,7 @@ class SendConfiguredNotifications implements ShouldQueue
     protected function getNotifiables(array $config, $notification, $event): ?array
     {
 
-
+		Log::info(print_r($event->order, true));
         if ($config['to'] === 'customer') {
             if ($customer = $event->order->customer()) {
                 return [
