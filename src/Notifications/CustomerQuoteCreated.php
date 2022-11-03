@@ -61,7 +61,7 @@ class CustomerQuoteCreated extends Notification
 	    $link_show = MagicLink::create($action)->siteUrl( $this->order->site());
 
         return (new MailMessage)
-	        ->from('info@drukhoek.nl', $this->order->site()->attributes()['name'])
+	        ->from('studio@print4sign.nl', $this->order->site()->attributes()['name'])
 	        ->bcc('verkoop@xpressing.nl')
 	        ->subject(trans('strings.notification.quote.created.subject', ['order_number' => $this->order->orderNumber()]))
 	        ->view('simple-commerce::emails.customer_quote_created', [

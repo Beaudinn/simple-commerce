@@ -48,7 +48,7 @@ class CustomerOrderApproved extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-	        ->from('info@drukhoek.nl', $this->order->site()->attributes()['name'])
+	        ->from('studio@print4sign.nl', $this->order->site()->attributes()['name'])
 	        ->bcc('verkoop@xpressing.nl')
 	        ->subject(trans('strings.notification.order.confirmation.subject', ['order_number' => $this->order->orderNumber()]))
 	        ->view('simple-commerce::emails.customer_order_approved', [

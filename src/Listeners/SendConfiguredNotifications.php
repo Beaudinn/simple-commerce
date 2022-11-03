@@ -61,7 +61,6 @@ class SendConfiguredNotifications implements ShouldQueue
     protected function getNotifiables(array $config, $notification, $event): ?array
     {
 
-		Log::error(print_r($event->order, true));
         if ($config['to'] === 'customer') {
             if ($customer = $event->order->customer()) {
                 return [
