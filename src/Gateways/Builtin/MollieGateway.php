@@ -282,7 +282,7 @@ class MollieGateway extends BaseGateway implements Gateway
 			if (isset(SimpleCommerce::orderDriver()['model'])) {
 				$order = (new (SimpleCommerce::orderDriver()['model']))
 					->query()
-					->where('gateway->mollie->id', $mollieId)
+					->where('gateway->data->id', $mollieId)
 					->first();
 
 				if (! $order) {
