@@ -25,7 +25,7 @@ use Statamic\Facades\Site;
 use Statamic\Statamic;
 
 class MollieGateway extends BaseGateway implements Gateway
-{
+ {
 	protected $mollie;
 
 	public function name(): string
@@ -284,6 +284,10 @@ class MollieGateway extends BaseGateway implements Gateway
 					->query()
 					->where('data->mollie->id', $mollieId)
 					->first();
+
+				if (! $order) {
+					throw new OrderNotFound("Order model related to Mollie transaction [{$mollieId}] could not be found.");
+				}
 
 				$order = OrderFacade::find($order->id, true);
 			}
