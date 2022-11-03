@@ -43,7 +43,7 @@ abstract class OrderState extends State
 			->allowTransition([Approved::class, Pending::class], Canceled::class)
 			->allowTransition([Pending::class, Canceled::class, Quote::class], Approved::class, ToApprovedTransition::class)
 			->allowTransition(Approved::class, Shipped::class)
-			->allowTransition(Approved::class,  Delivered::class);
+			->allowTransition([Approved::class,Shipped::class],  Delivered::class);
 	}
 }
 
