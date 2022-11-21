@@ -62,7 +62,7 @@ class CustomerQuoteCreated extends Notification
 
         return (new MailMessage)
 	        ->from('studio@print4sign.nl', $this->order->site()->attributes()['name'])
-	        ->bcc('verkoop@xpressing.nl')
+	        ->bcc('ops@print4sign.nl')
 	        ->subject(trans('strings.notification.quote.created.subject', ['order_number' => $this->order->orderNumber()]))
 	        ->view('simple-commerce::emails.customer_quote_created', [
                 'order' => $this->order,

@@ -10,13 +10,13 @@ trait CartDriver
 {
     protected function getCartKey(): string
     {
-        return $this->resolve()->getCartKey();
+        return $this->resolver()->getCartKey();
     }
 
     public function getCart(): Order
     {
         try {
-            return $this->resolve()->getCart();
+            return $this->resolver()->getCart();
         } catch (OrderNotFound $e) {
             $this->makeCart();
 
@@ -27,7 +27,7 @@ trait CartDriver
     public function hasCart(): bool
     {
         try {
-            return $this->resolve()->hasCart();
+            return $this->resolver()->hasCart();
         } catch (OrderNotFound $e) {
             return false;
         }
@@ -35,19 +35,19 @@ trait CartDriver
 
 	public function setCart($cart): Order
 	{
-		return $this->resolve()->setCart($cart);
+		return $this->resolver()->setCart($cart);
 	}
 
     protected function makeCart(): Order
     {
-        return $this->resolve()->makeCart();
+        return $this->resolver()->makeCart();
     }
 
 	public function getCartCount(): int
 	{
 		try {
 
-			return $this->resolve()->getCartCount();
+			return $this->resolver()->getCartCount();
 		} catch (\Exception $e) {
 
 			return 0;
@@ -56,20 +56,20 @@ trait CartDriver
 
     protected function getOrMakeCart(): Order
     {
-        return $this->resolve()->getOrMakeCart();
+        return $this->resolver()->getOrMakeCart();
     }
 
     protected function forgetCart()
     {
-        return $this->resolve()->forgetCart();
+        return $this->resolver()->forgetCart();
     }
 
-    protected function resolve()
+    protected function resolver()
     {
         if (request()->hasSession() && $checkoutSuccess = request()->session()->get('simple-commerce.checkout.success')) {
             // Has success expired? Use normal cart driver.
             //if ($checkoutSuccess['expiry']->isPast()) {
-            //    return resolve(CartDriverContract::class);
+            //    return resolver(CartDriverContract::class);
             //}
 
             // Is the user on the redirect URL? If not, use normal cart driver.

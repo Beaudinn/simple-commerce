@@ -46,7 +46,7 @@ class CustomerOrderShipped extends Notification
     {
         return (new MailMessage)
             ->subject(config('app.name') . ': Order Confirmation')
-	        ->bcc('verkoop@xpressing.nl')
+	        ->bcc('ops@print4sign.nl')
             ->markdown('simple-commerce::emails.customer_order_shipped', [
                 'order' => $this->order,
             ]);
