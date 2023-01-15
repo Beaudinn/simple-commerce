@@ -282,7 +282,7 @@ class Overview
 					    ->whereMonth('created_at', Carbon::now()->month)
 					    ->where('locale', Site::selected()->handle())
 					    ->whereHas('orders', function($q){
-						    $q->where('total_purchase_price', '>=', 0)->whereNotNull('total_purchase_price');
+						    $q->where('total_purchase_price', '>', 0);
 					    })
 					    ->withSum('orders', 'total_purchase_price')->get();
 
