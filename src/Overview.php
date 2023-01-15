@@ -277,7 +277,7 @@ class Overview
 
 				    $orderModel = new (\DoubleThreeDigital\SimpleCommerce\SimpleCommerce::orderDriver()['model']);
 
-				    $query = $orderModel::without('customer')->with('orders')
+				    $query = $orderModel::without('customer'
 					    ->whereState('state', [Approved::class, Shipped::class, Delivered::class])
 					    ->whereMonth('created_at', Carbon::now()->month)
 					    ->where('locale', Site::selected()->handle())
@@ -291,7 +291,7 @@ class Overview
 				    });
 
 				    $profit = $query->sum(function ($record){
-				    	if(!$record->orders_sum_total_purchase_pric)
+				    	if(!$record->orders_sum_total_purchase_price)
 				    		return 0;
 
 					    return $record->grand_total -  $record->orders_sum_total_purchase_price;
