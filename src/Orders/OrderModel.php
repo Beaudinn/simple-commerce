@@ -4,10 +4,10 @@ namespace DoubleThreeDigital\SimpleCommerce\Orders;
 
 use App\Models\Customer;
 use App\Models\Orderable;
-use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
-use DoubleThreeDigital\SimpleCommerce\Orders\States\Pending;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Approved;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\OrderState;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Pending;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Quote;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,56 +17,74 @@ use Webhoek\P4sSupplier\SupplierOrder\SupplierOrderModel;
 
 class OrderModel extends Model
 {
-    use HasFactory;
+	use HasFactory;
 	use HasStates;
 
-    protected $table = 'orders';
+	protected $table = 'orders';
 
-    protected $guarded = [];
+	protected $guarded = [];
 
-    protected $casts = [
-	    'state' => OrderState::class,
-        'is_paid' => 'boolean',
-        'is_shipped' => 'boolean',
-        'is_refunded' => 'boolean',
-        'items' => 'json',
-	    'upsells' => 'json',
-        'grand_total' => 'integer',
-	    'rush_total' => 'integer',
-        'items_total' => 'integer',
-	    'upsell_total' => 'integer',
-        'tax_total' => 'integer',
-        'shipping_total' => 'integer',
-        'coupon_total' => 'integer',
-        'use_shipping_address_for_billing' => 'boolean',
-        'gateway' => 'json',
-	    'invoice' => 'json',
-        'data' => 'array',
-        'paid_date' => 'datetime',
-	    'ordered_at' => 'datetime',
-	    'delivery_at' => 'datetime',
-	    'agent_client' => 'json',
-	    'agent_os' => 'json',
-    ];
+	protected $casts = [
+		'state' => OrderState::class,
+		'is_paid' => 'boolean',
+		'is_shipped' => 'boolean',
+		'is_refunded' => 'boolean',
+		'items' => 'json',
+		'upsells' => 'json',
+		'grand_total' => 'integer',
+		'rush_total' => 'integer',
+		'items_total' => 'integer',
+		'upsell_total' => 'integer',
+		'tax_total' => 'integer',
+		'shipping_total' => 'integer',
+		'coupon_total' => 'integer',
+		'use_shipping_address_for_billing' => 'boolean',
+		'gateway' => 'json',
+		'invoice' => 'json',
+		'data' => 'array',
+		'paid_date' => 'datetime',
+		'ordered_at' => 'datetime',
+		'delivery_at' => 'datetime',
+		'agent_client' => 'json',
+		'agent_os' => 'json',
+	];
 
-    protected $appends = [
-    	'title',
-        'order_number',
-	    'published',
-    ];
+	protected $appends = [
+		'title',
+		'order_number',
+		'published',
+		'profit',
+	];
 
-    protected $with = [
-    	'customer'
-    ];
+	protected $with = [
+		'customer',
+	];
 
-    function readOnly(){
+	public function getProfitAttribute()
+	{
+		if ($this->state->equals(Draft::class)) {
+			return 0;
+		}
 
-    	if($this->state->equals(Draft::class) || $this->state->equals(Quote::class) || $this->state->equals(Pending::class) || $this->state->equals(Approved::class)){
-    		return false;
-	    }
+		$costs = $this->orders->filter(fn($orderItem) => $orderItem->total_purchase_price)->sum(function ($orderItem) {
+			return $orderItem->total_purchase_price;
+		}, 0);
+		if (!$costs)
+			return 0;
 
-    	return true;
-    }
+
+		return $this->grand_total - $costs;
+	}
+
+	function readOnly()
+	{
+
+		if ($this->state->equals(Draft::class) || $this->state->equals(Quote::class) || $this->state->equals(Pending::class) || $this->state->equals(Approved::class)) {
+			return false;
+		}
+
+		return true;
+	}
 
 	public function scopeRunwayListing($query)
 	{
@@ -84,7 +102,7 @@ class OrderModel extends Model
 			->orWhere('billing_company_name', 'LIKE', "%{$searchTerm}%")
 			->orWhere('billing_first_name', 'LIKE', "%{$searchTerm}%")
 			->orWhere('billing_last_name', 'LIKE', "%{$searchTerm}%")
-			->orWhereHas('orders', function ($query) use($searchTerm) {
+			->orWhereHas('orders', function ($query) use ($searchTerm) {
 				$query->where('order_number', 'LIKE', "%{$searchTerm}%");
 			});
 	}
@@ -99,23 +117,23 @@ class OrderModel extends Model
 	//	$query->where('site', Site::selected()->handle());
 	//}
 
-    //protected function items(): Attribute
-    //{
+	//protected function items(): Attribute
+	//{
 	//    return Attribute::make(
 	//	    get: fn ($value) => collect(json_decode($value ?? [], true))->filter(function ($item){
 	//		    return $item['type'] !== 'UPSELL';
 	//	    })->toArray()
 	//    );
-    //}
+	//}
 	//
-    //protected function upsells(): Attribute
-    //{
+	//protected function upsells(): Attribute
+	//{
 	//    return Attribute::make(
 	//	    get: fn ($value,$attributes) => collect(json_decode($attributes['items'] ?? [], true))->filter(function ($item){
 	//		    return $item['type'] == 'UPSELL';
 	//	    })->toArray()
 	//    );
-    //}
+	//}
 
 	public function getTitleAttribute()
 	{
@@ -142,10 +160,10 @@ class OrderModel extends Model
 	}
 
 
-    public function customer(): BelongsTo
-    {
-        return $this->belongsTo(Customer::class)->withoutGlobalScopes(['current_site']);
-    }
+	public function customer(): BelongsTo
+	{
+		return $this->belongsTo(Customer::class)->withoutGlobalScopes(['current_site']);
+	}
 
 
 
@@ -162,7 +180,8 @@ class OrderModel extends Model
 	//	return $this->morphMany(Orderable::class, 'orderable');
 	//}
 
-	public function orders(){
+	public function orders()
+	{
 
 		return $this->hasMany(SupplierOrderModel::class, 'order_id');
 	}
