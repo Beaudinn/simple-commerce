@@ -2,6 +2,7 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\ProductTypes;
 
+use App\Models\ShippingMethods;
 use DoubleThreeDigital\SimpleCommerce\Contracts\ProductType;
 use DoubleThreeDigital\SimpleCommerce\Facades\Product as ProductAPI;
 
@@ -24,6 +25,24 @@ class SimpleProduct extends BaseProductType implements ProductType
 
 		$lineItem['total'] = ($productPrice * $lineItem['quantity']);
 
+
+		$deliveries = collect($product->get('delivery_options'))->map(function ($delivery_option) use($lineItem){
+			$deliveries =  ShippingMethods::whereIn('id', $delivery_option['shipping_methods'])->get()->map(function ($method) use($delivery_option,$lineItem){
+				$methodData = $method->simpleArray();
+				if(!isset($delivery_option['delivery_date'])) {
+					$methodData['delivery_date'] = now()->addWeekdays(($delivery_option['production_hours'] / 24))->startOfDay()->format('Y-m-d');
+				}
+				return $methodData;
+			});
+
+			return  $deliveries;
+			return [$key => $deliveries];
+		})->flatten(1)->toArray();
+		//$deliveries =  ShippingMethods::all()->mapWithKeys(function ($method){
+		//	return [$method->code => $method->overwritableArray()];
+		//});
+
+		$data['deliveries'] = array_merge($deliveries, $data['deliveries']);
 
 		return [
 			'data' => $data,

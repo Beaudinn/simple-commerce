@@ -7,7 +7,14 @@ use Carbon\CarbonPeriod;
 use DoubleThreeDigital\SimpleCommerce\Facades\Customer;
 use DoubleThreeDigital\SimpleCommerce\Facades\Order;
 use DoubleThreeDigital\SimpleCommerce\Facades\Product;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Approved;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Delivered;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Pending;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Quote;
+use DoubleThreeDigital\SimpleCommerce\Orders\States\Shipped;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
@@ -49,9 +56,9 @@ class Overview
                     if (isset(SimpleCommerce::orderDriver()['collection'])) {
                         $query = Collection::find(SimpleCommerce::orderDriver()['collection'])
                             ->queryEntries()
-                            ->where('is_paid', true)
+	                        ->whereState('state', [Approved::class, Shipped::class, Delivered::class])
 	                        ->where('locale', Site::selected()->handle())
-                            ->whereDate('paid_date', $date->format('d-m-Y'))
+                            ->whereDate('created_at', $date->format('d-m-Y'))
                             ->get();
                     }
 
@@ -59,9 +66,9 @@ class Overview
                         $orderModel = new (SimpleCommerce::orderDriver()['model']);
 
                         $query = $orderModel::query()
-                            ->where('is_paid', true)
+	                        ->whereState('state', [Approved::class, Shipped::class, Delivered::class])
 	                        ->where('locale', Site::selected()->handle())
-                            ->whereDate('paid_date', $date)
+                            ->whereDate('created_at', $date)
                             ->get();
                     }
 
@@ -83,8 +90,8 @@ class Overview
                 if (isset(SimpleCommerce::orderDriver()['collection'])) {
                     $query = Collection::find(SimpleCommerce::orderDriver()['collection'])
                         ->queryEntries()
-                        ->where('is_paid', true)
-                        ->orderBy('paid_date', 'desc')
+	                    ->whereState('state', [Pending::class, Approved::class, Shipped::class, Delivered::class])
+                        ->orderBy('created_at', 'desc')
                         ->limit(5)
                         ->get()
                         ->map(function ($order) {
@@ -108,9 +115,8 @@ class Overview
 
                     $query = $orderModel::query()
                         ->where('locale', Site::selected()->handle())
-	                    ->where('is_paid', true)
-                        ->orderBy('paid_date', 'desc')
-                        ->orderBy('data->paid_date', 'desc')
+	                    ->whereState('state', [Pending::class, Approved::class, Shipped::class, Delivered::class])
+	                    ->orderBy('created_at', 'desc')
                         ->limit(5)
                         ->get()
                         ->map(function ($order) {
@@ -172,7 +178,7 @@ class Overview
                     $query = $customerModel::query()
                         ->whereHas('orders', function ($query) {
 	                        $query->where('locale', Site::selected()->handle());
-                            $query->where('is_paid', true);
+                            $query ->whereState('state', [Pending::class, Approved::class, Shipped::class, Delivered::class]);
                         })
                         ->withCount('orders')
                         ->orderBy('orders_count', 'desc')
@@ -256,5 +262,48 @@ class Overview
                 return null;
             },
         );
+
+
+        //Turnover & profit
+	    static::registerWidget(
+		    'turnover-profit',
+		    [
+			    'name' => 'Turnover & profit',
+			    'component' => 'overview-turnover-profit',
+		    ],
+		    function (Request $request) {
+
+			    if (isset(SimpleCommerce::orderDriver()['model'])) {
+
+				    $orderModel = new (\DoubleThreeDigital\SimpleCommerce\SimpleCommerce::orderDriver()['model']);
+
+				    $query = $orderModel::without('customer')
+					    ->whereState('state', [Approved::class, Shipped::class, Delivered::class])
+					    ->whereMonth('created_at', Carbon::now()->month)
+					    ->where('locale', Site::selected()->handle())
+					    ->whereHas('orders', function($q){
+						    $q->where('total_purchase_price', '>=', 0)->whereNotNull('total_purchase_price');
+					    })
+					    ->withSum('orders', 'total_purchase_price')->get();
+
+				    $turnover = $query->sum(function ($record){
+					    return $record->grand_total;
+				    });
+
+				    $profit = $query->sum(function ($record){
+					    return $record->grand_total -  $record->orders_sum_total_purchase_price;
+				    });
+
+				    return [
+				    	'current_month' =>  Carbon::now()->format('F'),
+				    	'order_count' => $query->count(),
+					    'turnover' => Currency::parse($turnover, Site::current()),
+				    	'profit' => Currency::parse($profit, Site::current()),
+				    ];
+			    }
+
+			    return null;
+		    },
+	    );
     }
 }

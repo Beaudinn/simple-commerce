@@ -8,6 +8,7 @@ use DoubleThreeDigital\SimpleCommerce\Orders\States\Approved;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Spatie\ModelStates\Transition;
+use Webhoek\P4sWefact\Processors\InvoiceProcessor;
 
 class ToApprovedTransition extends Transition
 {
@@ -44,6 +45,8 @@ class ToApprovedTransition extends Transition
 		$this->order->resource()->save();
 
 		$this->order = $this->order->fresh();
+
+		InvoiceProcessor::generate($this->order, ['status' => 4, 'send' => true]);
 
 
 		return $this->order->resource();

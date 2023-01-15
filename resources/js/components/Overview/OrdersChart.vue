@@ -63,7 +63,7 @@ export default {
         labels: [],
         datasets: [
           {
-            label: "Paid Orders",
+            label: "Ordered orders",
             backgroundColor: "#257fcc",
             data: [],
           },

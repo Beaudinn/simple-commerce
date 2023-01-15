@@ -73,6 +73,22 @@ class OrderModel extends Model
 		return $query->whereNot('grand_total', 0);
 	}
 
+	public function scopeRunwaySearch($query, $searchTerm)
+	{
+		return $query->where('order_number', 'LIKE', "%{$searchTerm}%")
+			->orWhere('reference', 'LIKE', "%{$searchTerm}%")
+			->orWhere('reference', 'LIKE', "%{$searchTerm}%")
+			->orWhere('shipping_company_name', 'LIKE', "%{$searchTerm}%")
+			->orWhere('shipping_first_name', 'LIKE', "%{$searchTerm}%")
+			->orWhere('shipping_last_name', 'LIKE', "%{$searchTerm}%")
+			->orWhere('billing_company_name', 'LIKE', "%{$searchTerm}%")
+			->orWhere('billing_first_name', 'LIKE', "%{$searchTerm}%")
+			->orWhere('billing_last_name', 'LIKE', "%{$searchTerm}%")
+			->orWhereHas('orders', function ($query) use($searchTerm) {
+				$query->where('order_number', 'LIKE', "%{$searchTerm}%");
+			});
+	}
+
 	//public function scopeRunwayListing($query)
 	//{
 	//	return $query->where('is_paid', true);

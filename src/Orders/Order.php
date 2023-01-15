@@ -258,8 +258,7 @@ class Order implements Contract
 	public function rushprices()
 	{
 		$prices  = $this->lineItems()->map(function ($item) {
-
-
+			//var_dump($item->rush_prices()->count());
 			return array_values($item->rush_prices()->toArray());
 		})->flatten(1);
 
@@ -277,6 +276,7 @@ class Order implements Contract
 			//	return $lineItem->product && $lineItem->product->purchasableType() == ProductType::PROBO();
 			//})->count();
 			//return count($item) == (count($this->lineItems()) - ($proboItemCount -1));
+			//var_dump( count($item).'--'.count($this->lineItems()));
 			return count($item) == count($this->lineItems());
 		});
 
@@ -334,6 +334,7 @@ class Order implements Contract
 			'postal_code' => $this->get('billing_postal_code'),
 			'city' => $this->get('billing_city'),
 			'phone' => $this->get('billing_phone'),
+			'email' => $this->get('billing_email'),
 			'country' => $this->get('billing_country'),
 		]);
 	}
@@ -350,6 +351,7 @@ class Order implements Contract
 			'postal_code' => $this->get('shipping_postal_code'),
 			'city' => $this->get('shipping_city'),
 			'phone' => $this->get('shipping_phone'),
+			'email' => $this->get('shipping_email'),
 			'country' => $this->get('shipping_country'),
 		]);
 	}
@@ -434,10 +436,17 @@ class Order implements Contract
 			$proboItemCount = $this->lineItems()->filter(function ($lineItem){
 				return $lineItem->product && $lineItem->product->purchasableType() == ProductType::PROBO();
 			})->count();
-			return count($item) == (count($this->lineItems()) - ($proboItemCount -1));
+
+			if($proboItemCount){
+				return count($item) == (count($this->lineItems()) - ($proboItemCount -1));
+			}else{
+				return count($item) == (count($this->lineItems()));
+			}
+
 		});
 
 		if(!count($deliveriesOriginal)){
+
 			return  [];
 		}
 

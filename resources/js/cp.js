@@ -24,6 +24,7 @@ import OverviewOrdersChart from './components/Overview/OrdersChart.vue'
 import Overview from './components/Overview/Overview.vue'
 import OverviewRecentOrders from './components/Overview/RecentOrders.vue'
 import OverviewTopCustomers from './components/Overview/TopCustomers.vue'
+import OverviewTurnoverProfit from './components/Overview/TurnoverProfit.vue'
 
 Statamic.$components.register('overview-configure', OverviewConfigure)
 Statamic.$components.register('overview-low-stock-products', OverviewLowStockProducts)
@@ -31,6 +32,8 @@ Statamic.$components.register('overview-orders-chart', OverviewOrdersChart)
 Statamic.$components.register('overview', Overview)
 Statamic.$components.register('overview-recent-orders', OverviewRecentOrders)
 Statamic.$components.register('overview-top-customers', OverviewTopCustomers)
+Statamic.$components.register('overview-turnover-profit', OverviewTurnoverProfit)
+
 
 // Hide 'Collections' active state if Simple Commerce nav item is active
 

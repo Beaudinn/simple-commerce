@@ -211,6 +211,7 @@ class ProductVariantsFieldtype extends Fieldtype
                     'display'  => 'Values',
                     'width'    => 50,
                     'validate' => 'required',
+
                 ],
             ],
         ];
@@ -240,6 +241,7 @@ class ProductVariantsFieldtype extends Fieldtype
                     'read_only' => true,
                     'validate'  => 'required',
                     'width'     => 50,
+	                'localizable' => true,
                 ],
             ],
             [
@@ -251,6 +253,7 @@ class ProductVariantsFieldtype extends Fieldtype
                     'display'   => 'Price',
                     'validate'  => 'required',
                     'width'     => 50,
+	                'localizable' => true,
                 ],
             ],
         ], $this->config('option_fields', []));

@@ -61,6 +61,40 @@ class SendConfiguredNotifications implements ShouldQueue
     protected function getNotifiables(array $config, $notification, $event): ?array
     {
 
+	    if ($config['to'] === 'customer_billing') {
+		    if ($customer = $event->order->billingAddress()) {
+			    if($customer->email) {
+				    return [
+					    ['channel' => 'mail', 'route' => $customer->email],
+				    ];
+			    }
+		    }
+
+		    if ($customer = $event->order->customer()) {
+			    return [
+				    ['channel' => 'mail', 'route' => $customer->email()],
+			    ];
+		    }
+
+	    }
+
+	    if ($config['to'] === 'customer_shipping') {
+		    if ($customer = $event->order->shippingAddress()) {
+		    	if($customer->email) {
+				    return [
+					    ['channel' => 'mail', 'route' => $customer->email],
+				    ];
+			    }
+		    }
+
+		    if ($customer = $event->order->customer()) {
+			    return [
+				    ['channel' => 'mail', 'route' => $customer->email()],
+			    ];
+		    }
+
+	    }
+
         if ($config['to'] === 'customer') {
             if ($customer = $event->order->customer()) {
                 return [
