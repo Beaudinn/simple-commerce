@@ -287,14 +287,14 @@ class Overview
 					//    $q->where('total_purchase_price', '>', 0);
 				    //})
 				    $turnover = $query->sum(function ($record){
-					    return $record->grand_total;
+					    return $record->total;
 				    });
 
 				    $profit = $query->sum(function ($record){
 				    	if(!$record->orders_sum_total_purchase_price)
 				    		return 0;
 
-					    return $record->grand_total -  $record->orders_sum_total_purchase_price;
+					    return $record->total -  $record->orders_sum_total_purchase_price;
 				    });
 
 				    return [

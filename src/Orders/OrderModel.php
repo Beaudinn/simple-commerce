@@ -54,11 +54,19 @@ class OrderModel extends Model
 		'order_number',
 		'published',
 		'profit',
+		'total'
 	];
 
 	protected $with = [
 		'customer',
 	];
+
+	public function getTotalAttribute()
+	{
+
+		return $this->items_total + $this->upsell_total + $this->shipping_total + $this->rush_total - $this->coupon_total ;
+	}
+
 
 	public function getProfitAttribute()
 	{
@@ -73,7 +81,7 @@ class OrderModel extends Model
 			return 0;
 
 
-		return $this->grand_total - $costs;
+		return $this->total - $costs;
 	}
 
 	function readOnly()
