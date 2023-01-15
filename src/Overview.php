@@ -277,7 +277,7 @@ class Overview
 
 				    $orderModel = new (\DoubleThreeDigital\SimpleCommerce\SimpleCommerce::orderDriver()['model']);
 
-				    $query = $orderModel::without('customer'
+				    $query = $orderModel::without('customer')
 					    ->whereState('state', [Approved::class, Shipped::class, Delivered::class])
 					    ->whereMonth('created_at', Carbon::now()->month)
 					    ->where('locale', Site::selected()->handle())
