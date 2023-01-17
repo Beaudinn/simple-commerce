@@ -22,7 +22,6 @@ class OrderModel extends Model
 
 	protected $table = 'orders';
 
-	protected $guarded = [];
 
 	protected $casts = [
 		'state' => OrderState::class,
@@ -60,6 +59,12 @@ class OrderModel extends Model
 	protected $with = [
 		'customer',
 	];
+
+	public static function boot()
+	{
+		parent::boot();
+
+	}
 
 	public function getTotalAttribute()
 	{
