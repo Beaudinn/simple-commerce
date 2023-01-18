@@ -22,6 +22,7 @@ class OrderModel extends Model
 
 	protected $table = 'orders';
 
+	protected $guarded = [];
 
 	protected $casts = [
 		'state' => OrderState::class,
