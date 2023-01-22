@@ -309,12 +309,19 @@ class Order implements Contract
 				$delivery_date_formatted = ucfirst($deliver_date->translatedFormat('l d  F'));// . ' - ' . Date::now()->hour . ' --- ' . $hours;
 			}
 
+			$rush_margin = Site::current()->attributes()['rush_margin']; // 10
+			if(!$total){
+				$rush_price = 0;
+			}else{
+				$rush_price = (float)  number_format((float)$total + (($total / 100) * $rush_margin), 2, '.', '');
+			}
+
 			return (object)[
 				'delivery_date_formatted' => $delivery_date_formatted,
 				'delivery_date' => Carbon::parse($prices->first()['delivery_date']),
 				'shipping_date' => Carbon::parse($prices->first()['shipping_date']),
 				'production_hours' => $prices->first()['production_hours'],
-				'price' => floatval($total),
+				'price' => floatval($rush_price),
 				'product_count' => count($prices),
 			];
 		});
