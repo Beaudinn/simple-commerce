@@ -46,11 +46,15 @@ class ToApprovedTransition extends Transition
 
 		$this->order = $this->order->fresh();
 
-		if($this->order->isPaid() && !$this->order->get('invoice')){
-			InvoiceProcessor::generate($this->order, ['status' => 4, 'send' => true]);
-		}elseif(!$this->order->get('invoice')){
-			InvoiceProcessor::generate($this->order, ['status' => 2, 'send' => true]);
+		if($this->values['create_invoice'] && !$this->order->get('invoice')){
+			InvoiceProcessor::generate($this->order, ['status' => $this->values['status'], 'send' => $this->values['send']]);
 		}
+
+		//if($this->order->isPaid() && !$this->order->get('invoice')){
+		//	InvoiceProcessor::generate($this->order, ['status' => 4, 'send' => true]);
+		//}elseif(!$this->order->get('invoice')){
+		//	InvoiceProcessor::generate($this->order, ['status' => 2, 'send' => true]);
+		//}
 
 
 		return $this->order->resource();

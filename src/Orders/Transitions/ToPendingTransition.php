@@ -52,13 +52,6 @@ class ToPendingTransition extends Transition
 
 		return $orderModel;
 	}
-
-
-	protected function createProboOrder(){
-
-
-
-	}
 }
 
 

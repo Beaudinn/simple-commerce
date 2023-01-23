@@ -46,7 +46,7 @@ class Approved extends OrderState
 		return false;
 	}
 
-	public function blueprint(OrderModel $order = null)
+	public function blueprint(OrderModel $order = NULL)
 	{
 		return StatamicBlueprint::make()->setContents([
 				'sections' => [
@@ -73,9 +73,59 @@ class Approved extends OrderState
 									'validate' => 'required',
 								],
 							],
+							[
+								'handle' => 'invoice_section',
+								'field' => [
+									'type' => 'section',
+									'width' => 100,
+									'display' => __('Invoice'),
+								],
+							],
+							[
+								'handle' => 'create_invoice',
+								'field' => [
+									'type' => 'toggle',
+									'width' => 33,
+									'default' => true,
+									'display' => __('Create invoice'),
+									'validate' => 'required',
+								],
+							],
+							[
+								'handle' => 'status',
+								'field' => [
+									'display' => 'Status',
+									'type' => 'select',
+									'max_items' => 1,
+									'width' => 33,
+									'options' => [
+										0 => 'Concept',
+										2 => 'Wacht op betaling',
+										3 => 'Deels betaald',
+										4 => 'Betaald',
+										8 => 'Creditfactuur',
+									],
+									'validate' => 'required',
+									'if' => [
+										'create_invoice' => 'is true',
+									],
+								],
+							],
+							[
+								'handle' => 'send',
+								'field' => [
+									'display' => 'Send invoice mail to customer',
+									'type' => 'toggle',
+									'default' => true,
+									'width' => 33,
+									'if' => [
+										'status' => 'contains_any 2, 3, 8',
+									],
+								],
+							],
 						],
-					]
-				]
+					],
+				],
 			]
 		);
 	}
