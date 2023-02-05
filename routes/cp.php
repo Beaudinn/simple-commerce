@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('simple-commerce')->name('simple-commerce.')->group(function () {
     Route::get('/overview', [OverviewController::class, 'index'])->name('overview');
+	Route::post('/overview/turnover-profit', [OverviewController::class, 'turnoverProfit'])->name('turnover-profit');
 
 	Route::post('/state/edit', [StateController::class, 'edit'])->name('state.edit');
 	Route::post('/state/update', [StateController::class, 'update'])->name('state.update');

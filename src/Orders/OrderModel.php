@@ -29,8 +29,10 @@ class OrderModel extends Model
 		'is_paid' => 'boolean',
 		'is_shipped' => 'boolean',
 		'is_refunded' => 'boolean',
-		'items' => 'json',
-		'upsells' => 'json',
+		'items' => 'array',
+		'upsells' => 'array',
+		'total' => 'integer',
+		'profit' => 'integer',
 		'grand_total' => 'integer',
 		'rush_total' => 'integer',
 		'items_total' => 'integer',
@@ -66,6 +68,7 @@ class OrderModel extends Model
 		parent::boot();
 
 	}
+
 
 	public function getTotalAttribute()
 	{
@@ -108,6 +111,7 @@ class OrderModel extends Model
 	public function scopeRunwaySearch($query, $searchTerm)
 	{
 		return $query->where('order_number', 'LIKE', "%{$searchTerm}%")
+			->orWhere('id', 'LIKE', "%{$searchTerm}%")
 			->orWhere('reference', 'LIKE', "%{$searchTerm}%")
 			->orWhere('reference', 'LIKE', "%{$searchTerm}%")
 			->orWhere('shipping_company_name', 'LIKE', "%{$searchTerm}%")
@@ -116,6 +120,7 @@ class OrderModel extends Model
 			->orWhere('billing_company_name', 'LIKE', "%{$searchTerm}%")
 			->orWhere('billing_first_name', 'LIKE', "%{$searchTerm}%")
 			->orWhere('billing_last_name', 'LIKE', "%{$searchTerm}%")
+			->orWhere('gateway->data->id', 'LIKE', "%{$searchTerm}%")
 			->orWhereHas('orders', function ($query) use ($searchTerm) {
 				$query->where('order_number', 'LIKE', "%{$searchTerm}%");
 			});

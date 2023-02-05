@@ -273,37 +273,10 @@ class Overview
 		    ],
 		    function (Request $request) {
 
-			    if (isset(SimpleCommerce::orderDriver()['model'])) {
 
-				    $orderModel = new (\DoubleThreeDigital\SimpleCommerce\SimpleCommerce::orderDriver()['model']);
-
-				    $query = $orderModel::without('customer')
-					    ->whereState('state', [Approved::class, Shipped::class, Delivered::class])
-					    ->whereMonth('created_at', Carbon::now()->month)
-					    ->where('locale', Site::selected()->handle())
-					    ->withSum('orders', 'total_purchase_price')->get();
-
-				    //->whereHas('orders', function($q){
-					//    $q->where('total_purchase_price', '>', 0);
-				    //})
-				    $turnover = $query->sum(function ($record){
-					    return $record->total;
-				    });
-
-				    $profit = $query->sum(function ($record){
-				    	if(!$record->orders_sum_total_purchase_price)
-				    		return 0;
-
-					    return $record->total -  $record->orders_sum_total_purchase_price;
-				    });
-
-				    return [
-				    	'current_month' =>  Carbon::now()->format('F'),
-				    	'order_count' => $query->count(),
-					    'turnover' => Currency::parse($turnover, Site::current()),
-				    	'profit' => Currency::parse($profit, Site::current()),
-				    ];
-			    }
+			    return [
+				    'fetch_route' => route('statamic.cp.simple-commerce.turnover-profit'),
+			    ];
 
 			    return null;
 		    },

@@ -2,6 +2,7 @@
 
 namespace DoubleThreeDigital\SimpleCommerce\Fieldtypes;
 
+use App\Gateways\MollieGateway;
 use DoubleThreeDigital\SimpleCommerce\Actions\RefundAction;
 use DoubleThreeDigital\SimpleCommerce\Facades\Gateway;
 use DoubleThreeDigital\SimpleCommerce\SimpleCommerce;
@@ -110,6 +111,10 @@ class GatewayFieldtype extends Fieldtype
 
 		if (! $gateway) {
 			return null;
+		}
+
+		if ($value['use'] == \DoubleThreeDigital\SimpleCommerce\Gateways\Builtin\MollieGateway::class) {
+			return  isset($value['data'], $value['data']['id']) ? $value['data']['id'] : 'Mollie';
 		}
 
 		return $gateway['name'];
