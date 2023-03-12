@@ -105,7 +105,7 @@ class Approved extends OrderState
 										4 => 'Betaald',
 										8 => 'Creditfactuur',
 									],
-									'validate' => 'required',
+									'validate' => 'required_if:create_invoice,true',
 									'if' => [
 										'create_invoice' => 'is true',
 									],
