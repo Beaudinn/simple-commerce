@@ -110,6 +110,7 @@ class OrderModel extends Model
 
 	public function scopeRunwaySearch($query, $searchTerm)
 	{
+
 		return $query->where('order_number', 'LIKE', "%{$searchTerm}%")
 			->orWhere('id', 'LIKE', "%{$searchTerm}%")
 			->orWhere('reference', 'LIKE', "%{$searchTerm}%")
