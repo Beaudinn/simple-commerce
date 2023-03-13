@@ -47,6 +47,20 @@ class CustomerModel extends Model
         return $this->hasMany(OrderModel::class, 'customer_id');
     }
 
+
+	public function scopeRunwaySearch($query, $searchTerm)
+	{
+		return $query->where('email', 'LIKE', "%{$searchTerm}%")
+			->orWhere('id', 'LIKE', "%{$searchTerm}%")
+			->orWhere('company_name', 'LIKE', "%{$searchTerm}%")
+			->orWhere('first_name', 'LIKE', "%{$searchTerm}%")
+			->orWhere('last_name', 'LIKE', "%{$searchTerm}%")
+			->orWhereHas('orders', function ($query) use ($searchTerm) {
+				$query->where('order_number', 'LIKE', "%{$searchTerm}%");
+			});
+	}
+
+
 	/**
 	 * Get all attached addresses to the model.
 	 *

@@ -120,7 +120,12 @@ class OrderModel extends Model
 			->orWhere('billing_company_name', 'LIKE', "%{$searchTerm}%")
 			->orWhere('billing_first_name', 'LIKE', "%{$searchTerm}%")
 			->orWhere('billing_last_name', 'LIKE', "%{$searchTerm}%")
+			->orWhere('shipping_email', 'LIKE', "%{$searchTerm}%")
+			->orWhere('billing_email', 'LIKE', "%{$searchTerm}%")
 			->orWhere('gateway->data->id', 'LIKE', "%{$searchTerm}%")
+			->orWhereHas('customer', function ($query) use ($searchTerm) {
+				$query->where('email', 'LIKE', "%{$searchTerm}%");
+			})
 			->orWhereHas('orders', function ($query) use ($searchTerm) {
 				$query->where('order_number', 'LIKE', "%{$searchTerm}%");
 			});
