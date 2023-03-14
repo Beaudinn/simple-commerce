@@ -12,8 +12,10 @@ use DoubleThreeDigital\SimpleCommerce\Orders\States\Quote;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Http;
 use Spatie\ModelStates\HasStates;
 use Webhoek\P4sSupplier\SupplierOrder\SupplierOrderModel;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class OrderModel extends Model
 {
@@ -130,6 +132,34 @@ class OrderModel extends Model
 			->orWhereHas('orders', function ($query) use ($searchTerm) {
 				$query->where('order_number', 'LIKE', "%{$searchTerm}%");
 			});
+	}
+
+	protected function conversations(): Attribute
+	{
+		return Attribute::make(
+			get: function (){
+				$conversations = [];
+				$response = Http::withHeaders([
+					"X-FreeScout-API-Key" =>  "92c2675f831605b36c8ec7c7a973f39b",
+					"Accept" => "application/json",
+					"Content-Type" => "application/json; charset=UTF-8",
+				])->get("https://support.print4sign.nl/api/conversations", [
+					"customerEmail" => "beaudinngreve@gmail.com",
+					"mailboxId" => 1,
+				]);
+
+				//var_dump($response->json()['_embedded']['conversations']); die();
+				if(isset($response->json()['_embedded'], $response->json()['_embedded']['conversations']))
+					$conversations = $response->json()['_embedded']['conversations'];
+
+				return [
+					'to' => optional($this->customer)->email,
+					//'mailbox_id' => optional($this->customer)->email,
+					'conversations' => $conversations,
+				];
+			},
+		);
+		//->shouldCache()
 	}
 
 	//public function scopeRunwayListing($query)
