@@ -140,13 +140,14 @@ class OrderModel extends Model
 		return Attribute::make(
 			get: function (){
 				$conversations = [];
+
 				$response = Http::withHeaders([
 					"X-FreeScout-API-Key" =>  "92c2675f831605b36c8ec7c7a973f39b",
 					"Accept" => "application/json",
 					"Content-Type" => "application/json; charset=UTF-8",
 				])->get("https://support.print4sign.nl/api/conversations", [
 					"customerEmail" => optional($this->customer)->email,
-					"mailboxId" => Site::get($this->locale)->attributes('mailbox_id'),
+					"mailboxId" => Site::get($this->locale)->attributes()['mailbox_id'],
 				]);
 
 				//var_dump($response->json()['_embedded']['conversations']); die();
@@ -155,7 +156,7 @@ class OrderModel extends Model
 
 				return [
 					'to' => optional($this->customer)->email,
-					//'mailbox_id' => optional($this->customer)->email,
+					'mailbox_id' => Site::get($this->locale)->attributes()['mailbox_id'],
 					'conversations' => $conversations,
 				];
 			},
