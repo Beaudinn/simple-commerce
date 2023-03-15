@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Http;
 use Spatie\ModelStates\HasStates;
+use Statamic\Facades\Site;
 use Webhoek\P4sSupplier\SupplierOrder\SupplierOrderModel;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
@@ -144,8 +145,8 @@ class OrderModel extends Model
 					"Accept" => "application/json",
 					"Content-Type" => "application/json; charset=UTF-8",
 				])->get("https://support.print4sign.nl/api/conversations", [
-					"customerEmail" => "beaudinngreve@gmail.com",
-					"mailboxId" => 1,
+					"customerEmail" => optional($this->customer)->email,
+					"mailboxId" => Site::get($this->locale)->attributes('mailbox_id'),
 				]);
 
 				//var_dump($response->json()['_embedded']['conversations']); die();
