@@ -25,6 +25,7 @@ class Overview
 
     public static function widgets(): array
     {
+
         return static::$widgets;
     }
 

@@ -141,6 +141,14 @@ class OrderModel extends Model
 			get: function (){
 				$conversations = [];
 
+				if(!$this->customer){
+					return  [
+						'to' => null,
+						'mailbox_id' => null,
+						'conversations' => [],
+					];
+				}
+
 				$response = Http::withHeaders([
 					"X-FreeScout-API-Key" =>  "92c2675f831605b36c8ec7c7a973f39b",
 					"Accept" => "application/json",

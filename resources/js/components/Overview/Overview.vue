@@ -95,11 +95,12 @@ export default {
 
         this.refreshData();
 
+
         return;
       }
 
       this.currentWidgets = this.widgets;
-
+      console.log(this.currentWidgets)
       this.refreshData();
     },
 

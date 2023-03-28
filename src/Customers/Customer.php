@@ -102,7 +102,7 @@ class Customer implements Contract
 		return Site::get($this->locale());
 	}
 
-	public function primaryAddress(): Address
+	public function primaryAddress()
 	{
 		return $this->resource->addresses()->IsPrimary()->first();
 	}
