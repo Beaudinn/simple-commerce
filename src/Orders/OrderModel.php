@@ -164,6 +164,7 @@ class OrderModel extends Model
 				if(isset($response->json()['_embedded'], $response->json()['_embedded']['conversations']))
 					$conversations = $response->json()['_embedded']['conversations'];
 
+				var_dump($this->locale,  Site::get($this->locale)->attributes()['mailbox_id']);
 				return [
 					'to' => optional($this->customer)->email,
 					'mailbox_id' => Site::get($this->locale)->attributes()['mailbox_id'],
