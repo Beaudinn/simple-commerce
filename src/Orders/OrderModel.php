@@ -3,7 +3,10 @@
 namespace DoubleThreeDigital\SimpleCommerce\Orders;
 
 use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\InvoiceHack;
 use App\Models\Orderable;
+use App\Models\OrderInvoice;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Approved;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\Draft;
 use DoubleThreeDigital\SimpleCommerce\Orders\States\OrderState;
@@ -26,6 +29,8 @@ class OrderModel extends Model
 	protected $table = 'orders';
 
 	protected $guarded = [];
+
+	//protected $invoices;
 
 	protected $casts = [
 		'state' => OrderState::class,
@@ -52,6 +57,7 @@ class OrderModel extends Model
 		'delivery_at' => 'datetime',
 		'agent_client' => 'json',
 		'agent_os' => 'json',
+		'invoices' => 'array'
 	];
 
 	protected $appends = [
@@ -259,6 +265,13 @@ class OrderModel extends Model
 
 		return $this->hasMany(SupplierOrderModel::class, 'order_id');
 	}
+
+	//public function invoices()
+	//{
+	//	//return $this->belongsToMany(Invoice::class, "$database.order_invoices", 'order_id', 'invoice_id');
+	//	return $this->hasMany(OrderInvoice::class, 'order_id');
+	//
+	//}
 
 
 	//public function orders()

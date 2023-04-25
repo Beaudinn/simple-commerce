@@ -17,6 +17,7 @@ class RefundAction extends Action
 
     public function visibleTo($item)
     {
+		return false;
         if (isset(SimpleCommerce::orderDriver()['collection'])) {
             return $item instanceof Entry
                 && $item->collectionHandle() === SimpleCommerce::orderDriver()['collection']

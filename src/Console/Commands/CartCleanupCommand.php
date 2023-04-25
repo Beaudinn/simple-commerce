@@ -43,7 +43,7 @@ class CartCleanupCommand extends Command
                 ->where('is_paid', 0)
 	            ->where(function ($query){
 		            $query->where('agent_ip', '165.22.195.209');
-		            $query->orWhere('created_at', '<', now()->subDays(2));
+		            $query->orWhere('created_at', '<', now()->subDays(3));
 	            })
                 ->each(function ($model) {
                     $this->line("Deleting order: {$model->id}");

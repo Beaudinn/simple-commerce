@@ -46,7 +46,7 @@ class ToApprovedTransition extends Transition
 
 		$this->order = $this->order->fresh();
 
-		if($this->values['create_invoice'] && !$this->order->get('invoice')){
+		if($this->values['create_invoice']){
 			InvoiceProcessor::generate($this->order, ['status' => $this->values['status'], 'send' => $this->values['send']]);
 		}
 
