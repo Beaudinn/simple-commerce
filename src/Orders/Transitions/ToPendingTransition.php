@@ -101,7 +101,6 @@ class ToPendingTransition extends Transition
 			return $item;
 		});
 
-		die();
 		//Storage::disk('orders')->url($packing_slip_path)
 
 		event(new OrderPendingEvent($this->order, $this->values));
