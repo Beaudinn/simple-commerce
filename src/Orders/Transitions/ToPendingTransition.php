@@ -70,7 +70,7 @@ class ToPendingTransition extends Transition
 					$number = str_pad($productKey, 2, '0', STR_PAD_LEFT);
 
 					if(isset($productFile['front_side'], $productFile['front_side']['file']['original_file_url'])){
-						$side = $productFile['back_side']['file'];
+						$side = $productFile['front_side']['file'];
 						//'https://s3-eu-west-1.amazonaws.com/proboprodbucket/
 						$url = "https://s3-eu-west-1.amazonaws.com/proboprodbucket/".$side['original_file_url'];
 						$_PATH_INFO = pathinfo($url);

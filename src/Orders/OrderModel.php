@@ -180,6 +180,7 @@ class OrderModel extends Model
 
 				return [
 					'to' => optional($this->customer)->email,
+					'order_number' => $this->order_number,
 					'mailbox_id' => Site::get($this->locale)->attributes()['mailbox_id'],
 					'conversations' => $conversations,
 				];
