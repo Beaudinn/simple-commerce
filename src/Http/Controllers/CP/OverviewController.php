@@ -73,7 +73,7 @@ class OverviewController
 
 	    return [
 		    'order_count' => $query->count(),
-		    'turnover' => Currency::parse($profit, Site::current()),
+		    'turnover' => Currency::parse($turnover, Site::current()),
 		    'profit' => Currency::parse($profit, Site::current()),
 	    ];
     }
