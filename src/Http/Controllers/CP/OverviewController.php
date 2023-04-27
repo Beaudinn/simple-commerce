@@ -55,20 +55,25 @@ class OverviewController
 	    //->whereHas('orders', function($q){
 	    //    $q->where('total_purchase_price', '>', 0);
 	    //})
+
+		$profit = $query->sum(function ($record){
+			return $record->profit;
+		});
+
 	    $turnover = $query->sum(function ($record){
 		    return $record->total;
 	    });
 
-	    $profit = $query->sum(function ($record){
-		    if(!$record->orders_sum_total_purchase_price)
-			    return 0;
-
-		    return $record->total -  $record->orders_sum_total_purchase_price;
-	    });
+	    //$profit = $query->sum(function ($record){
+		//    if(!$record->orders_sum_total_purchase_price)
+		//	    return 0;
+		//
+		//    return $record->total -  $record->orders_sum_total_purchase_price;
+	    //});
 
 	    return [
 		    'order_count' => $query->count(),
-		    'turnover' => Currency::parse($turnover, Site::current()),
+		    'turnover' => Currency::parse($profit, Site::current()),
 		    'profit' => Currency::parse($profit, Site::current()),
 	    ];
     }
