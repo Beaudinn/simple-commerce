@@ -90,7 +90,7 @@ class OrderModel extends Model
 
 	public function getProfitAttribute()
 	{
-		if ($this->state->equals(Draft::class)) {
+		if ($this->state && $this->state->equals(Draft::class)) {
 			return 0;
 		}
 
