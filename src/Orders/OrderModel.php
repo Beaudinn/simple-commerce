@@ -64,7 +64,6 @@ class OrderModel extends Model
 		'title',
 		'order_number',
 		'published',
-		'profit',
 		'total'
 	];
 
