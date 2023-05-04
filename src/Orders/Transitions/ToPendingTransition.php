@@ -59,6 +59,7 @@ class ToPendingTransition extends Transition
 		$orderModel->items = collect($orderModel->items)->each(function ($item, $key) use ($original_path){
 
 			$product = \DoubleThreeDigital\SimpleCommerce\Facades\Product::find($item['product']);
+			$item['initial'] = isset($item['initial']) ? $item['initial'] : "*";
 			$sufix = str_replace(' ', '_', $item['initial']);
 			$number = str_pad($key, 2, '0', STR_PAD_LEFT);
 			$product_title = strtolower($product->get('title'));
