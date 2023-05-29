@@ -113,10 +113,32 @@ class OrderModel extends Model
 		return true;
 	}
 
+
+	public function scopeRunway($query)
+	{
+		return $query->select(array_diff($this->getTableColumns(), ['items']));
+	}
+
 	public function scopeRunwayListing($query)
 	{
-		return $query->whereNot('grand_total', 0);
+		return $query->select(array_diff($this->getTableColumns(), ['items']))->whereNot('grand_total', 0);
 	}
+
+	/**
+	 * Shows All the columns of the Corresponding Table of Model
+	 *
+	 * @author Manojkiran.A <manojkiran10031998@gmail.com>
+	 * If You need to get all the Columns of the Model Table.
+	 * Useful while including the columns in search
+	 * @return array
+	 **/
+	public function getTableColumns()
+	{
+		return \Illuminate\Support\Facades\Cache::rememberForever('MigrMod:'.filemtime(database_path('migrations')).':'.$this->getTable(), function () {
+			return $this->getConnection()->getSchemaBuilder()->getColumnListing($this->getTable());
+		});
+	}
+
 
 	public function scopeRunwaySearch($query, $searchTerm)
 	{
@@ -186,6 +208,7 @@ class OrderModel extends Model
 			},
 		)->shouldCache();
 	}
+
 
 	//public function scopeRunwayListing($query)
 	//{
