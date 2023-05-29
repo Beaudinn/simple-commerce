@@ -504,7 +504,6 @@ class Order implements Contract
 			$overwrite = [];
 			$array->prices->sales_price = $array->prices->purchase_price;
 
-			var_dump($array->shipping_method_api_code); die();
 			if (isset($shipping_methods[$array->shipping_method_api_code])){
 				$overwrite = $shipping_methods[$array->shipping_method_api_code];
 				$array->prices->sales_price = (float)$array->prices->purchase_price + (float)$overwrite['margin'];
