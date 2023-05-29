@@ -427,7 +427,7 @@ class Order implements Contract
 
 	public function getDeliveries($date)
 	{
-		$shipping_methods = Cache::rememberForever('swhippdcssdindg_methods', function () {
+		$shipping_methods = Cache::rememberForever('swhippddcssdindg_methods', function () {
 			return ShippingMethods::all()->mapWithKeys(function ($method){
 				return [$method->code => $method->overwritableArray()];
 			});
@@ -509,7 +509,7 @@ class Order implements Contract
 
 				if(!$overwrite['active'])
 					continue;
-				
+
 				$array->prices->sales_price = (float)$array->prices->purchase_price + (float)$overwrite['margin'];
 			}
 
